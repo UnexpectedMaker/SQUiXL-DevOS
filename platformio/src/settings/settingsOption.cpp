@@ -168,7 +168,7 @@ bool SettingsOptionIntRange::update(int val)
 
 void SettingsOptionIntRange::log_data()
 {
-	Serial.printf("log_data: %s with %d, %d, %d in group %d\n", fieldname, *setting_ref, value_min, value_max, group);
+	// Serial.printf("log_data: %s with %d, %d, %d in group %d\n", fieldname, *setting_ref, value_min, value_max, group);
 }
 
 int SettingsOptionIntRange::get() { return constrain(*setting_ref, value_min, value_max); }
@@ -410,6 +410,8 @@ bool SettingsOptionBool::update(bool val)
 	*setting_ref = val;
 	settings.save(false);
 
+	Serial.printf("toggle now %d\n", *setting_ref);
+
 	return true;
 }
 
@@ -472,6 +474,7 @@ bool SettingsOptionString::update(String *val)
 		return false;
 
 	*setting_ref = *val;
+	Serial.printf("String is now %s\n", *setting_ref);
 	settings.save(false);
 
 	return true;

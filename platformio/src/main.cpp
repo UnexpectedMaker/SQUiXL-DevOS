@@ -389,4 +389,9 @@ void loop()
 		}
 	}
 
+	// Finally, call non forced save on settings
+	// This will only try to save every so often, and will only commit to saving if any save data has changed.
+	// This is to prevent spamming the FS or causing SPI contention with the PSRAM for the frame buffer
+	settings.save(false);
+
 } /* loop() */

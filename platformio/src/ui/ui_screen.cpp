@@ -184,7 +184,7 @@ void ui_screen::show_random_background(bool fade)
 		show_background_jpg(wallpaper_06, sizeof(wallpaper_06), fade);
 }
 
-void ui_screen::refresh(bool forced)
+void ui_screen::refresh(bool forced, bool force_children)
 {
 	unsigned long start_time = millis();
 
@@ -214,8 +214,10 @@ void ui_screen::refresh(bool forced)
 	{
 		if (ui_children[w] != nullptr)
 		{
-			if (ui_children[w]->should_refresh())
+			if (force_children || ui_children[w]->should_refresh())
 			{
+				if (force_children)
+					ui_children[w]->set_dirty(true);
 				if (ui_children[w]->redraw(32))
 					child_dirty = true;
 			}
@@ -317,13 +319,6 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 
 bool ui_screen::redraw(uint8_t fade_amount)
 {
-
-	// // Have the main screen sprites been setup?
-	// if (!_sprite_clean.getBuffer())
-	// {
-	// 	setup();
-	// }
-
 	unsigned long start_time = millis();
 
 	if (fade_amount < 32)
@@ -481,5 +476,6 @@ void ui_screen::animate_pos(Directions direction, unsigned long duration, tween_
 		_sprite_mixed.freeVirtual();
 
 	squixl.switching_screens = false;
+	squixl.current_screen()->refresh(true, true);
 	// Serial.println("Anim complete");
 }

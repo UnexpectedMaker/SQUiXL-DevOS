@@ -17,7 +17,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_haptics, enabled, trigger
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_open_weather, enabled, api_key, poll_frequency, units_metric);
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, mdns_name, case_color, city, country, utc_offset, time_24hour, time_dateformat, volume, current_background);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, mdns_name, case_color, city, country, utc_offset, time_24hour, time_dateformat, volume, current_background, open_weather, audio, mqtt, haptics);
 
 unsigned long Settings::reset_screen_dim_time()
 {
@@ -319,6 +319,11 @@ bool Settings::save(bool force)
 	// If the data is the same as the last data we saved, bail out
 	if (!force && data == config.last_saved_data && !ui_forced_save)
 	{
+		// Serial.println("skipping save - no change");
+		// Serial.println(data.dump().c_str());
+		// Serial.println();
+		// Serial.println(config.last_saved_data.dump().c_str());
+
 		last_save_time = millis();
 		return false;
 	}
@@ -332,39 +337,26 @@ bool Settings::save(bool force)
 
 	std::string serializedObject = data.dump();
 
-	// Serial.print("Data Length: "+String(serializedObject.length())+"-> ");
-	// Serial.println(serializedObject);
-
-	// SetRGB_ClockSpeed(600000);
-
-	// RGB_Set_SPI_Speed(4000000);
-	// delay(50);
+	// Serial.printf("Data Length: %d ->", serializedObject.length());
+	// Serial.println(serializedObject.c_str());
 
 	File file = LittleFS.open(tmp_filename, FILE_WRITE);
 	if (!file)
 	{
 		Serial.println("Failed to write to settings file");
-		// log_to_nvs("save_status", "failed to open for write");
 		return false;
 	}
 
 	file.print(serializedObject.c_str());
-	// log_to_nvs("save_status", "data written");
 
 	file.close();
-	// log_to_nvs("save_status", "file closed");
 
 	LittleFS.rename(tmp_filename, filename);
-	// log_to_nvs("save_status", "file renamed");
 
 	Serial.println("Settings SAVE: Saved!");
 
-	// RGB_Set_SPI_Speed(12000000);
-
 	// Store last saved data for comparison on next save
 	config.last_saved_data.swap(data);
-
-	// SetRGB_ClockSpeed(1200000);
 
 	last_save_time = millis();
 	return true;

@@ -8,7 +8,9 @@ class ui_control_toggle : public ui_control
 		bool redraw(uint8_t fade_amount) override;
 		bool process_touch(touch_event_t touch_event) override;
 		void set_toggle_text(const char *_text_off, const char *_text_on);
-		const char *get_state_test();
+		const char *get_state_text();
+
+		void set_options_data(SettingsOptionBase *sett) override;
 
 	protected:
 		std::string toggle_text_off = "OFF";

@@ -205,7 +205,7 @@ bool ui_control_slider::process_touch(touch_event_t touch_event)
 		}
 		else
 		{
-			Serial.printf("\n\n %d,%d - %d, %d, %d, %d\n\n", touch_event.x, touch_event.y, _x, _y, _w, _h);
+			// Serial.printf("\n\n %d,%d - %d, %d, %d, %d\n\n", touch_event.x, touch_event.y, _x, _y, _w, _h);
 		}
 	}
 	else if (touch_event.type == TOUCH_DRAG_END)

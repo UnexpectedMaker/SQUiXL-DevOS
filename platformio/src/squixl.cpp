@@ -86,7 +86,7 @@ void SQUiXL::display_first_boot(bool show)
 		squixl.loadPNG_into(&logo_squixl, 0, 0, squixl_logo_blue, sizeof(squixl_logo_blue));
 
 		wifi_manager_content.createVirtual(480, 480, NULL, true);
-		wifi_manager_content.fillScreen(darken565(0x5AEB, 0.5));
+		wifi_manager_content.fillScreen(darken565(0x5AEB, 0.7));
 
 		wifi_manager_content.drawSprite(170, 20, &logo_squixl, 0.5, 0x0, DRAW_TO_RAM);
 

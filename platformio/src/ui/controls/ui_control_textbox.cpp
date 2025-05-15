@@ -11,13 +11,6 @@ void ui_control_textbox::set_options_data(SettingsOptionBase *sett)
 
 	auto *opt = static_cast<SettingsOptionString *>(setting_option);
 	_text = opt->get().c_str();
-
-	// _title = setting_option->fieldname.c_str();
-	// squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 0, &char_width_title, &char_height_title);
-	// title_len_pixels = _title.length() * char_width_title;
-
-	// set_label_sizes();
-	// set_draggable(true);
 }
 
 bool ui_control_textbox::redraw(uint8_t fade_amount)
@@ -87,6 +80,13 @@ bool ui_control_textbox::redraw(uint8_t fade_amount)
 void ui_control_textbox::set_text(const char *text)
 {
 	_text = text;
+	if (setting_option)
+	{
+		auto *opt = static_cast<SettingsOptionString *>(setting_option);
+		String new_text = String(text);
+		opt->update(&new_text);
+	}
+	string_len_pixels = 0;
 }
 
 bool ui_control_textbox::process_touch(touch_event_t touch_event)

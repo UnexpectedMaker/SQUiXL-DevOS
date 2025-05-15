@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ui/ui_window.h"
-// #include "ui/icons/images/weather/bitmaps_ow.h"
 #include "ui/icons/images/weather/um_ow_01d.h"
 #include "ui/icons/images/weather/um_ow_02d.h"
 #include "ui/icons/images/weather/um_ow_03d.h"
@@ -23,13 +22,9 @@ class widgetOpenWeather : public ui_window
 		bool process_touch(touch_event_t touch_event);
 
 		std::string build_server_path();
-		// void decode_json(String _data);
 		void load_icons();
 
 		void process_weather_data(bool success, const String &response);
-
-		// void store_values_for_deepsleep();
-		// void retrieve_values_for_deepsleep();
 
 	private:
 		std::string server_path = "http://api.openweathermap.org/data/2.5/weather?q=";
@@ -49,13 +44,6 @@ class widgetOpenWeather : public ui_window
 		uint8_t stat = 0;
 
 		std::map<String, BB_SPI_LCD> ow_icons;
-
-		bool should_store_values_for_deepsleep()
-		{
-			return (_temp > -999);
-		}
-
-		// bool deepsleep_data_stored = false;
 };
 
 extern widgetOpenWeather widget_ow;

@@ -1,7 +1,18 @@
 #include "ui/controls/ui_control_toggle.h"
 #include "ui/ui_screen.h"
 
-const char *ui_control_toggle::get_state_test()
+void ui_control_toggle::set_options_data(SettingsOptionBase *sett)
+{
+	if (sett == nullptr)
+		return;
+
+	setting_option = sett;
+
+	auto *opt = static_cast<SettingsOptionBool *>(setting_option);
+	toggle_state = opt->get();
+}
+
+const char *ui_control_toggle::get_state_text()
 {
 	return (toggle_state ? toggle_text_on.c_str() : toggle_text_off.c_str());
 }
@@ -71,7 +82,7 @@ bool ui_control_toggle::redraw(uint8_t fade_amount)
 	else
 		_sprite_content.fillRoundRect(10, 25, 30, 25, 6, squixl.current_screen()->light_tint[0], DRAW_TO_RAM);
 
-	_sprite_content.print(get_state_test());
+	_sprite_content.print(get_state_text());
 
 	/*
 	Button style toggle

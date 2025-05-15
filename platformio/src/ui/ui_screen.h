@@ -24,7 +24,7 @@ class ui_screen : public ui_element
 		void show_next_background();
 		void show_random_background(bool fade = true);
 
-		void refresh(bool forced = false);
+		void refresh(bool forced = false, bool force_children = false);
 
 		// Vitrual Funcs
 		bool redraw(uint8_t fade_amount) override;

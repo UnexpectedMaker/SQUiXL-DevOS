@@ -3,8 +3,6 @@
 
 using json = nlohmann::json;
 
-// extern ui_screen *current_screen();
-
 std::string widgetOpenWeather::build_server_path()
 {
 	if (settings.config.city == "" || settings.config.country == "")
@@ -173,12 +171,15 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount)
 		// Serial.printf("redraw() title: %s ||\n", _title.c_str());
 		_sprite_back.print(_title.c_str());
 
-		_sprite_back.setFreeFont(UbuntuMono_R[0]);
-		_sprite_back.setTextColor(TFT_WHITE, -1);
-		_sprite_back.setCursor(10, _h - 8);
-		_sprite_back.print(settings.config.city);
-		_sprite_back.print(", ");
-		_sprite_back.print(settings.config.country);
+		if (settings.config.country.length() > 0)
+		{
+			_sprite_back.setFreeFont(UbuntuMono_R[0]);
+			_sprite_back.setTextColor(TFT_WHITE, -1);
+			_sprite_back.setCursor(10, _h - 8);
+			_sprite_back.print(settings.config.city);
+			_sprite_back.print(", ");
+			_sprite_back.print(settings.config.country);
+		}
 
 		// Serial.printf("is_dirty_hard? %d, is_dirty %d\n", is_dirty_hard, is_dirty);
 
@@ -187,9 +188,10 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount)
 
 	if (is_dirty)
 	{
+		_sprite_back.setFreeFont(UbuntuMono_R[2]);
+
 		if (has_data)
 		{
-
 			_sprite_back.setFreeFont(UbuntuMono_R[1]);
 			_sprite_back.setTextColor(TFT_CYAN, -1);
 			_sprite_back.setCursor(10, 30);
@@ -209,16 +211,22 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount)
 			// We've shown first data, so let's slow down the interval
 			set_refresh_interval(30000);
 		}
+		else if (!settings.config.open_weather.enabled)
+		{
+			_sprite_back.setTextColor(TFT_RED - 1);
+			_sprite_back.setCursor(10, 38);
+			_sprite_back.print("NOT ENABLED!");
+			Serial.println("NOT ENABLED!");
+		}
 		else if (!settings.config.open_weather.has_key())
 		{
-			_sprite_back.setFreeFont(UbuntuMono_R[1]);
 			_sprite_back.setTextColor(TFT_RED - 1);
 			_sprite_back.setCursor(10, 38);
 			_sprite_back.print("NO API KEY");
+			Serial.println("NO API KEY");
 		}
 		else
 		{
-			_sprite_back.setFreeFont(UbuntuMono_R[1]);
 			_sprite_back.setTextColor(TFT_GREY, -1);
 			_sprite_back.setCursor(10, 38);
 			_sprite_back.print("WAITING...");

@@ -85,7 +85,7 @@ struct Config_widget_battery
 		float perc_offset = 7.0;
 		// User settable % to trigger fuel gauge wake from sleep trigger.
 		// This can only be between 1% and 32%
-		uint8_t low_perc = 25;
+		int low_perc = 25;
 		// User settable V to trigger fuel gauge wake from sleep trigger.
 		float low_volt_warn = 3.5;
 		// User settable V to trigger power cutoff to the watch power switch.
@@ -104,7 +104,7 @@ struct Config_widget_open_weather
 
 		bool has_key()
 		{
-			return api_key != "";
+			return (api_key.length() > 1);
 		}
 };
 
@@ -299,7 +299,7 @@ class Settings
 		static const int max_backups = 10;
 		static long backupNumber(const String);
 
-		unsigned long max_time_between_saves = 30000; // every 30 seconds
+		unsigned long max_time_between_saves = 10000; // every 10 seconds
 		unsigned long last_save_time = 0;
 };
 

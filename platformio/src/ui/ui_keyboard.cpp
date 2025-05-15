@@ -1,4 +1,5 @@
 #include "ui/ui_keyboard.h"
+#include "ui/ui_screen.h"
 #include "ui/images/kboards/kb_empty.h"
 #include "squixl.h"
 
@@ -97,13 +98,13 @@ void Keyboard::init_keymap()
 	_keys_by_row[4] = {
 		{KC_TOGGLE, {"?123", "?123"}, 20, 228, 93, 50, true},
 		{KC_SPACE, {"space", "space"}, 133, 228, 228, 50, true},
-		{KC_RETURN, {"return", "return"}, 367, 228, 93, 50, true},
+		{KC_RETURN, {"set", "set"}, 367, 228, 93, 50, true},
 	};
 
 	_keys_by_row_numeric[4] = {
 		{KC_TOGGLE, {"abc", "ABC"}, 20, 228, 93, 50, true},
 		{KC_SPACE, {"space", "space"}, 133, 228, 228, 50, true},
-		{KC_RETURN, {"return", "return"}, 367, 228, 93, 50, true},
+		{KC_RETURN, {"set", "set"}, 367, 228, 93, 50, true},
 	};
 }
 
@@ -152,7 +153,7 @@ void Keyboard::show(bool state, ui_control_textbox *target)
 		_edited_text = _target->get_text();
 
 		// delay(10);
-		Serial.printf("Show Virtual KB? %d for %s\n", state, _target->get_title());
+		// Serial.printf("Show Virtual KB? %d for %s\n", state, _target->get_title());
 		showing = true;
 		redraw_kayboard();
 		// print_text();
@@ -160,11 +161,15 @@ void Keyboard::show(bool state, ui_control_textbox *target)
 	}
 	else
 	{
-		squixl.lcd.drawSprite(0, 200, &_sprite_background, 1.0, -1);
-		Serial.println("Hide Virtual KB");
+		// squixl.lcd.drawSprite(0, 200, &_sprite_background, 1.0, -1);
+		// Serial.println("Hide Virtual KB");
 		_target = nullptr;
 		showing = false;
+		can_flash = false;
+		cursor_visible = false;
+		update_cursor();
 		cursor_pos = -1;
+		squixl.current_screen()->refresh(true, true);
 		audio.play_tone(800, 0.5);
 	}
 }
@@ -202,7 +207,7 @@ void Keyboard::update(touch_event_t t)
 	}
 	else if (auto key = find_key_at(tx, ty))
 	{
-		Serial.printf("Hit %s (code 0x%04X)\n", key->label[is_upper ? 1 : 0], key->code);
+		// Serial.printf("Hit %s (code 0x%04X)\n", key->label[is_upper ? 1 : 0], key->code);
 		audio.play_tone(1500, 0.3);
 		switch (key->code)
 		{
@@ -231,7 +236,9 @@ void Keyboard::update(touch_event_t t)
 
 			break;
 		case Keyboard::KC_RETURN:
-			// _target->insertCharacter('\n');
+			_target->set_text(_edited_text.c_str());
+			// _target->redraw(32);
+			show(false, nullptr);
 			break;
 		case Keyboard::KC_SHIFT:
 			is_upper = !is_upper;
@@ -320,7 +327,7 @@ void Keyboard::print_text()
 	string_len_pixels = string_len * char_width;
 	string_start_pos_x = 240 - (string_len_pixels / 2);
 	// string_len_pixels = constrain(string_len_pixels, 0, _w);
-	Serial.printf("text box string %s len %d, pixels %d, x %d, w %d, pos %d\n", _edited_text.c_str(), string_len, string_len_pixels, _x, _w, (_w / 2) - (string_len_pixels / 2));
+	// Serial.printf("text box string %s len %d, pixels %d, x %d, w %d, pos %d\n", _edited_text.c_str(), string_len, string_len_pixels, _x, _w, (_w / 2) - (string_len_pixels / 2));
 
 	_sprite_keyboard.setFreeFont(UbuntuMono_R[2]);
 	_sprite_keyboard.fillRect(10, 10, 460, 34, RGB(60, 60, 59));

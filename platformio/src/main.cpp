@@ -367,6 +367,7 @@ void loop()
 
 		if (wifiSetup.is_done())
 		{
+			settings.config.first_time = false;
 			settings.update_wifi_credentials(wifiSetup.get_ssid(), wifiSetup.get_pass());
 
 			// Delay required so the wifi client can land on the connected page

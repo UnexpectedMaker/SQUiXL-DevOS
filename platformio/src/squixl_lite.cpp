@@ -74,7 +74,7 @@ void SQUiXL_LITE::init()
 	}
 
 	// Set the SPI frequency for the screen to 6Mhz to remove contention between PSRAM (frame buffer) and Flash.
-	// RGBChangeFreq(6000000);
+	RGBChangeFreq(6000000);
 }
 
 void SQUiXL_LITE::screen_init_spi_bitbanged(const uint8_t *data)

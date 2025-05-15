@@ -5,7 +5,7 @@ using json = nlohmann::json;
 
 std::string widgetOpenWeather::build_server_path()
 {
-	if (settings.config.city == "" || settings.config.country == "")
+	if (settings.config.city == "" || settings.config.country == "" || settings.config.open_weather.enabled == false || settings.config.open_weather.api_key == "")
 		return "";
 
 	if (full_server_call == "")

@@ -4,7 +4,6 @@
 #include "web/wifi_setup.h"
 
 #include "ui/ui_screen.h"
-// extern ui_screen *current_screen();
 
 void widgetBattery::create(int16_t x, int16_t y, uint16_t color)
 {
@@ -46,7 +45,7 @@ void widgetBattery::capture_clean_sprite()
 	is_dirty_hard = false;
 }
 
-bool widgetBattery::redraw(uint8_t fade_amount)
+bool widgetBattery::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	// This is busy if something else is drawing this
 	if (is_busy)

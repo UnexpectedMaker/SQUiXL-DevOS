@@ -252,12 +252,12 @@ class Settings
 		SettingsOptionColor565 setting_case_color{&config.case_color, 0, "Case Color"};
 
 		// Web and WiFi
-		SettingsOptionBool setting_OTA_start{&config.ota_start, 1, "Enable ATO Updates", "NO", "YES"};
+		SettingsOptionBool setting_OTA_start{&config.ota_start, 1, "Enable OTA Updates", "NO", "YES"};
 		SettingsOptionBool setting_wifi_check_updates{&config.wifi_check_for_updates, 1, "Notify Updates", "NO", "YES"};
 		SettingsOptionString setting_web_mdns{&config.mdns_name, 1, "mDNS Name", "SQUiXL", false};
 		SettingsOptionString setting_country{&config.country, 1, "Country Code"};
 		SettingsOptionString setting_city{&config.city, 1, "City"};
-		SettingsOptionInt settings_utc_offset{&config.utc_offset, -99, 99, false, 1, "UTC Offset"};
+		SettingsOptionIntRange settings_utc_offset{&config.utc_offset, -12, 14, 1, false, 1, "UTC Offset"};
 		SettingsOptionWiFiStations wifi_stations{&config.wifi_options, 1, "Wifi Stations"};
 
 		// Audio
@@ -265,6 +265,7 @@ class Settings
 		SettingsOptionBool setting_audio_alarm{&config.audio.alarm, 2, "Alarm Sound", "NO", "YES"};
 		SettingsOptionBool setting_audio_on_hour{&config.audio.on_hour, 2, "Beep Hour", "NO", "YES"};
 		SettingsOptionBool setting_audio_charge{&config.audio.charge, 2, "Start Charge", "NO", "YES"};
+		SettingsOptionFloatRange setting_audio_volume{&config.volume, 0, 21, 1, false, 2, "Volume"};
 
 		// haptics
 		SettingsOptionBool setting_haptics_enabled{&config.haptics.enabled, 3, "Enabled", "NO", "YES"};

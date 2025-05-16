@@ -12,11 +12,11 @@ void ui_control_slider::set_options_data(SettingsOptionBase *sett)
 	{
 		auto *opt = static_cast<SettingsOptionIntRange *>(setting_option);
 		opt->log_data();
-		current_value = opt->get();
-		value_min = opt->get_min_value();
-		value_max = opt->get_max_value();
-		value_step = opt->get_step_value();
-		Serial.printf("\n@@@ current_value (INT): %d - min: %d, max %d\n\n", current_value, value_min, value_max);
+		current_value = (float)opt->get();
+		value_min = (float)opt->get_min_value();
+		value_max = (float)opt->get_max_value();
+		value_step = (float)opt->get_step_value();
+		Serial.printf("\n@@@ current_value (INT): %0.1f - min: %0.1f, max %0.1f \n\n", current_value, value_min, value_max);
 	}
 	else if (value_type == VALUE_TYPE::FLOAT)
 	{
@@ -25,7 +25,7 @@ void ui_control_slider::set_options_data(SettingsOptionBase *sett)
 		value_min = opt->get_min_value();
 		value_max = opt->get_max_value();
 		value_step = opt->get_step_value();
-		Serial.printf("\n@@@ current_value (FLOAT): %f\n\n", current_value);
+		Serial.printf("\n@@@ current_value (FLOAT): %0.1f - min: %0.1f, max %0.1f \n\n", current_value, value_min, value_max);
 	}
 
 	_title = setting_option->fieldname.c_str();
@@ -38,7 +38,6 @@ void ui_control_slider::set_options_data(SettingsOptionBase *sett)
 
 void ui_control_slider::set_label_sizes()
 {
-
 	squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 2, &char_width, &char_height);
 
 	if (value_type == VALUE_TYPE::INT)
@@ -56,7 +55,7 @@ void ui_control_slider::set_label_sizes()
 	value_max_len_pixels = value_max_text.length() * char_width;
 }
 
-bool ui_control_slider::redraw(uint8_t fade_amount)
+bool ui_control_slider::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	// This is busy if something else is drawing this
 	if (is_busy)
@@ -147,8 +146,8 @@ bool ui_control_slider::redraw(uint8_t fade_amount)
 
 	// Blend and draw the sprite to the current ui_screen content sprite
 	squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
-	ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-	// squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+
+	squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
 
 	if (fade_amount == 32)
 		next_refresh = millis();

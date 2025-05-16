@@ -207,6 +207,7 @@ class SQUiXL : public SQUiXL_LITE
 		uint16_t startX = 0;
 		uint16_t startY = 0;
 		uint touchTime = 0;
+		int8_t tab_group_index = -1;
 		bool last_was_click = false;
 		bool last_was_long = false;
 		bool prevent_long_press = false;

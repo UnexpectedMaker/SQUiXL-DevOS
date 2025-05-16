@@ -15,6 +15,8 @@
 #include "ui/controls/ui_control_slider.h"
 #include "ui/controls/ui_control_textbox.h"
 
+#include "ui/controls/ui_control_tabgroup.h"
+
 #include "mqtt/mqtt.h"
 #include "utils/littlefs_cli.h"
 
@@ -37,10 +39,21 @@ ui_screen screen_settings;
 ui_screen screen_wifi_manager;
 
 // Settings
+ui_control_tabgroup settings_tab_group;
+// Time
 ui_control_toggle toggle_time_mode;
 ui_control_toggle toggle_date_mode;
+ui_control_slider slider_UTC;
+// WiFi
 ui_control_toggle toggle_OTA_updates;
+ui_control_toggle toggle_Notify_updates;
 
+// Audio
+ui_control_toggle toggle_audio_ui;
+ui_control_toggle toggle_audio_alarm;
+ui_control_slider slider_volume;
+// Haptics
+ui_control_toggle toggle_haptics_enable;
 // Open Weather
 ui_control_toggle toggle_ow_enable;
 ui_control_slider slider_ow_refresh;
@@ -189,63 +202,92 @@ void loop()
 		// screen_wifi_manager.add_child_ui(&widget_wifimanager);
 		// wifiSetup.set_screen(&screen_wifi_manager);
 
+		/*
+		Setup Settings Screen
+		*/
 		screen_settings.setup(0x5AEB, false);
 
-		// // Settings screen
-		// button_hello.create(20, 20, 120, 40, "Button");
-		// screen_settings.add_child_ui(&button_hello);
+		// Settings are grouped by tabs, so we setup the tab group here with a screen size
+		// and then pass it a list of strings for each group
+		//
+		settings_tab_group.create(0, 0, 480, 40);
+		settings_tab_group.set_tabs(std::vector<std::string>{"Time", "WiFi", "Sound", "Haptics", "OW"});
+		screen_settings.set_page_tabgroup(&settings_tab_group);
 
-		// ow_group.set_grid_padding(5);
-		// ow_group.create_on_grid(0, 0, 3, 2, "OPEN WEATHER");
-		// ow_group.set_touchable(false);
-		// screen_settings.add_child_ui(&ow_group);
-
-		toggle_OTA_updates.create_on_grid(0, 0, 1, 1, "OTA UPDATES");
-		toggle_OTA_updates.set_toggle_text("NO", "YES");
-		toggle_OTA_updates.set_options_data(&settings.setting_OTA_start);
-		screen_settings.add_child_ui(&toggle_OTA_updates);
-
-		// toggle_time_mode.create(160, 10, 140, 60, "TIME FORMAT");
+		// Time
 		toggle_time_mode.create_on_grid(1, 0, 1, 1, "TIME FORMAT");
 		toggle_time_mode.set_toggle_text("12H", "24H");
 		toggle_time_mode.set_options_data(&settings.setting_time_24hour);
-		screen_settings.add_child_ui(&toggle_time_mode);
+		settings_tab_group.add_child_ui(&toggle_time_mode, 0);
 
-		// toggle_date_mode.create(320, 10, 140, 60, "DATE FORMAT");
 		toggle_date_mode.create_on_grid(2, 0, 1, 1, "DATE FORMAT");
 		toggle_date_mode.set_toggle_text("D-M-Y", "M-D-Y");
 		toggle_date_mode.set_options_data(&settings.setting_time_dateformat);
-		screen_settings.add_child_ui(&toggle_date_mode);
+		settings_tab_group.add_child_ui(&toggle_date_mode, 0);
 
-		// toggle_ow_enable.create(20, 90, 120, 60, "OW ENABLE");
+		slider_UTC.create_on_grid(0, 1, 3, 1);
+		slider_UTC.set_value_type(VALUE_TYPE::INT);
+		slider_UTC.set_options_data(&settings.settings_utc_offset);
+		settings_tab_group.add_child_ui(&slider_UTC, 0);
+
+		// WiFi
+		toggle_OTA_updates.create_on_grid(0, 0, 1, 1, "ENABLE OTA");
+		toggle_OTA_updates.set_toggle_text("NO", "YES");
+		toggle_OTA_updates.set_options_data(&settings.setting_OTA_start);
+		settings_tab_group.add_child_ui(&toggle_OTA_updates, 1);
+
+		toggle_Notify_updates.create_on_grid(1, 0, 1, 1, "NOTIFY UPDATES");
+		toggle_Notify_updates.set_toggle_text("NO", "YES");
+		toggle_Notify_updates.set_options_data(&settings.setting_wifi_check_updates);
+		settings_tab_group.add_child_ui(&toggle_Notify_updates, 1);
+
+		// Sound
+		toggle_audio_ui.create_on_grid(0, 0, 1, 1, "UI BEEPS");
+		toggle_audio_ui.set_toggle_text("NO", "YES");
+		toggle_audio_ui.set_options_data(&settings.setting_audio_ui);
+		settings_tab_group.add_child_ui(&toggle_audio_ui, 2);
+
+		toggle_audio_alarm.create_on_grid(1, 0, 1, 1, "ALARMS");
+		toggle_audio_alarm.set_toggle_text("NO", "YES");
+		toggle_audio_alarm.set_options_data(&settings.setting_audio_alarm);
+		settings_tab_group.add_child_ui(&toggle_audio_alarm, 2);
+
+		slider_volume.create_on_grid(0, 1, 2, 1);
+		slider_volume.set_value_type(VALUE_TYPE::FLOAT);
+		slider_volume.set_options_data(&settings.setting_audio_volume);
+		settings_tab_group.add_child_ui(&slider_volume, 2);
+
+		// Haptics
+
+		toggle_haptics_enable.create_on_grid(0, 0, 1, 1, "ENABLED");
+		toggle_haptics_enable.set_toggle_text("NO", "YES");
+		toggle_haptics_enable.set_options_data(&settings.setting_haptics_enabled);
+		settings_tab_group.add_child_ui(&toggle_haptics_enable, 3);
+
+		// Open Weather
+		// Create a Toggle frmo the widget_ow_enabled sewtting
 		toggle_ow_enable.create_on_grid(0, 1, 1, 1, "OW ENABLE");
 		toggle_ow_enable.set_toggle_text("NO", "YES");
 		toggle_ow_enable.set_options_data(&settings.widget_ow_enabled);
-		screen_settings.add_child_ui(&toggle_ow_enable);
+		settings_tab_group.add_child_ui(&toggle_ow_enable, 4);
 
 		// Create an Int Slider from the widget_ow_poll_interval setting
 		slider_ow_refresh.create_on_grid(1, 1, 2, 1);
 		slider_ow_refresh.set_value_type(VALUE_TYPE::INT);
 		slider_ow_refresh.set_options_data(&settings.widget_ow_poll_interval);
-		screen_settings.add_child_ui(&slider_ow_refresh);
+		settings_tab_group.add_child_ui(&slider_ow_refresh, 4);
 
 		// Create an Text Box the widget_ow_apikey setting
 		text_ow_api_key.create_on_grid(0, 2, 3, 1, "OW API KEY");
 		text_ow_api_key.set_options_data(&settings.widget_ow_apikey);
-		screen_settings.add_child_ui(&text_ow_api_key);
-
-		// example_slider2.create(20, 160, 440, 60);
-		// example_slider2.set_min_max(50, 250, 5);
-		// // example_slider2.set_suffix("%");
-		// example_slider2.set_value_type(VALUE_TYPE::INT);
-		// example_slider2.set_prefix("$");
-		// screen_settings.add_child_ui(&example_slider2);
-
+		settings_tab_group.add_child_ui(&text_ow_api_key, 4);
 		screen_settings.set_can_cycle_back_color(true);
-		// screen_settings.refresh(true);
 
-		// main screen
+		screen_settings.set_refresh_interval(0);
 
+		/*
+		Setup Main Screen
+		*/
 		screen_main.setup(TFT_BLACK, true);
 
 		widget_battery.create(10, 0, TFT_WHITE);
@@ -265,17 +307,19 @@ void loop()
 		widget_ow.set_refresh_interval(1000);
 		screen_main.add_child_ui(&widget_ow);
 
-		// MQTT Screen
+		/*
+		Setup MQTT Screen
+		*/
 
 		screen_mqtt.setup(TFT_BLUE, true);
 		widget_mqtt_sensors.create(10, 120, 460, 240, TFT_BLACK, 12, 0, "MQTT Sensors");
 		widget_mqtt_sensors.set_refresh_interval(1000);
 		screen_mqtt.add_child_ui(&widget_mqtt_sensors);
-		// screen_mqtt.refresh(true);
 
 		screen_main.set_navigation(Directions::LEFT, &screen_mqtt, true);
 		screen_main.set_navigation(Directions::DOWN, &screen_settings, true);
 
+		// Continue processing startup
 		if (!was_asleep)
 			squixl.display_logo(false);
 
@@ -297,24 +341,27 @@ void loop()
 		}
 
 		Serial.printf("\n>>> UI build done in %0.2f ms\n\n", (millis() - timer));
-		squixl.log_heap("main");
+		// squixl.log_heap("main");
 
 		return;
 	}
 
+	// If we have a current screen selected and it should be refreshed, refresh it!
 	if (squixl.current_screen() != nullptr && squixl.current_screen()->should_refresh())
 	{
 		squixl.current_screen()->refresh();
 	}
 
+	// If there are any active animations running,
+	// don't perocess further to allow the anims to play smoothly
 	if (animation_manager.active_animations() > 0)
 		return;
 
 	// This allows desktop access to the LittleFS partition on the SQUiXL
 	// littlefs_cli();
 
-	// touch rate is done with process_touch - if it was processed, it returns true,
-	// otherwise it returns false
+	// Touch rate is done with process_touch_full()
+	// If a touch was processed, it returns true, otherwise it returns false
 	if (squixl.process_touch_full())
 	{
 		// If 5V power had been detected, play a sound.

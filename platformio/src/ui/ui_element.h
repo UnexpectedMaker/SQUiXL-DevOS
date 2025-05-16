@@ -1,9 +1,9 @@
 #pragma once
 
 #include "squixl.h"
+#include <map>
 
-// class ui_screen;
-// extern ui_screen *current_screen();
+class ui_control_tabgroup;
 
 enum TEXT_ALIGN
 {
@@ -25,10 +25,8 @@ class ui_element
 		using CallbackFunction = void (*)();
 
 	public:
-		// void set_parent_sprite(BB_SPI_LCD *sprite);
-
 		// Drawing stuff
-		virtual bool redraw(uint8_t fade_amount) { return false; }
+		virtual bool redraw(uint8_t fade_amount, int8_t tab_group = -1) { return false; }
 
 		virtual void capture_clean_sprite();
 		virtual void set_dirty(bool state) { is_dirty = state; }
@@ -37,7 +35,7 @@ class ui_element
 		// Touch related stuff
 		virtual bool process_touch(touch_event_t touch_event) { return false; }
 
-		ui_element *find_touched_element(uint16_t x, uint16_t y);
+		ui_element *find_touched_element(uint16_t x, uint16_t y, int8_t tabgroup = -1);
 		bool check_bounds(uint16_t x, uint16_t y);
 
 		void set_callback(CallbackFunction callback);
@@ -45,7 +43,8 @@ class ui_element
 
 		bool should_refresh();
 
-		void add_child_ui(ui_element *child);
+		void add_child_ui(ui_element *child, int8_t tab_group = -1);
+
 		const char *get_title();
 
 		void fade(float from, float to, unsigned long duration, bool set_dirty, bool invalidate_cache, std::function<void()> completion_callback = nullptr);
@@ -69,6 +68,13 @@ class ui_element
 		void set_touchable(bool state) { is_touchable = state; }
 		bool touchable() { return is_touchable; }
 
+		int8_t get_tab_group() { return element_tab_group; }
+		void set_tab_group(int8_t group) { element_tab_group = group; }
+		bool check_tab_group(int8_t group) { return element_tab_group == group || group < 0; }
+
+		void reposition(uint8_t *_col, uint8_t *_row);
+		void restore_reposition();
+
 		int drag_dir = -1;
 
 		UI_PADDING padding;
@@ -82,6 +88,9 @@ class ui_element
 
 		// My direct UI parent that I am a child of
 		ui_element *ui_parent = nullptr;
+		// Any UI children that I am the parent of
+		std::vector<ui_element *> ui_children;
+		std::map<int8_t, std::vector<ui_element *>> tab_group_children;
 
 	protected:
 		int16_t _x = 0; // X position
@@ -91,6 +100,11 @@ class ui_element
 		int16_t _c = 0; // Color (565)
 		uint8_t _t = 0; // Transparency
 		uint8_t _b = 0; // Blur Count
+
+		int16_t _origional_x = 0; // X position
+		int16_t _origional_y = 0; // Y position
+
+		bool repositioned = false;
 
 		std::string _title = "";
 
@@ -104,19 +118,8 @@ class ui_element
 		bool is_touchable = true;
 		bool is_draggable = false;
 		bool block_dragging = true;
-		// unsigned long drag_start_time = 0;
+
 		unsigned long click_hold_start_timer = 0;
-		// int16_t drag_start_x = 0;
-		// int16_t drag_start_y = 0;
-
-		// int16_t drag_end_x = 0;
-		// int16_t drag_end_y = 0;
-
-		// uint16_t drag_delta_x = 0;
-		// uint16_t drag_delta_y = 0;
-
-		// uint16_t drag_step_x = 0;
-		// uint16_t drag_step_y = 0;
 
 		bool is_dirty_hard = true; // Do I need to capture my clean backgrouns sprite
 		bool is_dirty = true;	   // Do I need to re-draw my content?
@@ -124,8 +127,5 @@ class ui_element
 		bool is_aniamted_cached = false;
 		bool has_never_drawn = true;
 
-		// Any UI children that I am the parent of
-		std::vector<ui_element *> ui_children;
-
-		// BB_SPI_LCD *parent_sprite = nullptr;
+		int8_t element_tab_group = -1;
 };

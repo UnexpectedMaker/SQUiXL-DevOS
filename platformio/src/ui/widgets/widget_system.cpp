@@ -3,7 +3,6 @@
 #include "web/wifi_controller.h"
 
 #include "ui/ui_screen.h"
-// extern ui_screen *current_screen();
 
 void widgetSystem::create(int16_t x, int16_t y, uint16_t color)
 {
@@ -47,7 +46,7 @@ void widgetSystem::capture_clean_sprite()
 	is_dirty_hard = false;
 }
 
-bool widgetSystem::redraw(uint8_t fade_amount)
+bool widgetSystem::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	// This is busy if something else is drawing this
 	if (is_busy)

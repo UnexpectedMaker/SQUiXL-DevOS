@@ -2,9 +2,23 @@
 #include "ui/ui_keyboard.h"
 #include "settings/settings.h"
 #include "JPEGDisplay.inl"
-// #include "PNGDisplay.inl"
 
 uint16_t background_colors[6] = {0x5AEB, darken565(0x5AEB, 0.5), 0x001f, 0xf800, darken565(0x07e0, 0.5), 0xbbc0};
+
+void ui_screen::set_page_tabgroup(ui_control_tabgroup *tabgroup)
+{
+	ui_tab_group = tabgroup;
+	tabgroup->ui_parent = this;
+	// ui_children.push_back(this);
+}
+
+int8_t ui_screen::get_tab_group_index()
+{
+	if (ui_tab_group == nullptr)
+		return -1;
+
+	return ui_tab_group->get_current_tab();
+}
 
 void ui_screen::setup(uint16_t _back_color, bool add)
 {
@@ -120,6 +134,9 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 		Serial.printf("JPG not loaded - size was %d :(\n", jpg_size);
 	}
 
+	/*
+	TODO: Need to add tab group support to this?
+	*/
 	for (int w = 0; w < ui_children.size(); w++)
 	{
 		if (ui_children[w] != nullptr)
@@ -184,6 +201,69 @@ void ui_screen::show_random_background(bool fade)
 		show_background_jpg(wallpaper_06, sizeof(wallpaper_06), fade);
 }
 
+void ui_screen::clear_content()
+{
+	_sprite_content.fillScreen(TFT_MAGENTA);
+}
+
+bool ui_screen::position_children(bool force_children)
+{
+	bool child_dirty = false;
+
+	int8_t tab_group = -1;
+	if (ui_tab_group != nullptr)
+	{
+		ui_tab_group->redraw(32);
+		tab_group = ui_tab_group->get_current_tab();
+		current_tab_group = tab_group;
+
+		uint8_t col = 0;
+		uint8_t row = 0;
+
+		// Serial.printf("ui_tab_group->tab_group_children[tab_group].size() %d for %d\n", ui_tab_group->tab_group_children[tab_group].size(), tab_group);
+
+		for (int w = 0; w < ui_tab_group->tab_group_children[tab_group].size(); w++)
+		{
+			ui_element *child = ui_tab_group->tab_group_children[tab_group][w];
+			if (child != nullptr)
+			{
+				child->reposition(&col, &row);
+				// Serial.printf("Child is ok! Should refresh? %d\n", child->should_refresh());
+				if (force_children || child->should_refresh())
+				{
+					if (force_children)
+						child->set_dirty(true);
+
+					if (child->redraw(32))
+						child_dirty = true;
+				}
+			}
+		}
+	}
+	else
+	{
+		// Process all of this elements children without tab groups
+		for (int w = 0; w < ui_children.size(); w++)
+		{
+			ui_element *child = ui_children[w];
+			if (child != nullptr)
+			{
+				child->restore_reposition();
+				if (force_children || child->should_refresh())
+				{
+					if (force_children)
+						child->set_dirty(true);
+
+					if (child->redraw(32))
+						child_dirty = true;
+				}
+			}
+		}
+	}
+
+	return child_dirty;
+}
+
 void ui_screen::refresh(bool forced, bool force_children)
 {
 	unsigned long start_time = millis();
@@ -196,41 +276,21 @@ void ui_screen::refresh(bool forced, bool force_children)
 
 	if (keyboard.showing)
 	{
-		// Serial.println("KB open!!!!");
-		// keyboard.update();
 		next_refresh = millis();
 		return;
 	}
 
-	// if (next_refresh == 0)
-	// {
-	// 	set_refresh_interval(3);
-	// 	// forced = true;
-	// }
-
-	bool child_dirty = false;
-
-	for (int w = 0; w < ui_children.size(); w++)
-	{
-		if (ui_children[w] != nullptr)
-		{
-			if (force_children || ui_children[w]->should_refresh())
-			{
-				if (force_children)
-					ui_children[w]->set_dirty(true);
-				if (ui_children[w]->redraw(32))
-					child_dirty = true;
-			}
-		}
-	}
+	bool child_dirty = position_children(force_children);
 
 	if (child_dirty || animation_manager.active_animations() > 0 || forced)
 	{
-		if (animation_manager.active_animations() > 0)
-			refresh_interval = 1;
-		else
-			refresh_interval = 20;
-		// Serial.printf("screen update - child_dirty? %d, forced? %d, anims? %d\n", child_dirty, forced, animation_manager.active_animations());
+		if (refresh_interval > 0)
+		{
+			if (animation_manager.active_animations() > 0)
+				refresh_interval = 1;
+			else
+				refresh_interval = 20;
+		}
 		redraw(32);
 	}
 
@@ -241,31 +301,39 @@ void ui_screen::refresh(bool forced, bool force_children)
 
 bool ui_screen::process_touch(touch_event_t touch_event)
 {
-
-	// if (touch_event.type == TOUCH_TAP)
-	// {
-	// 	if (check_bounds(touch_event.x, touch_event.y))
-	// 	{
-	// 		if (millis() - next_click_update > 1000)
-	// 		{
-	// 			next_click_update = millis();
-	// 			Serial.printf("TAP at %d, %d\n", touch_event.x, touch_event.y);
-	// 			audio.play_tone(300, 2);
-
-	// 			return true;
-	// 		}
-	// 	}
-	// }
-
-	// return true;
-
-	// Did any of my children recieve this touch event?
-	for (int w = 0; w < ui_children.size(); w++)
+	int8_t tab_group = -1;
+	if (ui_tab_group != nullptr)
 	{
-		if (ui_children[w]->process_touch(touch_event))
+		tab_group = ui_tab_group->get_current_tab();
+		if (ui_tab_group->process_touch(touch_event))
 		{
 			next_update = 0;
 			return true;
+		}
+
+		// for (int w = 0; w < ui_tab_group->tab_group_children[tab_group].size(); w++)
+		// {
+		// 	ui_element *child = ui_tab_group->tab_group_children[tab_group][w];
+		// 	if (child->check_tab_group(tab_group))
+		// 	{
+		// 		if (child->process_touch(touch_event))
+		// 		{
+		// 			next_update = millis() + 1000;
+		// 			return true;
+		// 		}
+		// 	}
+		// }
+	}
+	else
+	{
+		// Did any of my children recieve this touch event?
+		for (int w = 0; w < ui_children.size(); w++)
+		{
+			if (ui_children[w]->process_touch(touch_event))
+			{
+				next_update = 0;
+				return true;
+			}
 		}
 	}
 
@@ -277,10 +345,28 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 			back_color = background_colors[random(5)];
 			_sprite_back.fillScreen(back_color);
 			calc_new_tints();
-			for (int w = 0; w < ui_children.size(); w++)
+
+			int8_t tabgroup = -1;
+			if (ui_tab_group != nullptr)
 			{
-				if (ui_children[w] != nullptr)
-					ui_children[w]->redraw(32);
+				ui_tab_group->redraw(32);
+				tabgroup = ui_tab_group->get_current_tab();
+
+				for (int w = 0; w < ui_tab_group->tab_group_children[tab_group].size(); w++)
+				{
+					ui_element *child = ui_tab_group->tab_group_children[tab_group][w];
+					if (child != nullptr)
+						child->redraw(32);
+				}
+			}
+
+			else
+			{
+				for (int w = 0; w < ui_children.size(); w++)
+				{
+					if (ui_children[w] != nullptr)
+						ui_children[w]->redraw(32);
+				}
 			}
 			// delay(10);
 			redraw(32);
@@ -317,7 +403,7 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 	return false;
 }
 
-bool ui_screen::redraw(uint8_t fade_amount)
+bool ui_screen::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	unsigned long start_time = millis();
 
@@ -416,19 +502,20 @@ void ui_screen::animate_pos(Directions direction, unsigned long duration, tween_
 	// _x = (int)from_x;
 	// _y = (int)from_y;
 
-	for (int w = 0; w < ui_children.size(); w++)
-	{
-		if (ui_children[w] != nullptr)
-		{
-			ui_children[w]->redraw(32);
-		}
-	}
+	bool child_dirty = position_children(true);
 
 	// we only need this sprite temporarly if we are blending content
 	if (!_sprite_mixed.getBuffer())
 		_sprite_mixed.createVirtual(480, 480, NULL, true);
 
-	squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_mixed, 32, TFT_MAGENTA);
+	bool s_content = _sprite_content.getBuffer();
+	bool s_back = _sprite_back.getBuffer();
+	bool s_mixed = _sprite_mixed.getBuffer();
+
+	// Serial.printf("s_content %d, s_back %d, s_mixed %d\n", s_content, s_back, s_mixed);
+
+	if (s_content && s_back && s_mixed)
+		squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_mixed, 32, TFT_MAGENTA);
 
 	while (t < 1.0 || _x != (int)to_x || _y != (int)to_y)
 	{

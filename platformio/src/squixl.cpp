@@ -362,11 +362,35 @@ bool SQUiXL::process_touch_full()
 			drag_rate = millis();
 			last_finger_move = millis();
 
+			tab_group_index = -1;
+
+			// currently_selected = nullptr;
+
 			// Serial.printf("touch: %d,%d\n", startX, startY);
 
 			if (current_screen() != nullptr)
 			{
-				currently_selected = current_screen()->find_touched_element(pts[0][0], pts[0][1]);
+				tab_group_index = current_screen()->get_tab_group_index();
+				if (tab_group_index > -1)
+				{
+					if (current_screen()->ui_tab_group->process_touch(touch_event_t(pts[0][0], pts[0][1], TOUCH_TAP)))
+					{
+						isTouched = false;
+						next_touch = millis() + 1000;
+						currently_selected = nullptr;
+						// Serial.printf("BLOCKED!!!! @ millis() %u -> next %u\n", millis(), next_touch);
+						return false;
+					}
+					else
+					{
+						currently_selected = current_screen()->ui_tab_group->find_touched_element(pts[0][0], pts[0][1], tab_group_index);
+					}
+				}
+				else
+				{
+					currently_selected = current_screen()->find_touched_element(pts[0][0], pts[0][1], -1);
+				}
+
 				if (currently_selected != nullptr && !currently_selected->is_drag_blocked())
 				{
 					currently_selected->process_touch(touch_event_t(pts[0][0], pts[0][1], TOUCH_DRAG));
@@ -504,7 +528,6 @@ bool SQUiXL::process_touch_full()
 		{
 			if (currently_selected->process_touch(touch_event_t(moved_x, moved_y, TOUCH_TAP)))
 			{
-				// BuzzerUI({{2000, 20}});
 				current_screen()->refresh(true);
 			}
 		}

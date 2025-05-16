@@ -115,7 +115,7 @@ void widgetOpenWeather::process_weather_data(bool success, const String &respons
 	should_redraw = true;
 }
 
-bool widgetOpenWeather::redraw(uint8_t fade_amount)
+bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	// we want the poll_frequency to be (mins in millis, so mins * 60 * 1000)
 	if (millis() - next_update > (settings.config.open_weather.poll_frequency * 60000) || next_update == 0)

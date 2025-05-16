@@ -10,7 +10,7 @@ class ui_icon : public ui_element
 		void create(int16_t x, int16_t y, int16_t target_w, int16_t target_h, const void *image, int image_size, bool fade = true);
 
 		// Virtual Funcs
-		bool redraw(uint8_t fade_amount) override;
+		bool redraw(uint8_t fade_amount, int8_t tab_group = -1) override;
 
 	protected:
 		int16_t _target_w; // draw pos x

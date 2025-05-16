@@ -13,7 +13,7 @@ void ui_control_textbox::set_options_data(SettingsOptionBase *sett)
 	_text = opt->get().c_str();
 }
 
-bool ui_control_textbox::redraw(uint8_t fade_amount)
+bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	// This is busy if something else is drawing this
 	if (is_busy)
@@ -64,8 +64,8 @@ bool ui_control_textbox::redraw(uint8_t fade_amount)
 
 	// Blend and draw the sprite to the current ui_screen content sprite
 	squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
-	// squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-	ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+
+	squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
 
 	if (fade_amount == 32)
 		next_refresh = millis();

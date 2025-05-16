@@ -1,7 +1,7 @@
 #include "ui/dashboard/ui_gauge_bme280.h"
 #include "mqtt/mqtt.h"
 
-bool ui_gauge_bme280::redraw(uint8_t fade_amount)
+bool ui_gauge_bme280::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	// This is busy if something else is drawing this
 	if (is_busy)

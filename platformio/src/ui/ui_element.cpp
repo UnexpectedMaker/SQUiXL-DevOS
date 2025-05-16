@@ -1,18 +1,13 @@
 #include "ui/ui_element.h"
 #include "settings/settings.h"
 
-// static ui_element *current_ui_element = nullptr;
-
-void ui_element::add_child_ui(ui_element *child)
+void ui_element::add_child_ui(ui_element *child, int8_t tab_group)
 {
 	ui_children.push_back(child);
 	child->ui_parent = this;
+	child->set_tab_group(tab_group);
+	tab_group_children[tab_group].push_back(child);
 }
-
-// void ui_element::set_parent_sprite(BB_SPI_LCD *sprite)
-// {
-// 	parent_sprite = sprite;
-// }
 
 void ui_element::set_refresh_interval(uint16_t interval)
 {
@@ -40,11 +35,76 @@ bool ui_element::should_refresh()
 	bool ok = false;
 	if (millis() - next_refresh > refresh_interval)
 	{
+		// Serial.printf("Interval %d\n", refresh_interval);
 		next_refresh = millis();
 		ok = true;
 	}
 
 	return ok;
+}
+
+void ui_element::reposition(uint8_t *_col, uint8_t *_row)
+{
+	if (repositioned)
+		return;
+
+	repositioned = true;
+	// Back up original values
+	_origional_x = _x;
+	_origional_y = _y;
+
+	uint8_t grid_padding = 10;
+	uint8_t col_width = 160;
+	uint8_t row_height = 80;
+
+	uint8_t _span_c = _w / (col_width - grid_padding - grid_padding);
+	uint8_t _span_r = _h / (row_height - grid_padding - grid_padding);
+
+	// Serial.printf("element _w %d, col_width %d, span_c %d, new col %d, rew row %d\n", _w, (col_width - grid_padding - grid_padding), _span_c, (*_col + _span_c), *_row);
+
+	// Need to ensure the col span is not wider than the screen based on the selected col
+	if (*_col + _span_c > 3)
+	{
+		*_col = 0;
+		*_row = *_row + 1;
+		if (*_row > 5)
+		{
+			Serial.printf("element Error 1 _col %d, _row %d\n", *_col, *_row);
+
+			*_row = 99;
+			*_col = 99;
+			return;
+		}
+	}
+
+	_x = (*_col * col_width + grid_padding);
+	_y = (*_row * row_height + grid_padding) + 60; // tab group offset
+
+	// Serial.printf("element repositioned to col %d, row %d, span_c %d\n", *_col, *_row, _span_c);
+
+	*_col += _span_c;
+	if (*_col > 2)
+	{
+		*_col = 0;
+		*_row = *_row + 1;
+		if (*_row > 5)
+		{
+			Serial.printf("element Error 2 _col %d, _row %d\n", *_col, *_row);
+			*_row = 99;
+			*_col = 99;
+		}
+	}
+}
+
+void ui_element::restore_reposition()
+{
+	if (repositioned)
+	{
+		repositioned = false;
+		// Restore original values
+		_x = _origional_x;
+		_y = _origional_y;
+	}
 }
 
 void ui_element::capture_clean_sprite()
@@ -82,15 +142,19 @@ const char *ui_element::get_title()
 
 bool ui_element::check_bounds(uint16_t touch_x, uint16_t touch_y)
 {
+	// Serial.printf("%d >= %d - %d (%d) && %d < %d + %d + %d (%d)\n", touch_y, _y, touch_padding, (_y - touch_padding), touch_y, _y, _h, touch_padding, (_y + _h + touch_padding));
+
+	// Serial.printf("%d >= %d && %d < %d ? %d\n", touch_y, (_y - touch_padding), touch_y, (_y + _h + touch_padding), (touch_y >= _y - touch_padding && touch_y < _y + _h + touch_padding));
+
 	return (touch_x >= _x - touch_padding && touch_x < _x + _w + touch_padding && touch_y >= _y - touch_padding && touch_y < _y + _h + touch_padding);
 }
 
-ui_element *ui_element::find_touched_element(uint16_t x, uint16_t y)
+ui_element *ui_element::find_touched_element(uint16_t x, uint16_t y, int8_t tabgroup)
 {
 	// Serial.printf("Number of UI element children %d\n", ui_children.size());
 	for (int i = 0; i < ui_children.size(); i++)
 	{
-		if (ui_children[i] != nullptr && ui_children[i]->touchable())
+		if (ui_children[i] != nullptr && ui_children[i]->touchable() && ui_children[i]->check_tab_group(tabgroup))
 		{
 			// Serial.printf("Checking UI element %s\n", ui_children[i]->get_title());
 			if (ui_children[i]->check_bounds(x, y))
@@ -98,8 +162,13 @@ ui_element *ui_element::find_touched_element(uint16_t x, uint16_t y)
 		}
 	}
 
-	if (!squixl.showing_settings)
-		return this;
+	// Serial.println("Nope, returning this");
+
+	// if (!squixl.showing_settings)
+	if (ui_parent != nullptr)
+		return ui_parent;
+
+	return this;
 
 	return nullptr;
 }

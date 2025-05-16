@@ -5,7 +5,7 @@
 class ui_control_slider : public ui_control
 {
 	public:
-		bool redraw(uint8_t fade_amount) override;
+		bool redraw(uint8_t fade_amount, int8_t tab_group = -1) override;
 		bool process_touch(touch_event_t touch_event) override;
 		void set_value_text(const char *_text);
 		void set_min_max(float _min, float _max, float _step);

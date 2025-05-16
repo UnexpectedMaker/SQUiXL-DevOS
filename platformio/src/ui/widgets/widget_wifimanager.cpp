@@ -34,7 +34,7 @@ void widgetWiFiManager::capture_clean_sprite()
 	is_dirty_hard = false;
 }
 
-bool widgetWiFiManager::redraw(uint8_t fade_amount)
+bool widgetWiFiManager::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	// This is busy if something else is drawing this
 	if (is_busy)

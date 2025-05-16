@@ -49,7 +49,7 @@ void ui_label::move(int16_t x, int16_t y)
 	_sprite_content.print(_title.c_str());
 }
 
-bool ui_label::redraw(uint8_t fade_amount)
+bool ui_label::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	if (fade_amount == 0)
 	{

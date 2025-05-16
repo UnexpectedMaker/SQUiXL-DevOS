@@ -14,7 +14,7 @@ class ui_label : public ui_element
 		void show(bool fade = false);
 
 		// Virtual Funcs
-		bool redraw(uint8_t fade_amount) override;
+		bool redraw(uint8_t fade_amount, int8_t tab_group = -1) override;
 		void slow_fade();
 
 	protected:

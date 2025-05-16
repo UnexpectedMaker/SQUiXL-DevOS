@@ -4,7 +4,7 @@
 
 using json = nlohmann::json;
 
-bool widgetMQTTSensors::redraw(uint8_t fade_amount)
+bool widgetMQTTSensors::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	if (mqtt_stuff.mqtt_dirty)
 	{

@@ -10,7 +10,7 @@ class widgetBattery : public ui_element
 		void load_icons();
 
 		// Virtual Funcs
-		bool redraw(uint8_t fade_amount) override;
+		bool redraw(uint8_t fade_amount, int8_t tab_group = -1) override;
 		void capture_clean_sprite() override;
 		bool process_touch(touch_event_t touch_event) override;
 

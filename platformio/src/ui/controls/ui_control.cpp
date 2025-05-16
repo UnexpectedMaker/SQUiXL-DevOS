@@ -16,6 +16,8 @@ void ui_control::create(uint16_t _pos_x, uint16_t _pos_y, uint16_t _width, uint1
 	_sprite_clean.createVirtual(_w, _h, NULL, true);
 	_sprite_mixed.createVirtual(_w, _h, NULL, true);
 
+	// Serial.printf("created control %d, %d, %d, %d\n", _x, _y, _w, _h);
+
 	if (_title.length() > 0)
 		set_label_sizes();
 }

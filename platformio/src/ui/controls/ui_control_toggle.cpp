@@ -17,7 +17,7 @@ const char *ui_control_toggle::get_state_text()
 	return (toggle_state ? toggle_text_on.c_str() : toggle_text_off.c_str());
 }
 
-bool ui_control_toggle::redraw(uint8_t fade_amount)
+bool ui_control_toggle::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	// This is busy if something else is drawing this
 	if (is_busy)
@@ -104,8 +104,7 @@ bool ui_control_toggle::redraw(uint8_t fade_amount)
 
 	// Blend and draw the sprite to the current ui_screen content sprite
 	squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
-	// squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-	ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+	squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
 
 	if (fade_amount == 32)
 		next_refresh = millis();
@@ -127,6 +126,7 @@ bool ui_control_toggle::process_touch(touch_event_t touch_event)
 {
 	if (touch_event.type == TOUCH_TAP)
 	{
+		// Serial.printf("checking bounds %d,%d for %s\n", touch_event.x, touch_event.y, get_title());
 		if (check_bounds(touch_event.x, touch_event.y))
 		{
 			toggle_state = !toggle_state;

@@ -14,7 +14,7 @@ class widgetJokes : public ui_window
 {
 	public:
 		// void draw(uint canvasid);
-		bool redraw(uint8_t fade_amount) override;
+		bool redraw(uint8_t fade_amount, int8_t tab_group = -1) override;
 		bool process_touch(touch_event_t touch_event);
 
 		void process_joke_data(bool success, const String &response);

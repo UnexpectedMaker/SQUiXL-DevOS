@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ui/ui_element.h"
+#include "ui/controls/ui_control_tabgroup.h"
 #include <map>
 #include <vector>
 #include "WiFi.h"
@@ -25,9 +26,12 @@ class ui_screen : public ui_element
 		void show_random_background(bool fade = true);
 
 		void refresh(bool forced = false, bool force_children = false);
+		void clear_content();
+
+		void set_page_tabgroup(ui_control_tabgroup *child);
 
 		// Vitrual Funcs
-		bool redraw(uint8_t fade_amount) override;
+		bool redraw(uint8_t fade_amount, int8_t tab_group = -1) override;
 
 		void calc_new_tints();
 		void set_can_cycle_back_color(bool state) { can_cycle_background_color = state; }
@@ -41,8 +45,13 @@ class ui_screen : public ui_element
 
 		void animate_pos(Directions direction, unsigned long duration, tween_ease_t ease, std::function<void()> completion_callback);
 
+		int8_t get_tab_group_index();
+		bool position_children(bool force_children = false);
+
 		uint16_t dark_tint[8];
 		uint16_t light_tint[8];
+
+		ui_control_tabgroup *ui_tab_group = nullptr;
 
 	protected:
 		int background_size = 0;
@@ -53,6 +62,8 @@ class ui_screen : public ui_element
 		uint8_t overlay_alpha = 0;
 		bool rebuild_mixed_sprite = false;
 		bool switching_screens = false;
+
+		int8_t current_tab_group = -1;
 
 		ui_screen *navigation[4] = {nullptr, nullptr, nullptr, nullptr};
 };

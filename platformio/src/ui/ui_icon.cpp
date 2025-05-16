@@ -19,7 +19,7 @@ void ui_icon::create(int16_t x, int16_t y, int16_t target_w, int16_t target_h, c
 	squixl.loadPNG_into(&_icon, 0, 0, ui_bolt, sizeof(ui_bolt));
 }
 
-bool ui_icon::redraw(uint8_t fade_amount)
+bool ui_icon::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 
 	if (fade_amount == 0)

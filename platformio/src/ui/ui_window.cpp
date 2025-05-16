@@ -135,7 +135,7 @@ void ui_window::draw_window_heading()
 // 	show(fade_in);
 // }
 
-bool ui_window::redraw(uint8_t fade_amount)
+bool ui_window::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	if (is_dirty_hard)
 	{

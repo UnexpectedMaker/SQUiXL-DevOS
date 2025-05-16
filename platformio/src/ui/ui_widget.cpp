@@ -103,7 +103,7 @@ void ui_widget::move(int16_t pos_x, int16_t pos_y, bool fade_in)
 	show(fade_in);
 }
 
-// void ui_widget::redraw(uint8_t fade_amount)
+// void ui_widget::redraw(uint8_t fade_amount, int8_t tab_group)
 // {
 // 	if (dirty)
 // 	{

@@ -1,8 +1,6 @@
 #include "ui/widgets/widget_time.h"
 #include "ui/ui_screen.h"
 
-// extern ui_screen *current_screen();
-
 void widgetTime::create(int16_t x, int16_t y, uint16_t color, TEXT_ALIGN alignment)
 {
 	_x = x;
@@ -12,34 +10,6 @@ void widgetTime::create(int16_t x, int16_t y, uint16_t color, TEXT_ALIGN alignme
 	_h = 0;
 
 	_align = alignment;
-
-	// _time_string = rtc.get_time_string_seconds(true, true).c_str();
-	// _date_string = rtc.get_date_string(true, false).c_str();
-
-	// Serial.println(_time_string.c_str());
-	// Serial.println(_date_string.c_str());
-	// calculate_text_size();
-
-	// // Work out new X,Y coordinates based on alingment
-	// if (_align == TEXT_ALIGN::ALIGN_LEFT)
-	// {
-	// 	_adj_x = _x;
-	// 	_adj_y = _y;
-	// }
-	// else if (_align == TEXT_ALIGN::ALIGN_CENTER)
-	// {
-	// 	_adj_x = _x - _w / 2;
-	// 	_adj_y = _y;
-	// }
-	// else if (_align == TEXT_ALIGN::ALIGN_RIGHT)
-	// {
-	// 	_adj_x = _x - _w;
-	// 	_adj_y = _y;
-	// }
-
-	// _sprite_content.createVirtual(_w, _h, NULL, true);
-	// _sprite_mixed.createVirtual(_w, _h, NULL, true);
-	// _sprite_clean.createVirtual(_w, _h, NULL, true);
 }
 
 void widgetTime::capture_clean_sprite()
@@ -48,7 +18,7 @@ void widgetTime::capture_clean_sprite()
 	is_dirty_hard = false;
 }
 
-bool widgetTime::redraw(uint8_t fade_amount)
+bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 
 	unsigned long start_time = millis();

@@ -1,7 +1,6 @@
 #include "ui/widgets/widget_jokes.h"
 
 #include "ui/ui_screen.h"
-// extern ui_screen *current_screen();
 
 using json = nlohmann::json;
 
@@ -98,7 +97,7 @@ void widgetJokes::process_joke_data(bool success, const String &response)
 	is_dirty = ok;
 }
 
-bool widgetJokes::redraw(uint8_t fade_amount)
+bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	bool was_dirty = false;
 

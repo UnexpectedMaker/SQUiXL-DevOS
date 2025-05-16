@@ -148,7 +148,7 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (fade_amount == 32 && should_redraw)
 	{
 		// squixl.lcd.drawSprite(_x, _y, &_sprite_clean, 1.0f, -1, DRAW_TO_LCD);
-		_sprite_content.fillScreen(TFT_MAGENTA);
+		// _sprite_content.fillScreen(TFT_MAGENTA);
 		squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
 
 		// Serial.printf("should_redraw? %d, fade_amount %d\n", should_redraw, fade_amount);
@@ -159,11 +159,11 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (is_dirty || is_dirty_hard)
 	{
 		// Read the region of the clean screen wallpaper into the local clean sprite
-		squixl.current_screen()->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_clean.getBuffer());
+		squixl.current_screen()->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_back.getBuffer());
 		delay(10);
-		_sprite_content.fillScreen(TFT_MAGENTA);
-		_sprite_content.fillRoundRect(0, 0, _w, _h, 7, _c, DRAW_TO_RAM); // white will be our mask
-		squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_back, _t, TFT_MAGENTA);
+		_sprite_clean.fillScreen(TFT_MAGENTA);
+		_sprite_clean.fillRoundRect(0, 0, _w, _h, 7, _c, DRAW_TO_RAM); // white will be our mask
+		squixl.lcd.blendSprite(&_sprite_clean, &_sprite_back, &_sprite_back, _t, TFT_MAGENTA);
 
 		_sprite_back.setTextColor(TFT_WHITE, -1);
 		_sprite_back.setFreeFont(UbuntuMono_R[1]);
@@ -216,14 +216,12 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 			_sprite_back.setTextColor(TFT_RED - 1);
 			_sprite_back.setCursor(10, 38);
 			_sprite_back.print("NOT ENABLED!");
-			Serial.println("NOT ENABLED!");
 		}
 		else if (!settings.config.open_weather.has_key())
 		{
 			_sprite_back.setTextColor(TFT_RED - 1);
 			_sprite_back.setCursor(10, 38);
 			_sprite_back.print("NO API KEY");
-			Serial.println("NO API KEY");
 		}
 		else
 		{

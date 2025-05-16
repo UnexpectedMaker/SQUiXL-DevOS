@@ -104,20 +104,19 @@ bool widgetWiFiManager::process_touch(touch_event_t touch_event)
 {
 	if (touch_event.type == TOUCH_TAP)
 	{
-		// if (check_bounds(touch_event.x, touch_event.y))
-		// {
-		// 	if (millis() - next_click_update > 1000)
-		// 	{
-		// 		next_click_update = millis();
-		// 		if (!wifi_controller.is_connected())
-		// 		{
-		// 			Serial.println("Open the wifi manager UI");
-		// 			audio.play_tone(300, 2);
+		if (check_bounds(touch_event.x, touch_event.y))
+		{
+			if (millis() - next_click_update > 1000)
+			{
+				next_click_update = millis();
 
-		// 			return true;
-		// 		}
-		// 	}
-		// }
+				if (back_screen != nullptr)
+					squixl.set_current_screen(back_screen);
+				audio.play_tone(300, 2);
+
+				return true;
+			}
+		}
 	}
 
 	return false;

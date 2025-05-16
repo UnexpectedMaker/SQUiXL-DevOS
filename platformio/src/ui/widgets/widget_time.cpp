@@ -125,41 +125,12 @@ bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 	return true;
 }
 
-void widgetTime::slow_fade()
-{
-	if (fade_dir)
-	{
-		current_fade += 2;
-		if (current_fade > 32)
-		{
-			current_fade = 32;
-			fade_dir = !fade_dir;
-		}
-	}
-	else
-	{
-		current_fade -= 2;
-		if (current_fade < 2)
-		{
-			current_fade = 0;
-			fade_dir = !fade_dir;
-		}
-	}
-
-	squixl.lcd.blendSprite(&_sprite_content, &_sprite_mixed, &_sprite_back, current_fade);
-	squixl.lcd.drawSprite(_adj_x, _adj_y, &_sprite_back, 1.0f, 0x0, DRAW_TO_LCD);
-}
-
 // Private
 
 bool widgetTime::calculate_text_size(bool forced)
 {
 	int16_t tempx;
 	int16_t tempy;
-	// uint16_t timew;
-	// // uint16_t timeh;
-	// uint16_t datew;
-	// uint16_t dateh;
 
 	bool changed = false;
 

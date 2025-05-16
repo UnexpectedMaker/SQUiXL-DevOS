@@ -67,74 +67,6 @@ void ui_window::draw_window_heading()
 	// Serial.println("Post draw_window_heading");
 }
 
-// void ui_window::show(bool fade_in)
-// {
-// 	// capture clean backgrounds again
-// 	squixl.lcd.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_clean.getBuffer());
-// 	squixl.lcd.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_back.getBuffer());
-
-// 	// DO we have any background blur to do?
-// 	if (_b > 0)
-// 	{
-// 		// Serial.printf("Bluring with a count of %d\n", _b);
-// 		for (int itter = 0; itter < _b; itter++)
-// 		{
-// 			_sprite_back.blurGaussian();
-// 		}
-// 	}
-
-// 	// Do we have transparency?
-// 	if (_t > 0)
-// 	{
-// 		squixl.lcd.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_content.getBuffer());
-
-// 		// _sprite_content.fillScreen(TFT_BLACK, DRAW_TO_RAM);
-// 		_sprite_content.fillRoundRect(0, 0, _w, _h, 7, _c, DRAW_TO_RAM); // white will be our mask
-
-// 		squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_back, _t);
-
-// 		_sprite_back.setTextColor(TFT_WHITE, -1);
-// 		_sprite_back.setFreeFont(_font);
-// 		int16_t x1, y1;
-// 		_sprite_back.getTextBounds(_title.c_str(), _x, _y, &x1, &y1, &_text_width, &_text_height);
-// 		_sprite_back.setCursor(_w / 2 - _text_width / 2, _text_height + 8);
-// 		_sprite_back.print(_title.c_str());
-
-// 		for (int w = 0; w < ui_children.size(); w++)
-// 		{
-// 			ui_children[w]->set_dirty(true);
-// 			ui_children[w]->redraw(32);
-// 		}
-
-// 		if (fade_in)
-// 		{
-// 			for (uint8_t u8Alpha = 0; u8Alpha < 32; u8Alpha++)
-// 			{
-// 				squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, u8Alpha);
-// 				squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, 0x0, DRAW_TO_LCD);
-// 				delay(5);
-// 			}
-// 		}
-// 		else
-// 		{
-// 			// squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, 32);
-// 			squixl.lcd.drawSprite(_x, _y, &_sprite_back, 1.0f, 0x0, DRAW_TO_LCD);
-// 		}
-// 	}
-// }
-
-// void ui_window::move(int16_t pos_x, int16_t pos_y, bool fade_in)
-// {
-// 	// replace window background with clean sprite captures previously
-// 	squixl.lcd.drawSprite(_x, _y, &_sprite_clean, 1.0f, -1, DRAW_TO_LCD);
-
-// 	// Adjust the new x,y position
-// 	_x = pos_x;
-// 	_y = pos_y;
-
-// 	show(fade_in);
-// }
-
 bool ui_window::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	if (is_dirty_hard)
@@ -179,9 +111,6 @@ bool ui_window::redraw(uint8_t fade_amount, int8_t tab_group)
 	}
 	else
 	{
-
-		// Serial.printf("Doing window child thingo om %d children\n", children.size());
-
 		// squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, 32);
 		squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, 0x0, DRAW_TO_LCD);
 		next_refresh = millis() + refresh_interval;

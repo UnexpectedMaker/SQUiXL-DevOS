@@ -128,23 +128,6 @@ bool widgetBattery::redraw(uint8_t fade_amount, int8_t tab_group)
 		next_refresh = millis();
 	}
 
-	// if (wifi_controller.is_connected())
-	// 	squixl.lcd.pushImage(padding.left + 42, padding.top, 16, 16, (uint16_t *)&icon_wifi_on, DRAW_TO_LCD);
-	// else
-	// 	squixl.lcd.pushImage(padding.left + 42, padding.top, 16, 16, (uint16_t *)&icon_wifi_off, DRAW_TO_LCD);
-	// Serial.printf("Bat Tick: %d\n", squixl.vbus_present());
-	// if (fade_amount < 32)
-	// {
-	// 	squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, fade_amount);
-	// 	squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, 0x0, DRAW_TO_LCD);
-	// }
-	// else
-	// {
-	// 	squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, 32);
-	// 	squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, 0x0, DRAW_TO_LCD);
-	// 	next_refresh = millis();
-	// }
-
 	is_dirty = false;
 	is_busy = false;
 	next_refresh = millis();

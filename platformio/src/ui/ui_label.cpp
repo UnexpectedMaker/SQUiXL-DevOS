@@ -143,31 +143,6 @@ void ui_label::update(const char *title)
 	// return true;
 }
 
-void ui_label::slow_fade()
-{
-	if (fade_dir)
-	{
-		current_fade += 2;
-		if (current_fade > 32)
-		{
-			current_fade = 32;
-			fade_dir = !fade_dir;
-		}
-	}
-	else
-	{
-		current_fade -= 2;
-		if (current_fade < 2)
-		{
-			current_fade = 0;
-			fade_dir = !fade_dir;
-		}
-	}
-
-	squixl.lcd.blendSprite(&_sprite_content, &_sprite_mixed, &_sprite_back, current_fade);
-	squixl.lcd.drawSprite(_adj_x, _adj_y, &_sprite_back, 1.0f, 0x0, DRAW_TO_LCD);
-}
-
 void ui_label::show(bool fade)
 {
 	if (fade)

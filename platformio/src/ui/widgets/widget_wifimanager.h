@@ -13,9 +13,13 @@ class widgetWiFiManager : public ui_element
 		void capture_clean_sprite() override;
 		bool process_touch(touch_event_t touch_event) override;
 
+		void set_back_screen(ui_screen *screen) { back_screen = screen; };
+
 	private:
 		bool icons_loaded = false;
 		BB_SPI_LCD wifi_icons[5];
+
+		ui_screen *back_screen = nullptr;
 };
 
 extern widgetWiFiManager widget_wifimanager;

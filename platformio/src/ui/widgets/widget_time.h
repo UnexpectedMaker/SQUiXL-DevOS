@@ -12,7 +12,6 @@ class widgetTime : public ui_element
 		// Virtual Funcs
 		bool redraw(uint8_t fade_amount, int8_t tab_group = -1) override;
 		bool process_touch(touch_event_t touch_event) override;
-		void slow_fade();
 
 	protected:
 		int16_t _adj_x = 0; // alignment adjusted draw pos x

@@ -15,7 +15,6 @@ class ui_label : public ui_element
 
 		// Virtual Funcs
 		bool redraw(uint8_t fade_amount, int8_t tab_group = -1) override;
-		void slow_fade();
 
 	protected:
 		int16_t _adj_x; // alignment adjusted draw pos x

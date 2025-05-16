@@ -29,14 +29,11 @@ void ui_screen::setup(uint16_t _back_color, bool add)
 
 	back_color = _back_color;
 
-	_sprite_clean.createVirtual(480, 480, NULL, true);
-	_sprite_clean.fillScreen(back_color);
+	// _sprite_back.createVirtual(480, 480, NULL, true);
+	// _sprite_back.fillScreen(back_color);
 
-	_sprite_back.createVirtual(480, 480, NULL, true);
-	_sprite_back.fillScreen(back_color);
-
-	_sprite_content.createVirtual(480, 480, NULL, true);
-	_sprite_content.fillScreen(TFT_MAGENTA);
+	// _sprite_content.createVirtual(480, 480, NULL, true);
+	// _sprite_content.fillScreen(TFT_MAGENTA);
 
 	set_refresh_interval(20);
 
@@ -54,6 +51,30 @@ void ui_screen::calc_new_tints()
 		light_tint[i] = lighten565(back_color, c);
 		c += 0.1;
 	}
+}
+
+void ui_screen::create_buffers()
+{
+	if (!_sprite_back.getBuffer())
+	{
+		_sprite_back.createVirtual(480, 480, NULL, true);
+		_sprite_back.fillScreen(back_color);
+	}
+
+	if (!_sprite_content.getBuffer())
+	{
+		_sprite_content.createVirtual(480, 480, NULL, true);
+		_sprite_content.fillScreen(TFT_MAGENTA);
+	}
+}
+
+void ui_screen::clear_buffers()
+{
+	if (!dont_destroy_back_sprite && _sprite_back.getBuffer())
+		_sprite_back.freeBuffer();
+
+	if (_sprite_content.getBuffer())
+		_sprite_content.freeBuffer();
 }
 
 void ui_screen::set_navigation(Directions from, ui_screen *screen, bool set_reversed)
@@ -77,6 +98,20 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 
 	int w, h, bpp;
 
+	_sprite_clean.createVirtual(480, 480, NULL, true);
+
+	// if (!_sprite_back.getBuffer())
+	// {
+	// 	_sprite_back.createVirtual(480, 480, NULL, true);
+	// 	_sprite_back.fillScreen(back_color);
+	// }
+
+	// if (!_sprite_content.getBuffer())
+	// {
+	// 	_sprite_content.createVirtual(480, 480, NULL, true);
+	// 	_sprite_content.fillScreen(TFT_MAGENTA);
+	// }
+
 	bool has_content = false;
 	if (background_size == 0)
 	{
@@ -96,6 +131,8 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 		// Serial.printf("JPG info: w %d, h %d, bpp %d\n", w, h, bpp);
 
 		squixl.jd.loadJPEG(&_sprite_back, 0, 0, jpg, jpg_size);
+
+		dont_destroy_back_sprite = true;
 
 		if (fade_in)
 		{
@@ -133,6 +170,8 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 	{
 		Serial.printf("JPG not loaded - size was %d :(\n", jpg_size);
 	}
+
+	_sprite_clean.freeBuffer();
 
 	/*
 	TODO: Need to add tab group support to this?
@@ -407,6 +446,18 @@ bool ui_screen::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	unsigned long start_time = millis();
 
+	// if (!_sprite_back.getBuffer())
+	// {
+	// 	_sprite_back.createVirtual(480, 480, NULL, true);
+	// 	_sprite_back.fillScreen(back_color);
+	// }
+
+	// if (!_sprite_content.getBuffer())
+	// {
+	// 	_sprite_content.createVirtual(480, 480, NULL, true);
+	// 	_sprite_content.fillScreen(TFT_MAGENTA);
+	// }
+
 	if (fade_amount < 32)
 	{
 		if (blend_transparency)
@@ -418,7 +469,6 @@ bool ui_screen::redraw(uint8_t fade_amount, int8_t tab_group)
 	{
 		if (squixl.switching_screens)
 		{
-			// squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_mixed, 32, TFT_MAGENTA);
 			squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
 		}
 		else
@@ -427,8 +477,6 @@ bool ui_screen::redraw(uint8_t fade_amount, int8_t tab_group)
 				squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &squixl.lcd, 32, TFT_MAGENTA);
 			else
 				squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &squixl.lcd, 32);
-
-			rebuild_mixed_sprite = true;
 		}
 
 		next_refresh = millis();
@@ -498,10 +546,6 @@ void ui_screen::animate_pos(Directions direction, unsigned long duration, tween_
 	unsigned long start_time = millis();
 	float t = 0.0;
 
-	// Initially force the screen to the start position and make it redarw to ensure it's got contents on it if it's the first time viewing it.
-	// _x = (int)from_x;
-	// _y = (int)from_y;
-
 	bool child_dirty = position_children(true);
 
 	// we only need this sprite temporarly if we are blending content
@@ -554,7 +598,6 @@ void ui_screen::animate_pos(Directions direction, unsigned long duration, tween_
 		_y = (int)current_y;
 		redraw(32);
 
-		// Serial.printf("(%d, %d) @ %f\n", _x, _y, t);
 		delay(5);
 	}
 
@@ -564,5 +607,4 @@ void ui_screen::animate_pos(Directions direction, unsigned long duration, tween_
 
 	squixl.switching_screens = false;
 	squixl.current_screen()->refresh(true, true);
-	// Serial.println("Anim complete");
 }

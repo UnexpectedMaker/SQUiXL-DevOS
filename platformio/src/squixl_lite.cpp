@@ -379,6 +379,7 @@ void SQUiXL_LITE::show_error(String error, bool fade)
 	{
 		squixl_lite.lcd.drawSprite(0, 0, &sprite, 1.0, -1);
 	}
+	sprite.freeBuffer();
 }
 
 bool SQUiXL_LITE::process_touch_lite(uint16_t *x, uint16_t *y)

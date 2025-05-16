@@ -28,6 +28,9 @@ class ui_screen : public ui_element
 		void refresh(bool forced = false, bool force_children = false);
 		void clear_content();
 
+		void create_buffers();
+		void clear_buffers();
+
 		void set_page_tabgroup(ui_control_tabgroup *child);
 
 		// Vitrual Funcs
@@ -60,10 +63,11 @@ class ui_screen : public ui_element
 
 		bool blend_transparency = true;
 		uint8_t overlay_alpha = 0;
-		bool rebuild_mixed_sprite = false;
 		bool switching_screens = false;
 
 		int8_t current_tab_group = -1;
+
+		bool dont_destroy_back_sprite = false;
 
 		ui_screen *navigation[4] = {nullptr, nullptr, nullptr, nullptr};
 };

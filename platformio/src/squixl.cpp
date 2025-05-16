@@ -538,7 +538,13 @@ bool SQUiXL::process_touch_full()
 
 void SQUiXL::set_current_screen(ui_screen *screen)
 {
+	if (_current_screen != nullptr)
+		_current_screen->clear_buffers();
+
 	_current_screen = screen;
+	_current_screen->create_buffers();
+
+	log_heap("Screen Switch");
 }
 
 ui_screen *SQUiXL::current_screen()

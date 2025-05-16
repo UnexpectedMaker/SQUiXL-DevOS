@@ -139,16 +139,6 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	if (is_dirty_hard)
 	{
-		// Serial.printf("\n***Hard Redraw JOKE Window with %d jokes loaded, fade: %d - is null? %d\n\n", stored_jokes.size(), fade_amount, (squixl.current_screen() == nullptr));
-
-		// if (!_sprite_clean.getBuffer())
-		// 	_sprite_clean.createVirtual(_w, _h, NULL, true);
-		// if (!_sprite_back.getBuffer())
-		// 	_sprite_back.createVirtual(_w, _h, NULL, true);
-		// if (!_sprite_mixed.getBuffer())
-		// 	_sprite_mixed.createVirtual(_w, _h, NULL, true);
-
-		// Serial.println("Post create jokes");
 
 		squixl.current_screen()->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_clean.getBuffer());
 		squixl.current_screen()->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_back.getBuffer());
@@ -197,23 +187,6 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 			is_aniamted_cached = true;
 		}
 	}
-
-	// if (fade_amount < 32)
-	// {
-	// 	squixl.lcd.blendSprite(&_sprite_joke, &_sprite_back, &_sprite_mixed, fade_amount, TFT_MAGENTA);
-	// 	squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_LCD);
-	// 	// Serial.printf("Redraw fading JOKE Window fade: %d\n", fade_amount);
-	// }
-	// else
-	// {
-	// 	squixl.lcd.blendSprite(&_sprite_joke, &_sprite_back, &_sprite_mixed, 32, TFT_MAGENTA);
-	// 	squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_LCD);
-	// 	// Serial.printf("Redraw Solid JOKE Window fade: %d\n", fade_amount);
-	// 	next_refresh = millis();
-	// }
-
-	// Serial.println("Pre blend jokes");
-	// Serial.printf("current_screen nullptr ? %d, _sprite_back? %d, _sprite_mixed? %d, _sprite_joke? %d\n", (squixl.current_screen() == nullptr), _sprite_back.getBuffer(), _sprite_mixed.getBuffer(), _sprite_joke.getBuffer());
 
 	if (fade_amount < 32)
 	{

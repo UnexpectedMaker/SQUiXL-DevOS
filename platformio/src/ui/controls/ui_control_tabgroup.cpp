@@ -30,7 +30,7 @@ bool ui_control_tabgroup::process_touch(touch_event_t touch_event)
 			{
 				current_tab = new_tab;
 
-				Serial.printf("New tab group tab is %d\n", current_tab);
+				// Serial.printf("New tab group tab is %d\n", current_tab);
 
 				squixl.current_screen()->clear_content();
 				squixl.current_screen()->refresh(true, true);

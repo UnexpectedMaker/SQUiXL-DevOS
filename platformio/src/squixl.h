@@ -168,7 +168,7 @@ class SQUiXL : public SQUiXL_LITE
 		{
 			Serial.printf("\nHeap Log: %s\nHeap Size: %u of %u\n", title, ESP.getFreeHeap(), ESP.getHeapSize());
 			Serial.printf("Min Heap Size: %u, Max Alloc Heap Size: %u, ", ESP.getMinFreeHeap(), ESP.getMaxAllocHeap());
-			Serial.printf("PSRAM Size: %u\n\n", ESP.getFreePsram());
+			Serial.printf("PSRAM Free: %u\n\n", ESP.getFreePsram());
 		}
 
 		bool showing_settings = false;

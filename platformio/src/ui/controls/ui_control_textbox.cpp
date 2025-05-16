@@ -41,7 +41,7 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 		uint8_t string_len = _text.length();
 		string_len_pixels = string_len * char_width;
 		// string_len_pixels = constrain(string_len_pixels, 0, _w);
-		Serial.printf("string %s len %d, pixels %d, x %d, w %d, pos %d\n", _text.c_str(), string_len, string_len_pixels, _x, _w, (_w / 2) - (string_len_pixels / 2));
+		// Serial.printf("string %s len %d, pixels %d, x %d, w %d, pos %d\n", _text.c_str(), string_len, string_len_pixels, _x, _w, (_w / 2) - (string_len_pixels / 2));
 	}
 
 	_sprite_content.fillRoundRect(0, 0, _w, _h, 8, squixl.current_screen()->dark_tint[1], DRAW_TO_RAM);

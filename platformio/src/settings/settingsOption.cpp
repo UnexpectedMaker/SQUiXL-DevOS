@@ -485,6 +485,29 @@ String SettingsOptionString::get()
 	return *setting_ref;
 }
 
+void SettingsOptionString::set_min_max(int min, int max)
+{
+	length_min = min;
+	length_max = max;
+}
+
+void SettingsOptionString::get_min_max(int *min, int *max)
+{
+	*min = length_min;
+	*max = length_max;
+}
+
+bool SettingsOptionString::validate()
+{
+	int len = (*setting_ref).length();
+	if (length_max == -1)
+	{
+		return (len >= length_min);
+	}
+
+	return (len >= length_min && len <= length_max);
+}
+
 String SettingsOptionString::generate_html(uint16_t index)
 {
 	// return "<div><span>SettingsOptionString for " + fieldname + "</span></div>";

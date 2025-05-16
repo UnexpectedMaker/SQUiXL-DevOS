@@ -18,6 +18,7 @@ class SettingsOptionBase
 		// virtual methods
 		virtual ~SettingsOptionBase() = default;
 		virtual String generate_html(uint16_t index) { return ""; }
+		virtual bool validate() { return true; }
 
 		enum Type
 		{
@@ -254,7 +255,7 @@ class SettingsOptionBool : public SettingsOptionBase
 class SettingsOptionString : public SettingsOptionBase
 {
 	public:
-		SettingsOptionString(String *val, int _group, const String &_fn, const String &pl = "", bool req = true) : setting_ref(val), required_field(req)
+		SettingsOptionString(String *val, int _group, const String &_fn, int len_min = 0, int len_max = -1, const String &pl = "", bool req = true) : setting_ref(val), required_field(req)
 		{
 			group = _group;
 			fieldname = _fn;
@@ -271,11 +272,16 @@ class SettingsOptionString : public SettingsOptionBase
 		bool update(String *val);
 		String get();
 		String generate_html(uint16_t index);
+		void set_min_max(int min, int max);
+		void get_min_max(int *min, int *max);
+		bool validate() override;
 
 	private:
 		String *setting_ref = nullptr;
 		String placeholder = "";
 		bool required_field = true;
+		int length_min = 0;
+		int length_max = -1;
 };
 
 class SettingsOptionColor565 : public SettingsOptionBase

@@ -64,6 +64,9 @@ class Keyboard
 		uint8_t keychar_width = 0;
 		uint8_t keychar_height = 0;
 
+		uint8_t titlechar_width = 0;
+		uint8_t titlechar_height = 0;
+
 		uint16_t touch_x = 0;
 		uint16_t touch_y = 0;
 

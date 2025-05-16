@@ -136,12 +136,13 @@ void Keyboard::show(bool state, ui_control_textbox *target)
 
 	if (state && !_sprite_keyboard.getBuffer())
 	{
-		_sprite_keyboard.createVirtual(480, 280, NULL, true);
-		_sprite_background.createVirtual(480, 280, NULL, true);
-		squixl.lcd.readImage(0, 200, 480, 280, (uint16_t *)_sprite_background.getBuffer());
+		_sprite_keyboard.createVirtual(480, 300, NULL, true);
+		_sprite_background.createVirtual(480, 300, NULL, true);
+		squixl.lcd.readImage(0, 180, 480, 300, (uint16_t *)_sprite_background.getBuffer());
 		squixl.loadPNG_into(&_sprite_keyboard, 0, 0, kb_empty, sizeof(kb_empty));
 
 		_sprite_keyboard.setFreeFont(UbuntuMono_R[2]);
+		squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 1, &titlechar_width, &titlechar_height);
 		squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 2, &char_width, &char_height);
 		squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 3, &keychar_width, &keychar_height);
 	}
@@ -152,17 +153,13 @@ void Keyboard::show(bool state, ui_control_textbox *target)
 		_target = target;
 		_edited_text = _target->get_text();
 
-		// delay(10);
 		// Serial.printf("Show Virtual KB? %d for %s\n", state, _target->get_title());
 		showing = true;
 		redraw_kayboard();
-		// print_text();
-		// squixl.lcd.drawSprite(0, 200, &_sprite_keyboard, 1.0, -1);
+		can_flash = true;
 	}
 	else
 	{
-		// squixl.lcd.drawSprite(0, 200, &_sprite_background, 1.0, -1);
-		// Serial.println("Hide Virtual KB");
 		_target = nullptr;
 		showing = false;
 		can_flash = false;
@@ -290,6 +287,15 @@ void Keyboard::update(touch_event_t t)
 void Keyboard::redraw_kayboard()
 {
 	squixl.loadPNG_into(&_sprite_keyboard, 0, 0, kb_empty, sizeof(kb_empty));
+	// set title
+	std::string title = _target->get_title();
+	int pixel_len = title.length() * titlechar_width;
+	_sprite_keyboard.setFreeFont(UbuntuMono_R[1]);
+	_sprite_keyboard.setTextColor(TFT_WHITE, -1);
+	_sprite_keyboard.setCursor(240 - (pixel_len / 2), 5 + titlechar_height);
+	_sprite_keyboard.print(_target->get_title());
+
+	// setup keys
 	_sprite_keyboard.setFreeFont(UbuntuMono_R[3]);
 	_sprite_keyboard.setTextColor(TFT_WHITE, -1);
 
@@ -304,13 +310,13 @@ void Keyboard::redraw_kayboard()
 				continue;
 
 			std::string label = k.label[is_upper ? 1 : 0];
-			uint16_t pos_x = k.x;
-			uint16_t pos_y = k.y;
+			// uint16_t pos_x = k.x;
+			uint16_t pos_y = k.y + 20; // new offset for UI_control title
 
 			uint8_t str_len = label.length();
 			uint16_t pxls = str_len * keychar_width;
 
-			_sprite_keyboard.setCursor(k.x + (k.w / 2) - (pxls / 2), k.y + (k.h / 2) + (keychar_height / 2));
+			_sprite_keyboard.setCursor(k.x + (k.w / 2) - (pxls / 2), pos_y + (k.h / 2) + (keychar_height / 2));
 			// Serial.printf("adding key %s to KB\n", label.c_str());
 			_sprite_keyboard.print(label.c_str());
 		}
@@ -330,9 +336,9 @@ void Keyboard::print_text()
 	// Serial.printf("text box string %s len %d, pixels %d, x %d, w %d, pos %d\n", _edited_text.c_str(), string_len, string_len_pixels, _x, _w, (_w / 2) - (string_len_pixels / 2));
 
 	_sprite_keyboard.setFreeFont(UbuntuMono_R[2]);
-	_sprite_keyboard.fillRect(10, 10, 460, 34, RGB(60, 60, 59));
+	_sprite_keyboard.fillRect(10, 30, 460, 34, RGB(60, 60, 59));
 	_sprite_keyboard.setTextColor(TFT_WHITE, -1);
-	_sprite_keyboard.setCursor(string_start_pos_x, 26 + (char_height / 2));
+	_sprite_keyboard.setCursor(string_start_pos_x, 46 + (char_height / 2));
 	_sprite_keyboard.print(_edited_text.c_str());
 
 	if (cursor_pos < 0)
@@ -345,7 +351,7 @@ void Keyboard::print_text()
 	// for (int c = 128; c < 140; c++)
 	// 	_sprite_keyboard.print((char)c);
 
-	squixl.lcd.drawSprite(0, 200, &_sprite_keyboard, 1.0, -1);
+	squixl.lcd.drawSprite(0, 180, &_sprite_keyboard, 1.0, -1);
 }
 
 void Keyboard::move_cursor(uint16_t pos)

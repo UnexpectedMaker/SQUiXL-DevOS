@@ -162,13 +162,15 @@ class SQUiXL : public SQUiXL_LITE
 		const uint16_t version_build = 1;
 		uint16_t version_latest = 0;
 
+		void process_version(bool success, const String &response);
 		bool update_available() { return (version_latest > version_build); }
 
 		void log_heap(String title)
 		{
 			Serial.printf("\nHeap Log: %s\nHeap Size: %u of %u\n", title, ESP.getFreeHeap(), ESP.getHeapSize());
 			Serial.printf("Min Heap Size: %u, Max Alloc Heap Size: %u, ", ESP.getMinFreeHeap(), ESP.getMaxAllocHeap());
-			Serial.printf("PSRAM Free: %u\n\n", ESP.getFreePsram());
+			Serial.printf("PSRAM Free: %u\n", ESP.getFreePsram());
+			Serial.printf("Largest PSRAM Chunk Free %u\n\n", heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
 		}
 
 		bool showing_settings = false;

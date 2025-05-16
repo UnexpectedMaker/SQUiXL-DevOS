@@ -58,6 +58,145 @@ ui_control_toggle toggle_haptics_enable;
 ui_control_toggle toggle_ow_enable;
 ui_control_slider slider_ow_refresh;
 ui_control_textbox text_ow_api_key;
+ui_control_textbox text_ow_country;
+ui_control_textbox text_ow_city;
+
+void create_ui_elements()
+{
+
+	// screen_wifi_manager.setup(0x5AEB, false);
+	// widget_wifimanager.create();
+	// // widget_wifimanager.set_back_screen(&screen_main);
+	// screen_wifi_manager.add_child_ui(&widget_wifimanager);
+	// wifiSetup.set_screen(&screen_wifi_manager);
+
+	/*
+	Setup Settings Screen
+	*/
+	screen_settings.setup(0x5AEB, false);
+
+	// Settings are grouped by tabs, so we setup the tab group here with a screen size
+	// and then pass it a list of strings for each group
+	//
+	settings_tab_group.create(0, 0, 480, 40);
+	settings_tab_group.set_tabs(std::vector<std::string>{"Time", "WiFi", "Sound", "Haptics", "Weather"});
+	screen_settings.set_page_tabgroup(&settings_tab_group);
+
+	// Time
+	toggle_time_mode.create_on_grid(1, 0, 1, 1, "TIME FORMAT");
+	toggle_time_mode.set_toggle_text("12H", "24H");
+	toggle_time_mode.set_options_data(&settings.setting_time_24hour);
+	settings_tab_group.add_child_ui(&toggle_time_mode, 0);
+
+	toggle_date_mode.create_on_grid(2, 0, 1, 1, "DATE FORMAT");
+	toggle_date_mode.set_toggle_text("D-M-Y", "M-D-Y");
+	toggle_date_mode.set_options_data(&settings.setting_time_dateformat);
+	settings_tab_group.add_child_ui(&toggle_date_mode, 0);
+
+	slider_UTC.create_on_grid(0, 1, 3, 1);
+	slider_UTC.set_value_type(VALUE_TYPE::INT);
+	slider_UTC.set_options_data(&settings.settings_utc_offset);
+	settings_tab_group.add_child_ui(&slider_UTC, 0);
+
+	// WiFi
+	toggle_OTA_updates.create_on_grid(0, 0, 1, 1, "ENABLE OTA");
+	toggle_OTA_updates.set_toggle_text("NO", "YES");
+	toggle_OTA_updates.set_options_data(&settings.setting_OTA_start);
+	settings_tab_group.add_child_ui(&toggle_OTA_updates, 1);
+
+	toggle_Notify_updates.create_on_grid(1, 0, 1, 1, "NOTIFY UPDATES");
+	toggle_Notify_updates.set_toggle_text("NO", "YES");
+	toggle_Notify_updates.set_options_data(&settings.setting_wifi_check_updates);
+	settings_tab_group.add_child_ui(&toggle_Notify_updates, 1);
+
+	// Sound
+	toggle_audio_ui.create_on_grid(0, 0, 1, 1, "UI BEEPS");
+	toggle_audio_ui.set_toggle_text("NO", "YES");
+	toggle_audio_ui.set_options_data(&settings.setting_audio_ui);
+	settings_tab_group.add_child_ui(&toggle_audio_ui, 2);
+
+	toggle_audio_alarm.create_on_grid(1, 0, 1, 1, "ALARMS");
+	toggle_audio_alarm.set_toggle_text("NO", "YES");
+	toggle_audio_alarm.set_options_data(&settings.setting_audio_alarm);
+	settings_tab_group.add_child_ui(&toggle_audio_alarm, 2);
+
+	slider_volume.create_on_grid(0, 1, 2, 1);
+	slider_volume.set_value_type(VALUE_TYPE::FLOAT);
+	slider_volume.set_options_data(&settings.setting_audio_volume);
+	settings_tab_group.add_child_ui(&slider_volume, 2);
+
+	// Haptics
+
+	toggle_haptics_enable.create_on_grid(0, 0, 1, 1, "ENABLED");
+	toggle_haptics_enable.set_toggle_text("NO", "YES");
+	toggle_haptics_enable.set_options_data(&settings.setting_haptics_enabled);
+	settings_tab_group.add_child_ui(&toggle_haptics_enable, 3);
+
+	// Open Weather
+	// Create a Toggle frmo the widget_ow_enabled sewtting
+	toggle_ow_enable.create_on_grid(0, 1, 1, 1, "ENABLE");
+	toggle_ow_enable.set_toggle_text("NO", "YES");
+	toggle_ow_enable.set_options_data(&settings.widget_ow_enabled);
+	settings_tab_group.add_child_ui(&toggle_ow_enable, 4);
+
+	// Create an Int Slider from the widget_ow_poll_interval setting
+	slider_ow_refresh.create_on_grid(1, 1, 2, 1);
+	slider_ow_refresh.set_value_type(VALUE_TYPE::INT);
+	slider_ow_refresh.set_options_data(&settings.widget_ow_poll_interval);
+	settings_tab_group.add_child_ui(&slider_ow_refresh, 4);
+
+	// Create an Text Box the widget_ow_apikey setting
+	text_ow_api_key.create_on_grid(0, 2, 3, 1, "OPEN WEATHER API KEY");
+	text_ow_api_key.set_options_data(&settings.widget_ow_apikey);
+	settings_tab_group.add_child_ui(&text_ow_api_key, 4);
+
+	// Create an Text Box the widget_ow_apikey setting
+	text_ow_country.create_on_grid(0, 3, 1, 1, "COUNTRY CODE");
+	text_ow_country.set_options_data(&settings.setting_country);
+	settings_tab_group.add_child_ui(&text_ow_country, 4);
+
+	// Create an Text Box the widget_ow_apikey setting
+	text_ow_city.create_on_grid(1, 3, 2, 1, "CITY");
+	text_ow_city.set_options_data(&settings.setting_city);
+	settings_tab_group.add_child_ui(&text_ow_city, 4);
+
+	screen_settings.set_can_cycle_back_color(true);
+	screen_settings.set_refresh_interval(0);
+
+	/*
+	Setup Main Screen
+	*/
+	screen_main.setup(TFT_BLACK, true);
+
+	widget_battery.create(10, 0, TFT_WHITE);
+	widget_battery.set_refresh_interval(1000);
+	screen_main.add_child_ui(&widget_battery);
+
+	widget_time.create(470, 10, TFT_WHITE, TEXT_ALIGN::ALIGN_RIGHT);
+	widget_time.set_refresh_interval(1000);
+	screen_main.add_child_ui(&widget_time);
+
+	widget_jokes.create(10, 370, 460, 100, TFT_BLACK, 12, 0, "JOKES");
+	widget_jokes.set_refresh_interval(5000);
+	screen_main.add_child_ui(&widget_jokes);
+
+	widget_ow.create(245, 80, 225, 72, TFT_BLACK, 16, 0, "CURRENT WEATHER");
+	widget_ow.set_title_alignment(TEXT_ALIGN::ALIGN_LEFT);
+	widget_ow.set_refresh_interval(1000);
+	screen_main.add_child_ui(&widget_ow);
+
+	/*
+	Setup MQTT Screen
+	*/
+
+	screen_mqtt.setup(TFT_BLUE, true);
+	widget_mqtt_sensors.create(10, 120, 460, 240, TFT_BLACK, 12, 0, "MQTT Sensors");
+	widget_mqtt_sensors.set_refresh_interval(1000);
+	screen_mqtt.add_child_ui(&widget_mqtt_sensors);
+
+	screen_main.set_navigation(Directions::LEFT, &screen_mqtt, true);
+	screen_main.set_navigation(Directions::DOWN, &screen_settings, true);
+}
 
 void setup()
 {
@@ -170,6 +309,16 @@ void setup()
 			rtc.set_time_from_NTP(settings.config.utc_offset);
 		}
 	}
+	else
+	{
+		if (settings.config.wifi_check_for_updates)
+		{
+			// If the user has opted in to check for firmware update notifications, kick off the check.
+			// This only happens once per boot up right now.
+			// TODO: Look at triggering this any time the user switches it on, if it was off?
+			wifi_controller.add_to_queue("https://squixl.io/latestver", [](bool success, const String &response) { squixl.process_version(success, response); });
+		}
+	}
 
 	Serial.printf("\n>>> Setup done in %0.2f ms\n\n", (millis() - timer));
 
@@ -197,128 +346,8 @@ void loop()
 
 		squixl.cache_text_sizes();
 
-		// screen_wifi_manager.setup(0x5AEB, false);
-		// widget_wifimanager.create();
-		// // widget_wifimanager.set_back_screen(&screen_main);
-		// screen_wifi_manager.add_child_ui(&widget_wifimanager);
-		// wifiSetup.set_screen(&screen_wifi_manager);
-
-		/*
-		Setup Settings Screen
-		*/
-		screen_settings.setup(0x5AEB, false);
-
-		// Settings are grouped by tabs, so we setup the tab group here with a screen size
-		// and then pass it a list of strings for each group
-		//
-		settings_tab_group.create(0, 0, 480, 40);
-		settings_tab_group.set_tabs(std::vector<std::string>{"Time", "WiFi", "Sound", "Haptics", "OW"});
-		screen_settings.set_page_tabgroup(&settings_tab_group);
-
-		// Time
-		toggle_time_mode.create_on_grid(1, 0, 1, 1, "TIME FORMAT");
-		toggle_time_mode.set_toggle_text("12H", "24H");
-		toggle_time_mode.set_options_data(&settings.setting_time_24hour);
-		settings_tab_group.add_child_ui(&toggle_time_mode, 0);
-
-		toggle_date_mode.create_on_grid(2, 0, 1, 1, "DATE FORMAT");
-		toggle_date_mode.set_toggle_text("D-M-Y", "M-D-Y");
-		toggle_date_mode.set_options_data(&settings.setting_time_dateformat);
-		settings_tab_group.add_child_ui(&toggle_date_mode, 0);
-
-		slider_UTC.create_on_grid(0, 1, 3, 1);
-		slider_UTC.set_value_type(VALUE_TYPE::INT);
-		slider_UTC.set_options_data(&settings.settings_utc_offset);
-		settings_tab_group.add_child_ui(&slider_UTC, 0);
-
-		// WiFi
-		toggle_OTA_updates.create_on_grid(0, 0, 1, 1, "ENABLE OTA");
-		toggle_OTA_updates.set_toggle_text("NO", "YES");
-		toggle_OTA_updates.set_options_data(&settings.setting_OTA_start);
-		settings_tab_group.add_child_ui(&toggle_OTA_updates, 1);
-
-		toggle_Notify_updates.create_on_grid(1, 0, 1, 1, "NOTIFY UPDATES");
-		toggle_Notify_updates.set_toggle_text("NO", "YES");
-		toggle_Notify_updates.set_options_data(&settings.setting_wifi_check_updates);
-		settings_tab_group.add_child_ui(&toggle_Notify_updates, 1);
-
-		// Sound
-		toggle_audio_ui.create_on_grid(0, 0, 1, 1, "UI BEEPS");
-		toggle_audio_ui.set_toggle_text("NO", "YES");
-		toggle_audio_ui.set_options_data(&settings.setting_audio_ui);
-		settings_tab_group.add_child_ui(&toggle_audio_ui, 2);
-
-		toggle_audio_alarm.create_on_grid(1, 0, 1, 1, "ALARMS");
-		toggle_audio_alarm.set_toggle_text("NO", "YES");
-		toggle_audio_alarm.set_options_data(&settings.setting_audio_alarm);
-		settings_tab_group.add_child_ui(&toggle_audio_alarm, 2);
-
-		slider_volume.create_on_grid(0, 1, 2, 1);
-		slider_volume.set_value_type(VALUE_TYPE::FLOAT);
-		slider_volume.set_options_data(&settings.setting_audio_volume);
-		settings_tab_group.add_child_ui(&slider_volume, 2);
-
-		// Haptics
-
-		toggle_haptics_enable.create_on_grid(0, 0, 1, 1, "ENABLED");
-		toggle_haptics_enable.set_toggle_text("NO", "YES");
-		toggle_haptics_enable.set_options_data(&settings.setting_haptics_enabled);
-		settings_tab_group.add_child_ui(&toggle_haptics_enable, 3);
-
-		// Open Weather
-		// Create a Toggle frmo the widget_ow_enabled sewtting
-		toggle_ow_enable.create_on_grid(0, 1, 1, 1, "OW ENABLE");
-		toggle_ow_enable.set_toggle_text("NO", "YES");
-		toggle_ow_enable.set_options_data(&settings.widget_ow_enabled);
-		settings_tab_group.add_child_ui(&toggle_ow_enable, 4);
-
-		// Create an Int Slider from the widget_ow_poll_interval setting
-		slider_ow_refresh.create_on_grid(1, 1, 2, 1);
-		slider_ow_refresh.set_value_type(VALUE_TYPE::INT);
-		slider_ow_refresh.set_options_data(&settings.widget_ow_poll_interval);
-		settings_tab_group.add_child_ui(&slider_ow_refresh, 4);
-
-		// Create an Text Box the widget_ow_apikey setting
-		text_ow_api_key.create_on_grid(0, 2, 3, 1, "OW API KEY");
-		text_ow_api_key.set_options_data(&settings.widget_ow_apikey);
-		settings_tab_group.add_child_ui(&text_ow_api_key, 4);
-		screen_settings.set_can_cycle_back_color(true);
-
-		screen_settings.set_refresh_interval(0);
-
-		/*
-		Setup Main Screen
-		*/
-		screen_main.setup(TFT_BLACK, true);
-
-		widget_battery.create(10, 0, TFT_WHITE);
-		widget_battery.set_refresh_interval(1000);
-		screen_main.add_child_ui(&widget_battery);
-
-		widget_time.create(470, 10, TFT_WHITE, TEXT_ALIGN::ALIGN_RIGHT);
-		widget_time.set_refresh_interval(1000);
-		screen_main.add_child_ui(&widget_time);
-
-		widget_jokes.create(10, 370, 460, 100, TFT_BLACK, 12, 0, "JOKES");
-		widget_jokes.set_refresh_interval(5000);
-		screen_main.add_child_ui(&widget_jokes);
-
-		widget_ow.create(245, 80, 225, 72, TFT_BLACK, 16, 0, "CURRENT WEATHER");
-		widget_ow.set_title_alignment(TEXT_ALIGN::ALIGN_LEFT);
-		widget_ow.set_refresh_interval(1000);
-		screen_main.add_child_ui(&widget_ow);
-
-		/*
-		Setup MQTT Screen
-		*/
-
-		screen_mqtt.setup(TFT_BLUE, true);
-		widget_mqtt_sensors.create(10, 120, 460, 240, TFT_BLACK, 12, 0, "MQTT Sensors");
-		widget_mqtt_sensors.set_refresh_interval(1000);
-		screen_mqtt.add_child_ui(&widget_mqtt_sensors);
-
-		screen_main.set_navigation(Directions::LEFT, &screen_mqtt, true);
-		screen_main.set_navigation(Directions::DOWN, &screen_settings, true);
+		// Func above setup() that is used to create all o ftheUI screens and controls an widgets
+		create_ui_elements();
 
 		// Continue processing startup
 		if (!was_asleep)

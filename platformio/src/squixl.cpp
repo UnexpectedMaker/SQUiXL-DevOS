@@ -629,4 +629,22 @@ void SQUiXL::go_to_sleep()
 	esp_deep_sleep_start();
 }
 
+void SQUiXL::process_version(bool success, const String &response)
+{
+	try
+	{
+		json data = json::parse(response);
+
+		uint16_t latest_version = data["latest_version"];
+
+		Serial.printf("\n ***Latest Version: %d, Build Version: %d, Should notify? %s\n\n", latest_version, version_build, String(latest_version > version_build ? "YES!" : "no"));
+		version_latest = latest_version;
+	}
+	catch (json::exception &e)
+	{
+		Serial.println("Verion Check parse error:");
+		Serial.println(e.what());
+	}
+}
+
 SQUiXL squixl;

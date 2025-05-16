@@ -28,7 +28,7 @@ bool ui_control_button::redraw(uint8_t fade_amount, int8_t tab_group)
 		squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 2, &char_width, &char_height);
 		uint8_t string_len = _title.length();
 		string_len_pixels = string_len * char_width;
-		Serial.printf("string len %d, pixels %d, x %d, w %d, pos %d\n", string_len, string_len_pixels, _x, _w, (_w / 2) - (string_len_pixels / 2));
+		// Serial.printf("string len %d, pixels %d, x %d, w %d, pos %d\n", string_len, string_len_pixels, _x, _w, (_w / 2) - (string_len_pixels / 2));
 	}
 
 	// uint16_t dark_shade = darken565(squixl.current_screen()->background_color(), 0.2f);

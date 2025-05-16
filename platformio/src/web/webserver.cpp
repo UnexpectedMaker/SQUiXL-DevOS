@@ -332,8 +332,6 @@ void WebServer::start_callback(bool success, const String &response)
 			return;
 		}
 
-		// wifi_controller.add_to_queue("https://squixl.io/latestver", [this](bool success, const String &response) { this->process_version(success, response); });
-
 		web_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_html, processor); });
 
 		// web_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(404, "text/plain", "Hello SQUiXL!"); });
@@ -610,23 +608,5 @@ void WebServer::stop(bool restart)
 void WebServer::process() {}
 
 bool WebServer::is_running() { return _running; }
-
-void WebServer::process_version(bool success, const String &response)
-{
-	try
-	{
-		json data = json::parse(response);
-
-		uint16_t latest_version = data["latest_version"];
-
-		Serial.printf("Latest Version: %d, Build Version: %d, Should notify? %s\n", latest_version, squixl.version_build, String(latest_version > squixl.version_build ? "YES!" : "no"));
-		squixl.version_latest = latest_version;
-	}
-	catch (json::exception &e)
-	{
-		Serial.println("Verion Check parse error:");
-		Serial.println(e.what());
-	}
-}
 
 WebServer webserver;

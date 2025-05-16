@@ -79,7 +79,7 @@ bool ui_control_tabgroup::redraw(uint8_t fade_amount, int8_t tab_group)
 	{
 		// If this tab is me, draw a rect behind the tab group name
 		if (current_tab == i)
-			_sprite_content.fillRoundRect(5 + i * tab_width, 5, tab_width, _h - 10, 5, squixl.current_screen()->dark_tint[2], DRAW_TO_RAM);
+			_sprite_content.fillRoundRect(6 + i * tab_width, 6, tab_width - 2, _h - 12, 5, squixl.current_screen()->dark_tint[2], DRAW_TO_RAM);
 
 		_sprite_content.setTextColor(current_tab == i ? squixl.squixl_blue : squixl.current_screen()->light_tint[4], -1);
 		uint16_t pos_x = i * tab_width + tab_width / 2 - (tab_names[i].length() * char_width) / 2;

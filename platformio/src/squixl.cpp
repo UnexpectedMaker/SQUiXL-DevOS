@@ -135,7 +135,7 @@ void SQUiXL::display_first_boot(bool show)
 void SQUiXL::set_backlight_level(float pwm_level_percent)
 {
 	// Screen is LOW side, so 0 is full bright, and 4096 of dimmest
-	uint16_t pwm_level = 4000 - (int)((pwm_level_percent / 100.0f) * 4000.0);
+	uint16_t pwm_level = 4090 - (int)((pwm_level_percent / 100.0f) * 4090.0);
 	ledcWrite(BL_PWM, pwm_level);
 	current_backlight_pwm = pwm_level_percent;
 }
@@ -147,7 +147,7 @@ void SQUiXL::animate_backlight(float from, float to, unsigned long duration)
 
 void SQUiXL::process_backlight_dimmer()
 {
-	if (millis() - backlight_dimmer_timer > settings.config.backlight_time_step * 1000)
+	if (millis() - backlight_dimmer_timer > ((is_5V_detected ? settings.config.backlight_time_step_vbus : settings.config.backlight_time_step_battery) * 1000))
 	{
 		backlight_dimmer_timer = millis();
 
@@ -160,7 +160,7 @@ void SQUiXL::process_backlight_dimmer()
 
 		if (current_backlight_pwm == 0)
 		{
-			if (!is_5V_detected || settings.config.sleep_vbus)
+			if ((is_5V_detected && settings.config.sleep_vbus) || (!is_5V_detected && settings.config.sleep_battery))
 			{
 				go_to_sleep();
 				return;

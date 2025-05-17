@@ -40,8 +40,10 @@ ui_screen screen_wifi_manager;
 
 // Settings
 ui_control_tabgroup settings_tab_group;
-ui_control_slider slider_backlight_timer;
+ui_control_slider slider_backlight_timer_battery;
+ui_control_slider slider_backlight_timer_vbus;
 ui_control_toggle toggle_sleep_vbus;
+ui_control_toggle toggle_sleep_battery;
 // Time
 ui_control_toggle toggle_time_mode;
 ui_control_toggle toggle_date_mode;
@@ -86,15 +88,25 @@ void create_ui_elements()
 
 	// General
 
+	slider_backlight_timer_battery.create_on_grid(1, 0, 2, 1);
+	slider_backlight_timer_battery.set_value_type(VALUE_TYPE::INT);
+	slider_backlight_timer_battery.set_options_data(&settings.settings_backlight_timer_battery);
+	settings_tab_group.add_child_ui(&slider_backlight_timer_battery, 0);
+
+	toggle_sleep_battery.create_on_grid(0, 0, 1, 1, "SLEEP ON BAT");
+	toggle_sleep_battery.set_toggle_text("NO", "YES");
+	toggle_sleep_battery.set_options_data(&settings.setting_sleep_battery);
+	settings_tab_group.add_child_ui(&toggle_sleep_battery, 0);
+
+	slider_backlight_timer_vbus.create_on_grid(1, 0, 2, 1);
+	slider_backlight_timer_vbus.set_value_type(VALUE_TYPE::INT);
+	slider_backlight_timer_vbus.set_options_data(&settings.settings_backlight_timer_vbus);
+	settings_tab_group.add_child_ui(&slider_backlight_timer_vbus, 0);
+
 	toggle_sleep_vbus.create_on_grid(0, 0, 1, 1, "SLEEP ON 5V");
 	toggle_sleep_vbus.set_toggle_text("NO", "YES");
 	toggle_sleep_vbus.set_options_data(&settings.setting_sleep_vbus);
 	settings_tab_group.add_child_ui(&toggle_sleep_vbus, 0);
-
-	slider_backlight_timer.create_on_grid(1, 0, 2, 1);
-	slider_backlight_timer.set_value_type(VALUE_TYPE::INT);
-	slider_backlight_timer.set_options_data(&settings.settings_backlight_timer);
-	settings_tab_group.add_child_ui(&slider_backlight_timer, 0);
 
 	toggle_time_mode.create_on_grid(1, 0, 1, 1, "TIME FORMAT");
 	toggle_time_mode.set_toggle_text("12H", "24H");

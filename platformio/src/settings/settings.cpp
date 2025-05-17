@@ -17,7 +17,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_haptics, enabled, trigger
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_open_weather, enabled, api_key, poll_frequency, units_metric);
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, mdns_name, case_color, city, country, utc_offset, time_24hour, time_dateformat, volume, current_background, backlight_time_step, sleep_vbus, open_weather, audio, mqtt, haptics);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, mdns_name, case_color, city, country, utc_offset, time_24hour, time_dateformat, volume, current_background, backlight_time_step_battery, backlight_time_step_vbus, sleep_vbus, sleep_battery, open_weather, audio, mqtt, haptics);
 
 unsigned long Settings::reset_screen_dim_time()
 {

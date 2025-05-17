@@ -147,20 +147,24 @@ void SQUiXL::animate_backlight(float from, float to, unsigned long duration)
 
 void SQUiXL::process_backlight_dimmer()
 {
-	if (millis() - backlight_dimmer_timer > backlight_dimmer_time_step)
+	if (millis() - backlight_dimmer_timer > settings.config.backlight_time_step * 1000)
 	{
 		backlight_dimmer_timer = millis();
 
-		if (is_5V_detected)
-		{
-			// Never dimm the backlight or go to sleep when powered from 5V
-			return;
-		}
+		// if (is_5V_detected && !settings.config.sleep_vbus)
+		// {
+		// 	// Never dimm the backlight or go to sleep when powered from 5V
+		// 	// unless the user selected dimming on 5V in settings
+		// 	return;
+		// }
 
 		if (current_backlight_pwm == 0)
 		{
-			go_to_sleep();
-			return;
+			if (!is_5V_detected || settings.config.sleep_vbus)
+			{
+				go_to_sleep();
+				return;
+			}
 		}
 
 		animate_backlight(current_backlight_pwm, constrain(current_backlight_pwm - 33.0f, 0.0f, 100.0f), 500);

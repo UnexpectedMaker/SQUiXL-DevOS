@@ -192,7 +192,6 @@ class SQUiXL : public SQUiXL_LITE
 	protected:
 		float current_backlight_pwm = 0.0f;
 		unsigned long backlight_dimmer_timer = 0;
-		uint16_t backlight_dimmer_time_step = 15000;
 
 		uint32_t current_cpu_frequency = 240;
 

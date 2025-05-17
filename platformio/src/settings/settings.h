@@ -144,6 +144,8 @@ struct Config
 		float volume = 15.0;
 
 		int current_background = 0;
+		int backlight_time_step = 15; // in seconds
+		bool sleep_vbus = false;
 
 		// Battery/FG specific settings - see Struct above
 		Config_widget_battery battery;
@@ -250,6 +252,8 @@ class Settings
 		SettingsOptionBool setting_time_24hour{&config.time_24hour, 0, "Time Mode", "12H", "24H"};
 		SettingsOptionBool setting_time_dateformat{&config.time_dateformat, 0, "Date FMT", "DMY", "MDY"};
 		SettingsOptionColor565 setting_case_color{&config.case_color, 0, "Case Color"};
+		SettingsOptionIntRange settings_backlight_timer{&config.backlight_time_step, 5, 30, 1, false, 0, "Backlight Dimmer Time (secs)"};
+		SettingsOptionBool setting_sleep_vbus{&config.sleep_vbus, 0, "Sleep On 5V", "NO", "YES"};
 
 		// Web and WiFi
 		SettingsOptionBool setting_OTA_start{&config.ota_start, 1, "Enable OTA Updates", "NO", "YES"};

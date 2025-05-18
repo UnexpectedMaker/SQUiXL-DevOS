@@ -54,16 +54,16 @@ void ui_element::reposition(uint8_t *_col, uint8_t *_row)
 	_origional_y = _y;
 
 	uint8_t grid_padding = 10;
-	uint8_t col_width = 160;
+	uint8_t col_width = 80;
 	uint8_t row_height = 80;
 
-	uint8_t _span_c = _w / (col_width - grid_padding - grid_padding);
+	uint8_t _span_c = (_w + grid_padding * 2) / (col_width);
 	uint8_t _span_r = _h / (row_height - grid_padding - grid_padding);
 
 	// Serial.printf("element _w %d, col_width %d, span_c %d, new col %d, rew row %d\n", _w, (col_width - grid_padding - grid_padding), _span_c, (*_col + _span_c), *_row);
 
 	// Need to ensure the col span is not wider than the screen based on the selected col
-	if (*_col + _span_c > 3)
+	if (*_col + _span_c > 7)
 	{
 		*_col = 0;
 		*_row = *_row + 1;
@@ -83,7 +83,7 @@ void ui_element::reposition(uint8_t *_col, uint8_t *_row)
 	// Serial.printf("element repositioned to col %d, row %d, span_c %d\n", *_col, *_row, _span_c);
 
 	*_col += _span_c;
-	if (*_col > 2)
+	if (*_col > 5)
 	{
 		*_col = 0;
 		*_row = *_row + 1;

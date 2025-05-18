@@ -165,7 +165,7 @@ void AudioClass::stop()
 #endif
 
 			mixer_channels[0]->stop();
-			mixer_channels[1]->stop();
+			// mixer_channels[1]->stop();
 
 			delete out;
 			delete wav;

@@ -6,12 +6,7 @@
 
 // HTML Templates
 #include "web/www/www_general.h"
-// #include "web/www/www_settings_watch.h"
 #include "web/www/www_settings_main.h"
-// #include "web/www/www_settings_apps.h"
-// #include "web/www/www_settings_web.h"
-// #include "web/www/www_settings_themes.h"
-// #include "web/www/www_debug_logs.h"
 
 String WebServer::processor(const String &var)
 {
@@ -64,6 +59,17 @@ String WebServer::processor(const String &var)
 		for (size_t i = 0; i < settings.settings_groups.size(); i++)
 		{
 			if (settings.settings_groups[i].type == SettingType::MAIN)
+				html += generate_settings_html(i);
+		}
+
+		return html;
+	}
+	else if (var == "SETTING_SCREENIE")
+	{
+		String html = "";
+		for (size_t i = 0; i < settings.settings_groups.size(); i++)
+		{
+			if (settings.settings_groups[i].type == SettingType::SCREENIE)
 				html += generate_settings_html(i);
 		}
 
@@ -136,19 +142,23 @@ String WebServer::generate_settings_html(int group_id)
 		else
 			html += "				<div class='col-6 pb-1'>\n";
 		html += group_name.groups[i]->generate_html(i);
-		html += "				</div>\n";
+		html += "				</div>\n\r\n";
 	}
 	html += "			</div>\n";
 
 	html += "			<div class ='row'>\n";
 	html += "				<div class='col-12 right align-middle' style='height:36px;'>\n";
 	html += "					<span class='flash-span me-2' style='display:none; color:green;'>Settings Updated!</span>\n";
-	html += "					<button type='submit' class='btn btn-sm btn-success m-1' style='width:100px;'>Update</button>\n";
+	if (group_id == 6)
+		html += "					<button type='submit' class='btn btn-sm btn-success m-1' style='width:300px;'>Update & Retake Screenshot</button>\n";
+	else
+		html += "					<button type='submit' class='btn btn-sm btn-success m-1' style='width:100px;'>Update</button>\n";
 	html += "				</div>\n";
 	html += "			</div>\n";
 	html += "		</form>\n";
 	html += "	</div>\n";
 	html += "</div>\n";
+	html += "\r\n\r\n";
 
 	return html;
 }
@@ -302,6 +312,7 @@ SettingsOptionBase *WebServer::get_obj_from_id(String id)
 void WebServer::start()
 {
 	// setCpuFrequencyMhz(80);
+
 	_running = true;
 	wifi_controller.wifi_prevent_disconnect = true;
 
@@ -333,6 +344,27 @@ void WebServer::start_callback(bool success, const String &response)
 		}
 
 		web_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_html, processor); });
+
+		web_server.on("/screenie", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", screenie_html, processor); });
+
+		web_server.on("/take_screenshot", HTTP_GET, [](AsyncWebServerRequest *request) {
+			squixl.delayed_take_screenshot();
+			request->send(200, "text/text", "Working....");
+		});
+
+		web_server.on("/screenshot", HTTP_GET, [](AsyncWebServerRequest *request) {
+			// save_png(&squixl.lcd);
+			request->send(LittleFS, "/screenshot.png", "image/png");
+		});
+
+		web_event.onConnect([](AsyncEventSourceClient *client) {
+			Serial.printf("SSE Client connected! ID: %" PRIu32 "\n", client->lastId());
+			client->send("hello!", NULL, millis(), 1000);
+		});
+
+		web_event.onDisconnect([](AsyncEventSourceClient *client) {
+			Serial.printf("SSE Client disconnected! ID: %" PRIu32 "\n", client->lastId());
+		});
 
 		// web_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(404, "text/plain", "Hello SQUiXL!"); });
 
@@ -373,8 +405,9 @@ void WebServer::start_callback(bool success, const String &response)
 			if (request->hasParam("group_id", true))
 			{
 				const AsyncWebParameter *_group = request->getParam("group_id", true);
-				Serial.printf("** Save Settings for Group ID: %s\n", String(_group->value().c_str()));
-				uint8_t group_id = String(_group->value().c_str()).toInt();
+				int group_id = String(_group->value().c_str()).toInt();
+
+				Serial.printf("** Save Settings for Group ID: %d\n", group_id);
 
 				auto &group = settings.settings_groups[group_id]; // Cache the current group
 
@@ -507,15 +540,38 @@ void WebServer::start_callback(bool success, const String &response)
 								bool updated = intPtr->update(data);
 								// Serial.printf("changed? %s\n", (updated ? "YES" : "no"));
 							}
-							// Serial.printf("Data: %s\n", String(_param->value().c_str()));
-							// 	settings.config.look_ahead = String(_set_reflow_lookahead->value().c_str()).toInt();
+							else if (setting->getType() == SettingsOptionBase::FLOAT_RANGE)
+							{
+								float data = String(_param->value().c_str()).toFloat();
+								SettingsOptionFloatRange *intPtr = static_cast<SettingsOptionFloatRange *>(setting);
+								Serial.printf("Web data: %f, class data %f - ", data, intPtr->get());
+								bool updated = intPtr->update(data);
+								Serial.printf("changed? %s\n", (updated ? "YES" : "no"));
+							}
 						}
 					}
 				}
 
-				// Buzzer({{2000, 20}});
+				// // Buzzer({{2000, 20}});
+				// audio.play_dock();
 				settings.save(true);
-				request->send(200, "text/html", generate_settings_html(group_id).c_str(), processor);
+
+				const char *return_data = generate_settings_html(group_id).c_str();
+				const size_t return_data_length = strlen_P(return_data);
+
+				AsyncResponseStream *response = request->beginResponseStream("text/html", return_data_length);
+				for (int i = 0; i < return_data_length; i++)
+				{
+					response->write(return_data[i]);
+				}
+				request->send(response);
+
+				if (group_id == 6)
+				{
+					// we updated from Screenie, so let's re-take the screenshot
+					// and update the ebsite via server events
+					squixl.delayed_take_screenshot();
+				}
 			}
 			else
 			{
@@ -585,6 +641,7 @@ void WebServer::start_callback(bool success, const String &response)
 		// });
 
 		Serial.println("web_server.begin();");
+		web_server.addHandler(&web_event);
 		web_server.begin();
 		_running = true;
 	}

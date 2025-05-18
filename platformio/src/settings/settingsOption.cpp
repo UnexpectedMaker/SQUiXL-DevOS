@@ -232,7 +232,7 @@ bool SettingsOptionFloatRange::update(float val)
 
 float SettingsOptionFloatRange::get() { return constrain(*setting_ref, value_min, value_max); }
 
-String SettingsOptionFloatRange::get_str() { return String(constrain(*setting_ref, value_min, value_max)); }
+String SettingsOptionFloatRange::get_str() { return String(constrain(*setting_ref, value_min, value_max), 1); }
 
 String SettingsOptionFloatRange::generate_html(uint16_t index)
 {
@@ -246,7 +246,7 @@ String SettingsOptionFloatRange::generate_html(uint16_t index)
 
 	String html = "					<div class='input-group input-group-sm flex-nowrap'>\n";
 	html += "						<span class='input-group-text' id='inputGroup-sizing-sm'>" + fieldname + "</span>\n";
-	html += "						<input type='range' min='" + String(value_min) + "' max='" + String(value_max) + "' step='" + String(value_step) + "' class='form-range form-range-sm ms-2 me-2 mt-2' id='" + fn + "' name='" + fn + "' value='" + get_str() + "' required oninput='document.getElementById(\"" + fn + "range\").innerHTML = this.value;'>\n";
+	html += "						<input type='range' min='" + String(value_min, 1) + "' max='" + String(value_max, 1) + "' step='" + String(value_step, 1) + "' class='form-range form-range-sm ms-2 me-2 mt-2' id='" + fn + "' name='" + fn + "' value='" + get_str() + "' required oninput='document.getElementById(\"" + fn + "range\").innerHTML = this.value;'>\n";
 	html += "						<span class='input-group-text' id='" + fn + "range'>" + get_str() + "</span>\n";
 	html += "					</div>\n";
 
@@ -379,7 +379,20 @@ String SettingsOptionFloat::get_str() { return String(*setting_ref); }
 
 String SettingsOptionFloat::generate_html(uint16_t index)
 {
-	return "<div><span>SettingsOptionFloat for " + fieldname + "</span></div>";
+	String fn = fieldname;
+	fn.replace(" ", "_");
+	fn.toLowerCase();
+	fn.replace("_(sec)", "");
+	fn.replace("_(min)", "");
+	fn.replace("_(%%)", "");
+	fn = String(group) + "," + String(index) + "__" + fn;
+
+	String html = "					<div class='input-group input-group-sm'>\n";
+	html += "						<span class='input-group-text' id='inputGroup-sizing-sm'>" + fieldname + "</span>\n";
+	html += "						<input type='number' min='" + String(value_min) + "' max='" + String(value_max) + "' step='" + String(value_step) + "' class='form-control form-control-sm' id='" + fn + "' name='" + fn + "' value='" + get() + "' required>\n";
+	html += "					</div>";
+
+	return html;
 }
 
 // void SettingsOptionFloat::register_option(int grp)

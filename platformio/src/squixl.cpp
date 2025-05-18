@@ -651,4 +651,12 @@ void SQUiXL::process_version(bool success, const String &response)
 	}
 }
 
+void SQUiXL::take_screenshot()
+{
+	audio.play_dock();
+	hint_take_screenshot = save_png(&lcd);
+	if (webserver.is_running())
+		webserver.web_event.send("hello", "refresh", millis());
+}
+
 SQUiXL squixl;

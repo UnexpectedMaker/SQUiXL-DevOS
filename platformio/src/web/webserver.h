@@ -13,7 +13,7 @@ class WebServer
 {
 
 	public:
-		WebServer() : web_server(80) {}
+		WebServer() : web_server(80), web_event("/event") {}
 
 		void start();
 		void start_callback(bool success, const String &response);
@@ -27,6 +27,8 @@ class WebServer
 		static String generate_themes_html(int group_id);
 
 		SettingsOptionBase *get_obj_from_id(String id);
+
+		AsyncEventSource web_event;
 
 	private:
 		bool _running = false;

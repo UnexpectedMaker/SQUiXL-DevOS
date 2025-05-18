@@ -13,11 +13,13 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_audio, ui, on_hour, charg
 
 // NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_battery, perc_offset, low_perc, low_volt_warn, low_volt_cutoff);
 
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_screenshot, temperature, tint, gamma, saturation, contrast, black, white, enabled);
+
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_haptics, enabled, trigger_on_boot, trigger_on_alarm, trigger_on_hour, trigger_on_event, trigger_on_wake, trigger_on_longpress, trigger_on_charge);
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_open_weather, enabled, api_key, poll_frequency, units_metric);
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, mdns_name, case_color, city, country, utc_offset, time_24hour, time_dateformat, volume, current_background, backlight_time_step_battery, backlight_time_step_vbus, sleep_vbus, sleep_battery, open_weather, audio, mqtt, haptics);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, mdns_name, case_color, city, country, utc_offset, time_24hour, time_dateformat, volume, current_background, backlight_time_step_battery, backlight_time_step_vbus, sleep_vbus, sleep_battery, open_weather, audio, mqtt, haptics, screenshot);
 
 unsigned long Settings::reset_screen_dim_time()
 {
@@ -29,6 +31,10 @@ void Settings::init()
 	setting_time_24hour.register_option();
 	setting_time_dateformat.register_option();
 	setting_case_color.register_option();
+	settings_backlight_timer_battery.register_option();
+	settings_backlight_timer_vbus.register_option();
+	setting_sleep_vbus.register_option();
+	setting_sleep_battery.register_option();
 
 	// Web and WiFi
 	setting_OTA_start.register_option();
@@ -68,6 +74,16 @@ void Settings::init()
 	setting_audio_alarm.register_option();
 	setting_audio_on_hour.register_option();
 	setting_audio_charge.register_option();
+	setting_audio_volume.register_option();
+
+	screenshot_saturation.register_option();
+	screenshot_contrast.register_option();
+	screenshot_black.register_option();
+	screenshot_white.register_option();
+	screenshot_gamma.register_option();
+
+	screenshot_wb_temp.register_option();
+	screenshot_wb_tint.register_option();
 }
 
 String Settings::color565ToWebHex(uint16_t color565)

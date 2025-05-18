@@ -16,6 +16,18 @@ struct mqtt_topic
 		String topic_publish = "";
 };
 
+struct Config_screenshot
+{
+		bool enabled = true;
+		float temperature = -0.1;
+		float tint = 1.0;
+		float black = 0.0;
+		float white = 1.0;
+		float gamma = 0.9;
+		float saturation = 1.0;
+		float contrast = 1.0;
+};
+
 struct Config_mqtt
 {
 		bool enabled = false;
@@ -164,6 +176,9 @@ struct Config
 		// Haptics specific settings
 		Config_haptics haptics;
 
+		// Screenshot tool stuff
+		Config_screenshot screenshot;
+
 		json last_saved_data;
 
 		String case_color_in_hex()
@@ -190,6 +205,7 @@ enum SettingType
 	WEB,
 	WIDGET,
 	THEME,
+	SCREENIE,
 };
 
 struct setting_group
@@ -231,7 +247,7 @@ class Settings
 
 			settings_groups.push_back({"MQTT Settings", SettingType::WEB});
 
-			// settings_groups[7].setup("Watch Themes", SettingType::THEME);
+			settings_groups.push_back({"Screenie", SettingType::SCREENIE});
 		}
 
 		void init();
@@ -299,6 +315,16 @@ class Settings
 		SettingsOptionString mqtt_password{&config.mqtt.password, 5, "Password", 0, -1, "", false};
 		SettingsOptionString mqtt_device_name{&config.mqtt.device_name, 5, "Device Name"};
 		SettingsOptionString mqtt_topic_listen{&config.mqtt.topic_listen, 5, "Listen Topic"};
+
+		// Screenshot
+		SettingsOptionBool screenshot_enabled{&config.screenshot.enabled, 6, "Enabled", "NO", "YES"};
+		SettingsOptionFloatRange screenshot_wb_temp{&config.screenshot.temperature, -1.0f, 1.0f, 0.1f, false, 6, "WB White Balance - Temperature"};
+		SettingsOptionFloatRange screenshot_wb_tint{&config.screenshot.tint, -1.0f, 1.0f, 0.1f, false, 6, "White Balance -  Tint"};
+		SettingsOptionFloatRange screenshot_black{&config.screenshot.black, 0.0f, 1.0f, 0.1f, false, 6, "Levels - Black"};
+		SettingsOptionFloatRange screenshot_white{&config.screenshot.white, 0.0f, 1.0f, 0.1f, false, 6, "Levels - White"};
+		SettingsOptionFloatRange screenshot_gamma{&config.screenshot.gamma, 0.0f, 2.0f, 0.1f, false, 6, "Levels - Gamma"};
+		SettingsOptionFloatRange screenshot_saturation{&config.screenshot.saturation, 0.0f, 2.0f, 0.1f, false, 6, "Saturation"};
+		SettingsOptionFloatRange screenshot_contrast{&config.screenshot.contrast, 0.0f, 2.0f, 0.1f, false, 6, "Contrast"};
 
 	private:
 		static constexpr const char *filename = "/settings.json";

@@ -47,6 +47,25 @@ void ui_control::create_on_grid(uint8_t _col, uint8_t _row, uint8_t _span_c, uin
 	create(_pos_x, _pos_y, _width, _height, title);
 }
 
+void ui_control::create_on_grid(uint8_t _span_c, uint8_t _span_r, const char *title)
+{
+
+	/*
+		uint8_t grid_padding = 10;
+		uint8_t col_width = 80; // new col width based on 6 colums so can do 2 wide for 3 cols, or 3 wide for 2 cols etc
+		uint8_t row_height = 80;
+		*/
+	if (_span_c < 2)
+		_span_c = 2;
+
+	uint16_t _width = (col_width * _span_c - grid_padding * 2);
+	uint16_t _height = (row_height * _span_r - grid_padding * 2);
+
+	// Serial.printf("%s is grid created as _w %d, _h %d, _span %d\n", get_title(), _width, _height, _span_c);
+
+	create(0, 0, _width, _height, title);
+}
+
 void ui_control::set_label_sizes()
 {
 	squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 0, &char_width_title, &char_height_title);

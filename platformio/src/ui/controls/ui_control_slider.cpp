@@ -185,13 +185,13 @@ bool ui_control_slider::process_touch(touch_event_t touch_event)
 			// 2. snap it to nearest step
 			//    e.g. steps = 10, halfStep = 5
 			int steps = int((raw - value_min + value_step / 2.0f) / value_step);
-			int snapped = value_min + steps * value_step;
+			float snapped = value_min + steps * value_step;
 
 			// 3. clamp just in case
 			current_value = constrain(snapped, value_min, value_max);
 
 			if (value_type == VALUE_TYPE::INT)
-				static_cast<SettingsOptionInt *>(setting_option)->update(current_value);
+				static_cast<SettingsOptionInt *>(setting_option)->update((int)current_value);
 			else if (value_type == VALUE_TYPE::FLOAT)
 				static_cast<SettingsOptionFloat *>(setting_option)->update(current_value);
 

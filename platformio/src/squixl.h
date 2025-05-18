@@ -122,6 +122,8 @@ struct touch_event_t
 		touch_event_t(uint16_t _x, uint16_t _y, TouchEventType _type, int16_t _d_x, int16_t _d_y) : x(_x), y(_y), type(_type), d_x(_d_x), d_y(_d_y) {}
 };
 
+bool save_png(BB_SPI_LCD *screen);
+
 class SQUiXL : public SQUiXL_LITE
 {
 
@@ -188,6 +190,10 @@ class SQUiXL : public SQUiXL_LITE
 
 		// Animation
 		void start_animation_task();
+
+		void delayed_take_screenshot() { hint_take_screenshot = true; }
+		bool hint_take_screenshot = false;
+		void take_screenshot();
 
 	protected:
 		float current_backlight_pwm = 0.0f;

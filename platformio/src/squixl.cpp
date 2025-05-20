@@ -646,7 +646,7 @@ void SQUiXL::process_version(bool success, const String &response)
 	}
 	catch (json::exception &e)
 	{
-		Serial.println("Verion Check parse error:");
+		Serial.println("Verions Check parse error:");
 		Serial.println(e.what());
 	}
 }

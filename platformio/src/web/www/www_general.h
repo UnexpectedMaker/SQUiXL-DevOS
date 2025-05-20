@@ -1,8 +1,9 @@
 #pragma once
 
 const char footer[] PROGMEM = R"rawliteral(
-		<div class="footer">
-			<span>SQUiXL - 2025 Unexpected Maker - %UPDATE_NOTICE%</span><br>
+		<div class="footer" %FOOTER_STYLE%>
+            %UPDATE_NOTICE%
+			<span>SQUiXL - 2025 Unexpected Maker - %FW_VER%</span><br>
 			<span>Firmware Source available on <a href="https://github.com/squixl" target="_blank">on GitHUB</a></span>
 			<!--<span>&nbsp;&nbsp;<a href="/debug_logs.html">debug logs</a></span>-->
 		</div>
@@ -306,7 +307,7 @@ const char css_dark[] PROGMEM = R"rawliteral(
         font-size: 9pt;
         min-height:100vh;
         position:relative; 
-        padding-bottom:80px;
+        padding-bottom:100px;
         color:#eee;
     }
     h2 {

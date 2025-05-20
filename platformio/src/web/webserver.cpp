@@ -33,11 +33,18 @@ String WebServer::processor(const String &var)
 	else if (var == "UPDATE_NOTICE")
 	{
 		if (squixl.update_available())
-			return squixl.version_firmware + " " + squixl.version_year + " <a href='https://squixl.io/firmware_alpha/' target='_blank'>NEW VERSION AVAILABLE</a>\n";
+			return "<a href='https://squixl.io/up/' target='_blank'><h2 style='padding:2px;'>NEW VERSION AVAILABLE</h2></a>\n";
 		else
-
-			return (squixl.version_firmware + " " + squixl.version_year);
+			return "";
 	}
+	else if (var == "FOOTER_STYLE")
+	{
+		if (squixl.update_available())
+			return " style='height:100px;'";
+		else
+			return "";
+	}
+
 	else if (var == "DEBUG_LOGS")
 	{
 		String logs = "";

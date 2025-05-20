@@ -86,7 +86,7 @@ void create_ui_elements()
 	/*
 	Setup Settings Screen
 	*/
-	screen_settings.setup(0x5AEB, false);
+	screen_settings.setup(darken565(0x5AEB, 0.5), false);
 
 	// Settings are grouped by tabs, so we setup the tab group here with a screen size
 	// and then pass it a list of strings for each group
@@ -261,8 +261,8 @@ void create_ui_elements()
 	Setup MQTT Screen
 	*/
 
-	screen_mqtt.setup(TFT_BLUE, true);
-	widget_mqtt_sensors.create(10, 120, 460, 240, TFT_BLACK, 12, 0, "MQTT Sensors");
+	screen_mqtt.setup(darken565(0x5AEB, 0.5), true);
+	widget_mqtt_sensors.create(10, 120, 460, 240, TFT_BLACK, 12, 0, "MQTT Messages");
 	widget_mqtt_sensors.set_refresh_interval(1000);
 	screen_mqtt.add_child_ui(&widget_mqtt_sensors);
 

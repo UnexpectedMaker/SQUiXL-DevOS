@@ -17,7 +17,7 @@ void widgetBattery::create(int16_t x, int16_t y, uint16_t color)
 void widgetBattery::load_icons()
 {
 	// Create the required sprites
-	_w = 240;
+	_w = 280;
 	_h = 64;
 	_sprite_content.createVirtual(_w, _h, NULL, true);
 	_sprite_clean.createVirtual(_w, _h, NULL, true);
@@ -85,11 +85,18 @@ bool widgetBattery::redraw(uint8_t fade_amount, int8_t tab_group)
 	{
 		_sprite_content.drawSprite(0, 0, &wifi_icons[4], 1.0f, 0x0, DRAW_TO_RAM);
 		_sprite_content.print(WiFi.localIP());
+		if (squixl.update_available())
+		{
+			_sprite_content.setCursor(40, 34);
+			_sprite_content.setTextColor(TFT_GREEN, -1);
+			_sprite_content.print("NEW FW @ https://squixl.io/up/");
+			_sprite_content.setTextColor(TFT_WHITE, -1);
+		}
 	}
 	else
 	{
 		_sprite_content.drawSprite(0, 0, &wifi_icons[0], 1.0f, 0x0, DRAW_TO_RAM);
-		_sprite_content.print("Setup SQUiXL WiFi");
+		_sprite_content.print("WiFi not configured");
 	}
 
 	_sprite_content.setCursor(40, 52);
@@ -144,15 +151,14 @@ bool widgetBattery::process_touch(touch_event_t touch_event)
 			if (millis() - next_click_update > 1000)
 			{
 				next_click_update = millis();
-				if (!wifi_controller.is_connected())
-				{
-					Serial.println("Open the wifi manager UI");
-					squixl.set_current_screen(wifiSetup.screen());
-					squixl.current_screen()->refresh(true);
-					audio.play_tone(300, 2);
+				// if (!wifi_controller.is_connected())
+				// {
+				// 	Serial.println("Open the wifi manager UI");
+				// 	squixl.set_current_screen(wifiSetup.screen());
+				// 	squixl.current_screen()->refresh(true);
+				// 	audio.play_tone(300, 2);
 
-					return true;
-				}
+				// 	return true;
 			}
 		}
 	}

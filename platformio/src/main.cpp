@@ -5,6 +5,7 @@
 
 #include "ui/widgets/widget_openweather.h"
 #include "ui/widgets/widget_jokes.h"
+#include "ui/widgets/widget_articles.h"
 #include "ui/widgets/widget_time.h"
 #include "ui/widgets/widget_mqtt_sensors.h"
 #include "ui/widgets/widget_battery.h"
@@ -257,6 +258,10 @@ void create_ui_elements()
 	widget_jokes.create(10, 370, 460, 100, TFT_BLACK, 12, 0, "JOKES");
 	widget_jokes.set_refresh_interval(5000);
 	screen_main.add_child_ui(&widget_jokes);
+
+	widget_articles.create(10, 260, 460, 100, TFT_BLACK, 12, 0, "Slashdot RSS");
+	widget_articles.set_refresh_interval(5000);
+	screen_main.add_child_ui(&widget_articles);
 
 	widget_ow.create(245, 80, 225, 72, TFT_BLACK, 16, 0, "CURRENT WEATHER");
 	widget_ow.set_title_alignment(TEXT_ALIGN::ALIGN_LEFT);

@@ -278,6 +278,22 @@ bool ui_screen::position_children(bool force_children)
 				}
 			}
 		}
+		// Now do screen UI children
+		for (int w = 0; w < ui_children.size(); w++)
+		{
+			ui_element *child = ui_children[w];
+			if (child != nullptr)
+			{
+				if (force_children || child->should_refresh())
+				{
+					// if (force_children)
+					// 	child->set_dirty(true);
+
+					if (child->redraw(32))
+						child_dirty = true;
+				}
+			}
+		}
 	}
 	else
 	{

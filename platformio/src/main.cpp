@@ -14,6 +14,7 @@
 #include "ui/controls/ui_control_toggle.h"
 #include "ui/controls/ui_control_slider.h"
 #include "ui/controls/ui_control_textbox.h"
+#include "ui/ui_label.h"
 
 #include "ui/controls/ui_control_tabgroup.h"
 
@@ -73,6 +74,8 @@ ui_control_slider slider_screenshot_lvl_white;
 ui_control_slider slider_screenshot_lvl_gamma;
 ui_control_slider slider_screenshot_saturation;
 ui_control_slider slider_screenshot_contrast;
+
+ui_label label_version;
 
 void create_ui_elements()
 {
@@ -231,6 +234,9 @@ void create_ui_elements()
 	slider_screenshot_wb_tint.set_value_type(VALUE_TYPE::FLOAT);
 	slider_screenshot_wb_tint.set_options_data(&settings.screenshot_wb_tint);
 	settings_tab_group.add_child_ui(&slider_screenshot_wb_tint, 5);
+
+	label_version.create(240, 460, squixl.version_firmware.c_str(), TFT_GREY);
+	screen_settings.add_child_ui(&label_version);
 
 	screen_settings.set_can_cycle_back_color(true);
 	screen_settings.set_refresh_interval(0);

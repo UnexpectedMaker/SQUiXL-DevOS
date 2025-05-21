@@ -293,7 +293,7 @@ void setup()
 	Serial.setDebugOutput(true); // sends all log_e(), log_i() messages to USB HW CDC
 	Serial.setTxTimeoutMs(0);	 // sets no timeout when trying to write to USB HW CDC
 
-	// delay(3000);
+	delay(3000);
 	// squixl.log_heap("BOOT");
 
 	if (!LittleFS.begin(true))
@@ -382,6 +382,7 @@ void setup()
 		}
 		else if (!settings.has_country_set())
 		{
+            wifi_controller.wifi_blocking_access = true;
 			// The user has wifi credentials, but no country or UTC has been set yet.
 			// Grab our public IP address, and then get out UTC offset and country and suburb.
 			wifi_controller.add_to_queue("http://api.ipify.org", [](bool success, const String &response) { squixl.get_public_ip(success, response); });

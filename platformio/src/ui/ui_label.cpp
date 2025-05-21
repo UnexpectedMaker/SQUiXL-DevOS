@@ -130,5 +130,5 @@ void ui_label::calculate_text_size()
 		_adj_y = _y;
 	}
 
-	Serial.printf("\n\n||||||   UI LABEL title calc - size is: %d,%d - %d,%d\n\n", _w, _h, _adj_x, _adj_y);
+	// Serial.printf("\n\n||||||   UI LABEL title calc - size is: %d,%d - %d,%d\n\n", _w, _h, _adj_x, _adj_y);
 }

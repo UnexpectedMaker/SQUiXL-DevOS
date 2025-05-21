@@ -7,7 +7,7 @@ void ui_control_tabgroup::set_tabs(std::vector<std::string> names)
 	for (int i = 0; i < names.size(); i++)
 	{
 		tab_names.push_back(names[i]);
-		Serial.printf("adding tab name %s at position %d\n", names[i].c_str(), i);
+		// Serial.printf("adding tab name %s at position %d\n", names[i].c_str(), i);
 	}
 }
 

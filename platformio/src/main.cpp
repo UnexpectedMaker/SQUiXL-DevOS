@@ -73,7 +73,6 @@ ui_control_toggle toggle_rss_enable;
 ui_control_slider slider_rss_refresh;
 ui_control_textbox text_rss_feed_url;
 
-
 // Screenshot stuff
 ui_control_toggle toggle_screenshot_enable;
 ui_control_slider slider_screenshot_wb_temp;
@@ -104,7 +103,7 @@ void create_ui_elements()
 	// and then pass it a list of strings for each group
 	//
 	settings_tab_group.create(0, 0, 480, 40);
-	settings_tab_group.set_tabs(std::vector<std::string>{"General", "WiFi", "Sound", "Haptics", "Weather", "Screenie"});
+	settings_tab_group.set_tabs(std::vector<std::string>{"General", "WiFi", "Sound", "Haptics", "Widgets", "Screenie"});
 	screen_settings.set_page_tabgroup(&settings_tab_group);
 
 	// grid layout is on a 6 column, 6 row array
@@ -147,15 +146,25 @@ void create_ui_elements()
 	settings_tab_group.add_child_ui(&slider_UTC, 0);
 
 	// WiFi
-	toggle_OTA_updates.create_on_grid(3, 1, "ENABLE OTA");
+	toggle_OTA_updates.create_on_grid(2, 1, "ENABLE OTA");
 	toggle_OTA_updates.set_toggle_text("NO", "YES");
 	toggle_OTA_updates.set_options_data(&settings.setting_OTA_start);
 	settings_tab_group.add_child_ui(&toggle_OTA_updates, 1);
 
-	toggle_Notify_updates.create_on_grid(3, 1, "NOTIFY UPDATES");
+	toggle_Notify_updates.create_on_grid(2, 1, "NOTIFY UPDATES");
 	toggle_Notify_updates.set_toggle_text("NO", "YES");
 	toggle_Notify_updates.set_options_data(&settings.setting_wifi_check_updates);
 	settings_tab_group.add_child_ui(&toggle_Notify_updates, 1);
+
+	// Create an Text Box the widget_ow_apikey setting
+	text_ow_city.create_on_grid(4, 1, "CITY");
+	text_ow_city.set_options_data(&settings.setting_city);
+	settings_tab_group.add_child_ui(&text_ow_city, 1);
+
+	// Create an Text Box the widget_ow_apikey setting
+	text_ow_country.create_on_grid(2, 1, "COUNTRY CODE");
+	text_ow_country.set_options_data(&settings.setting_country);
+	settings_tab_group.add_child_ui(&text_ow_country, 1);
 
 	// Sound
 	toggle_audio_ui.create_on_grid(3, 1, "UI BEEPS");
@@ -182,7 +191,7 @@ void create_ui_elements()
 
 	// Open Weather
 	// Create a Toggle from the widget_ow_enabled sewtting
-	toggle_ow_enable.create_on_grid(2, 1, "ENABLE");
+	toggle_ow_enable.create_on_grid(2, 1, "OW ENABLE");
 	toggle_ow_enable.set_toggle_text("NO", "YES");
 	toggle_ow_enable.set_options_data(&settings.widget_ow_enabled);
 	settings_tab_group.add_child_ui(&toggle_ow_enable, 4);
@@ -197,21 +206,10 @@ void create_ui_elements()
 	text_ow_api_key.create_on_grid(6, 1, "OPEN WEATHER API KEY");
 	text_ow_api_key.set_options_data(&settings.widget_ow_apikey);
 	settings_tab_group.add_child_ui(&text_ow_api_key, 4);
-	
-	// Create an Text Box the widget_ow_apikey setting
-	text_ow_country.create_on_grid(2, 1, "COUNTRY CODE");
-	text_ow_country.set_options_data(&settings.setting_country);
-	settings_tab_group.add_child_ui(&text_ow_country, 4);
-
-	// Create an Text Box the widget_ow_apikey setting
-	text_ow_city.create_on_grid(4, 1, "CITY");
-	text_ow_city.set_options_data(&settings.setting_city);
-	settings_tab_group.add_child_ui(&text_ow_city, 4);
-
 
 	// RSS Feed
 	// Create a Toggle from the widget_rss_enabled setting
-	toggle_rss_enable.create_on_grid(2, 1, "ENABLE");
+	toggle_rss_enable.create_on_grid(2, 1, "RSS ENABLE");
 	toggle_rss_enable.set_toggle_text("NO", "YES");
 	toggle_rss_enable.set_options_data(&settings.widget_rss_enabled);
 	settings_tab_group.add_child_ui(&toggle_rss_enable, 4);
@@ -226,7 +224,6 @@ void create_ui_elements()
 	text_rss_feed_url.create_on_grid(6, 1, "RSS Feed URL");
 	text_rss_feed_url.set_options_data(&settings.widget_rss_feed_url);
 	settings_tab_group.add_child_ui(&text_rss_feed_url, 4);
-
 
 	// Screenshot stuff
 	slider_screenshot_lvl_black.create_on_grid(3, 1);

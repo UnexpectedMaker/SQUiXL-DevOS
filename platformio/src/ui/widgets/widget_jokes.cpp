@@ -99,6 +99,9 @@ void widgetJokes::process_joke_data(bool success, const String &response)
 
 bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 {
+	if (squixl.switching_screens)
+		return false;
+
 	bool was_dirty = false;
 
 	if (process_next_joke)

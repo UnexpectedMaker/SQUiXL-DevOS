@@ -47,21 +47,14 @@ void widgetRSSFeeds::process_article_data(bool success, const String &response)
 		// Simple XML parsing to extract the first 5 articles
 		int article_count = 0;
 		int pos = 0;
-        unsigned long current_millis = millis();
-        static unsigned long boot_time_seconds = 0;
+		unsigned long current_millis = millis();
+		static unsigned long boot_time_seconds = 0;
 
-        if (boot_time_seconds == 0) {
-            // Initialize with an arbitrary recent timestamp (e.g., 2025-05-21T00:00:00)
-            boot_time_seconds = parse_iso8601_date("2025-05-21T00:00:00+00:00") - current_millis / 1000;
-        }
-
-        while (article_count < 5 && pos < response.length())
-        {
-            // Find the next <item> tag
-            int item_start = response.indexOf("<item rdf:about", pos);
-            if (item_start == -1) break;
-            int item_end = response.indexOf("</item>", item_start);
-            if (item_end == -1) break;
+		if (boot_time_seconds == 0)
+		{
+			// Initialize with an arbitrary recent timestamp (e.g., 2025-05-21T00:00:00)
+			boot_time_seconds = parse_iso8601_date("2025-05-21T00:00:00+00:00") - current_millis / 1000;
+		}
 
 		while (article_count < 5 && pos < response.length())
 		{
@@ -73,78 +66,87 @@ void widgetRSSFeeds::process_article_data(bool success, const String &response)
 			if (item_end == -1)
 				break;
 
-			String item_content = response.substring(item_start, item_end + 7);
-
-			// Extract title
-			String headline = "";
-			int title_start = item_content.indexOf("<title>") + 7;
-			int title_end = item_content.indexOf("</title>", title_start);
-			if (title_start != -1 && title_end != -1)
+			while (article_count < 5 && pos < response.length())
 			{
-				headline = item_content.substring(title_start, title_end);
+				// Find the next <item> tag
+				int item_start = response.indexOf("<item rdf:about", pos);
+				if (item_start == -1)
+					break;
+				int item_end = response.indexOf("</item>", item_start);
+				if (item_end == -1)
+					break;
+
+				String item_content = response.substring(item_start, item_end + 7);
+
+				// Extract title
+				String headline = "";
+				int title_start = item_content.indexOf("<title>") + 7;
+				int title_end = item_content.indexOf("</title>", title_start);
+				if (title_start != -1 && title_end != -1)
+				{
+					headline = item_content.substring(title_start, title_end);
+				}
+				// Extract date and convert to timestamp
+				String date = "";
+				unsigned long article_timestamp = 0;
+				int date_start = item_content.indexOf("<dc:date>") + 9;
+				int date_end = item_content.indexOf("</dc:date>", date_start);
+				if (date_start != -1 && date_end != -1)
+				{
+					date = item_content.substring(date_start, date_end);
+					article_timestamp = parse_iso8601_date(date);
+					// Compute time difference in seconds
+					unsigned long current_time_seconds = boot_time_seconds + current_millis / 1000;
+					unsigned long seconds_ago = (current_time_seconds > article_timestamp) ? (current_time_seconds - article_timestamp) : 0;
+					date = format_time_ago(seconds_ago);
+				}
+
+				// Extract creator
+				String creator = "";
+				int creator_start = item_content.indexOf("<dc:creator>") + 12;
+				int creator_end = item_content.indexOf("</dc:creator>", creator_start);
+				if (creator_start != -1 && creator_end != -1)
+				{
+					creator = item_content.substring(creator_start, creator_end);
+				}
+
+				// Extract subject
+				String subject = "";
+				int subject_start = item_content.indexOf("<slash:section>") + 15;
+				int subject_end = item_content.indexOf("</slash:section>", subject_start);
+				if (subject_start != -1 && subject_end != -1)
+				{
+					subject = item_content.substring(subject_start, subject_end);
+				}
+
+				// Extract Comments
+				String comments = "No";
+				int comments_start = item_content.indexOf("<slash:comments>") + 16;
+				int comments_end = item_content.indexOf("</slash:comments>", comments_start);
+				if (comments_start != -1 && comments_end != -1)
+				{
+					comments = item_content.substring(comments_start, comments_end);
+				}
+
+				if (headline.length() > 0)
+				{
+					stored_articles.push_back(ARTICLE(headline, date, creator, subject, comments));
+					article_count++;
+				}
+
+				pos = item_end + 7;
 			}
-            // Extract date and convert to timestamp
-            String date = "";
-            unsigned long article_timestamp = 0;
-            int date_start = item_content.indexOf("<dc:date>") + 9;
-            int date_end = item_content.indexOf("</dc:date>", date_start);
-            if (date_start != -1 && date_end != -1)
-            {
-                date = item_content.substring(date_start, date_end);
-                article_timestamp = parse_iso8601_date(date);
-                // Compute time difference in seconds
-                unsigned long current_time_seconds = boot_time_seconds + current_millis / 1000;
-                unsigned long seconds_ago = (current_time_seconds > article_timestamp) ? (current_time_seconds - article_timestamp) : 0;
-                date = format_time_ago(seconds_ago);
-            }
-
-			// Extract creator
-			String creator = "";
-			int creator_start = item_content.indexOf("<dc:creator>") + 12;
-			int creator_end = item_content.indexOf("</dc:creator>", creator_start);
-			if (creator_start != -1 && creator_end != -1)
-			{
-				creator = item_content.substring(creator_start, creator_end);
-			}
-
-			// Extract subject
-			String subject = "";
-			int subject_start = item_content.indexOf("<slash:section>") + 15;
-			int subject_end = item_content.indexOf("</slash:section>", subject_start);
-			if (subject_start != -1 && subject_end != -1)
-			{
-				subject = item_content.substring(subject_start, subject_end);
-			}
-
-            // Extract Comments
-            String comments = "No";
-            int comments_start = item_content.indexOf("<slash:comments>") + 16;
-            int comments_end = item_content.indexOf("</slash:comments>", comments_start);
-            if (comments_start != -1 && comments_end != -1)
-            {
-                comments = item_content.substring(comments_start, comments_end);
-
-            }
-
-			if (headline.length() > 0)
-			{
-				stored_articles.push_back(ARTICLE(headline, date, creator, subject, comments));
-				article_count++;
-			}
-
-			pos = item_end + 7;
 		}
+		Serial.printf("Added articles, you now have %d\n\n", stored_articles.size());
 	}
-	Serial.printf("Added articles, you now have %d\n\n", stored_articles.size());
-    }
-    catch (std::exception &e)
-    {
-        // Serial.printf("response: %s\n", response.c_str());
-        // Serial.println("XML parse error:");
-        // Serial.println(e.what());
-        next_update = millis();
-        ok = false;
-    }
+	catch (std::exception &e)
+	{
+		// Serial.printf("response: %s\n", response.c_str());
+		// Serial.println("XML parse error:");
+		// Serial.println(e.what());
+		next_update = millis();
+		ok = false;
+	}
 
 	if (ok)
 	{
@@ -163,6 +165,9 @@ void widgetRSSFeeds::process_article_data(bool success, const String &response)
 
 bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)
 {
+	if (squixl.switching_screens)
+		return false;
+
 	bool was_dirty = false;
 
 	if (process_next_article)
@@ -172,21 +177,21 @@ bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)
 		return false;
 	}
 
-    if (!is_setup)
-    {
-        is_setup = true;
-        get_char_width();
-        _sprite_article.createVirtual(_w, _h, NULL, true);
-        //Serial.println("RSS Wasn't Set up");
-        
-        feed_url = settings.config.rss_feed.feed_url.c_str();
+	if (!is_setup)
+	{
+		is_setup = true;
+		get_char_width();
+		_sprite_article.createVirtual(_w, _h, NULL, true);
+		// Serial.println("RSS Wasn't Set up");
 
-        if (!feed_url.empty() && settings.has_wifi_creds() ) //&& !wifi_controller.wifi_blocking_access
-        {
-            wifi_controller.add_to_queue(feed_url, [this](bool success, const String &response) { this->process_article_data(success, response); });
-            //Serial.println("Add to Queue");
-        }
-    }
+		feed_url = settings.config.rss_feed.feed_url.c_str();
+
+		if (!feed_url.empty() && settings.has_wifi_creds()) //&& !wifi_controller.wifi_blocking_access
+		{
+			wifi_controller.add_to_queue(feed_url, [this](bool success, const String &response) { this->process_article_data(success, response); });
+			// Serial.println("Add to Queue");
+		}
+	}
 
 	if (is_busy)
 	{
@@ -233,31 +238,31 @@ bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)
 				}
 			}
 
-            was_dirty = true;
-            is_aniamted_cached = true;
-        } 
-        else if (!settings.config.rss_feed.enabled)
+			was_dirty = true;
+			is_aniamted_cached = true;
+		}
+		else if (!settings.config.rss_feed.enabled)
 		{
 			_sprite_article.setTextColor(TFT_RED - 1);
 			_sprite_article.setCursor(10, 38);
 			_sprite_article.print("NOT ENABLED!");
-            // Serial.println("Not Enabled");
+			// Serial.println("Not Enabled");
 		}
 		else if (!settings.config.rss_feed.has_url())
 		{
 			_sprite_article.setTextColor(TFT_RED - 1);
 			_sprite_article.setCursor(10, 38);
 			_sprite_article.print("NO RSS FEED URL");
-            // Serial.println("No RSS Feed URL");
+			// Serial.println("No RSS Feed URL");
 		}
 		else
 		{
 			_sprite_article.setTextColor(TFT_GREY, -1);
 			_sprite_article.setCursor(10, 38);
 			_sprite_article.print("WAITING...");
-            // Serial.println("Waiting");
+			// Serial.println("Waiting");
 		}
-    }
+	}
 
 	if (fade_amount < 32)
 	{
@@ -385,34 +390,44 @@ void widgetRSSFeeds::wrap_text(const String &text, int max_chars_per_line)
 	}
 }
 
-unsigned long widgetRSSFeeds::parse_iso8601_date(const String &date_str) {
-    // Example format: "2025-05-20T21:20:00+00:00"
-    int year = date_str.substring(0, 4).toInt();
-    int month = date_str.substring(5, 7).toInt();
-    int day = date_str.substring(8, 10).toInt();
-    int hour = date_str.substring(11, 13).toInt();
-    int minute = date_str.substring(14, 16).toInt();
-    int second = date_str.substring(17, 19).toInt();
+unsigned long widgetRSSFeeds::parse_iso8601_date(const String &date_str)
+{
+	// Example format: "2025-05-20T21:20:00+00:00"
+	int year = date_str.substring(0, 4).toInt();
+	int month = date_str.substring(5, 7).toInt();
+	int day = date_str.substring(8, 10).toInt();
+	int hour = date_str.substring(11, 13).toInt();
+	int minute = date_str.substring(14, 16).toInt();
+	int second = date_str.substring(17, 19).toInt();
 
-    unsigned long days = (year - 1970) * 365 + (month - 1) * 30 + day;
-    unsigned long seconds = days * 86400 + hour * 3600 + minute * 60 + second;
-    return seconds;
+	unsigned long days = (year - 1970) * 365 + (month - 1) * 30 + day;
+	unsigned long seconds = days * 86400 + hour * 3600 + minute * 60 + second;
+	return seconds;
 }
 
 // Helper function to format time difference
-String widgetRSSFeeds::format_time_ago(unsigned long seconds_ago) {
-    if (seconds_ago < 60) {
-        return String(seconds_ago) + " seconds ago";
-    } else if (seconds_ago < 3600) {
-        return String(seconds_ago / 60) + " minutes ago";
-    } else if (seconds_ago < 86400) {
-        return String(seconds_ago / 3600) + " hours ago";
-    } else if (seconds_ago < 604800) {
-        return String(seconds_ago / 86400) + " days ago";
-    } else {
-        return String(seconds_ago / 604800) + " weeks ago";
-    }
+String widgetRSSFeeds::format_time_ago(unsigned long seconds_ago)
+{
+	if (seconds_ago < 60)
+	{
+		return String(seconds_ago) + " seconds ago";
+	}
+	else if (seconds_ago < 3600)
+	{
+		return String(seconds_ago / 60) + " minutes ago";
+	}
+	else if (seconds_ago < 86400)
+	{
+		return String(seconds_ago / 3600) + " hours ago";
+	}
+	else if (seconds_ago < 604800)
+	{
+		return String(seconds_ago / 86400) + " days ago";
+	}
+	else
+	{
+		return String(seconds_ago / 604800) + " weeks ago";
+	}
 }
 
 widgetRSSFeeds widget_rss_feeds;
-

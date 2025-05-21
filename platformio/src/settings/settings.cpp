@@ -19,7 +19,9 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_haptics, enabled, trigger
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_open_weather, enabled, api_key, poll_frequency, units_metric);
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, mdns_name, case_color, city, country, utc_offset, time_24hour, time_dateformat, volume, current_background, backlight_time_step_battery, backlight_time_step_vbus, sleep_vbus, sleep_battery, open_weather, audio, mqtt, haptics, screenshot);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_rss_feed, enabled, feed_url, poll_frequency);
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, mdns_name, case_color, city, country, utc_offset, time_24hour, time_dateformat, volume, current_background, backlight_time_step_battery, backlight_time_step_vbus, sleep_vbus, sleep_battery, open_weather, rss_feed, audio, mqtt, haptics, screenshot);
 
 unsigned long Settings::reset_screen_dim_time()
 {
@@ -51,6 +53,11 @@ void Settings::init()
 	widget_ow_poll_interval.register_option();
 	widget_ow_units.register_option();
 
+	// RSS Feed
+	widget_rss_enabled.register_option();
+	widget_rss_feed_url.register_option();
+	widget_rss_poll_interval.register_option();
+
 	// Haptics
 	setting_haptics_enabled.register_option();
 	setting_haptics_trig_boot.register_option();
@@ -70,12 +77,16 @@ void Settings::init()
 	mqtt_device_name.register_option();
 	mqtt_topic_listen.register_option();
 
+
+	// Audio UI
 	setting_audio_ui.register_option();
 	setting_audio_alarm.register_option();
 	setting_audio_on_hour.register_option();
 	setting_audio_charge.register_option();
 	setting_audio_volume.register_option();
 
+
+	// Snapshot Image Settings
 	screenshot_saturation.register_option();
 	screenshot_contrast.register_option();
 	screenshot_black.register_option();

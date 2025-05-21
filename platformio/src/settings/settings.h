@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+#include <string>
 #include "utils/json.h"
 #include "utils/json_conversions.h"
 #include "settings/settingsOption.h"
@@ -82,8 +83,8 @@ struct Config_audio
 
 struct wifi_station
 {
-		String ssid = "";
-		String pass = "";
+		std::string ssid = "";
+		std::string pass = "";
 		uint8_t channel = 9;
 };
 

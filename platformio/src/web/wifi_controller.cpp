@@ -73,7 +73,7 @@ bool WifiController::connect()
 		while (stations_to_try > 0)
 		{
 			// Serial.printf("Trying wifi index %d - %s %s\n", settings.config.current_wifi_station, settings.config.wifi_options[settings.config.current_wifi_station].ssid, settings.config.wifi_options[settings.config.current_wifi_station].pass);
-			WiFi.begin(settings.config.wifi_options[settings.config.current_wifi_station].ssid, settings.config.wifi_options[settings.config.current_wifi_station].pass);
+			WiFi.begin(settings.config.wifi_options[settings.config.current_wifi_station].ssid.c_str(), settings.config.wifi_options[settings.config.current_wifi_station].pass.c_str());
 
 			unsigned long start_time = millis();
 			// Time out the connection if it takes longer than 5 seconds
@@ -92,7 +92,7 @@ bool WifiController::connect()
 				if (settings.config.current_wifi_station == settings.config.wifi_options.size())
 					settings.config.current_wifi_station = 0;
 
-				Serial.printf("nope - WiFi.status(): %d, stations_to_try: %d, settings.config.current_wifi_station: %d\n", WiFi.status(), stations_to_try, settings.config.current_wifi_station);
+				Serial.printf("SQUiXL WiFI: Unable to connect to WiFi Router.\nResponse WiFi.status() code: %d, Saved stations left to try: %d/%d\n", WiFi.status(), stations_to_try, settings.config.wifi_options.size());
 			}
 			else
 			{
@@ -105,17 +105,21 @@ bool WifiController::connect()
 
 	if (WiFi.status() == WL_CONNECTED)
 	{
-		Serial.printf("connected using index %d - %s %s\n", settings.config.current_wifi_station, settings.config.wifi_options[settings.config.current_wifi_station].ssid, settings.config.wifi_options[settings.config.current_wifi_station].pass);
+		Serial.printf("SQUiXL WiFI: Connected to WiFi Router using index %d - %s %s\n", settings.config.current_wifi_station, settings.config.wifi_options[settings.config.current_wifi_station].ssid.c_str(), settings.config.wifi_options[settings.config.current_wifi_station].pass.c_str());
 
 		// If we are connected and it's on a different network than last time, we save the settings with the new connection index
 		if (settings.config.current_wifi_station != start_index)
 			settings.save(true);
+
+		Serial.print("IP Address: ");
+		Serial.println(WiFi.localIP());
+	}
+	else
+	{
+		Serial.println("SQUiXL WiFI: Was unable to connect SQUiXL to the WiFi Router. Too bad, so sad :(");
 	}
 
 	wifi_busy = false;
-
-	Serial.print("IP Address: ");
-	Serial.println(WiFi.localIP());
 
 	return (WiFi.status() == WL_CONNECTED);
 }

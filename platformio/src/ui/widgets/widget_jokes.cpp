@@ -16,10 +16,10 @@ void widgetJokes::show_next_joke()
 	{
 		if (!is_getting_more_jokes)
 		{
-			is_getting_more_jokes = true;
-			// Serial.println("Grab more jokes");
-			if (!server_path.empty())
+
+			if (settings.has_wifi_creds() && !server_path.empty() && !wifi_controller.wifi_blocking_access)
 			{
+				is_getting_more_jokes = true;
 				wifi_controller.add_to_queue(server_path, [this](bool success, const String &response) { this->process_joke_data(success, response); });
 			}
 		}
@@ -122,7 +122,7 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 
 		// Serial.println("Post is_setup jokes");
 
-		if (!server_path.empty())
+		if (settings.has_wifi_creds() && !server_path.empty() && !wifi_controller.wifi_blocking_access)
 		{
 			wifi_controller.add_to_queue(server_path, [this](bool success, const String &response) { this->process_joke_data(success, response); });
 		}
@@ -256,7 +256,7 @@ void widgetJokes::get_char_width()
 	max_chars_per_line = int((_w - 20) / char_width); // includes padding for margins
 	max_lines = int((_h - 60) / char_height);		  // includes padding for margins ahd top heading
 
-	Serial.printf("char width: %d, max_chars_per_line: %d\n", char_width, max_chars_per_line);
+	// Serial.printf("char width: %d, max_chars_per_line: %d\n", char_width, max_chars_per_line);
 }
 
 void widgetJokes::process_lines()

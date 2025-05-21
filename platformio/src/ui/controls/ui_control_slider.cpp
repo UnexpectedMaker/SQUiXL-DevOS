@@ -16,7 +16,7 @@ void ui_control_slider::set_options_data(SettingsOptionBase *sett)
 		value_min = (float)opt->get_min_value();
 		value_max = (float)opt->get_max_value();
 		value_step = (float)opt->get_step_value();
-		Serial.printf("\n@@@ current_value (INT): %0.1f - min: %0.1f, max %0.1f \n\n", current_value, value_min, value_max);
+		// Serial.printf("\n@@@ current_value (INT): %0.1f - min: %0.1f, max %0.1f \n\n", current_value, value_min, value_max);
 	}
 	else if (value_type == VALUE_TYPE::FLOAT)
 	{
@@ -25,7 +25,7 @@ void ui_control_slider::set_options_data(SettingsOptionBase *sett)
 		value_min = opt->get_min_value();
 		value_max = opt->get_max_value();
 		value_step = opt->get_step_value();
-		Serial.printf("\n@@@ current_value (FLOAT): %0.1f - min: %0.1f, max %0.1f \n\n", current_value, value_min, value_max);
+		// Serial.printf("\n@@@ current_value (FLOAT): %0.1f - min: %0.1f, max %0.1f \n\n", current_value, value_min, value_max);
 	}
 
 	_title = setting_option->fieldname.c_str();

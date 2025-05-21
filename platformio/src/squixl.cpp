@@ -225,8 +225,15 @@ bool SQUiXL::vbus_changed()
 void SQUiXL::get_public_ip(bool success, const String &response)
 {
 	// Serial.println("Callback executed. Success: " + String(success ? "TRUE" : "FALSE") + ", Response: " + String(response));
-	std::string url = std::string("https://ipapi.co/") + response.c_str() + std::string("/json/");
-	wifi_controller.add_to_queue(url, [](bool success, const String &response) { squixl.get_and_update_utc_settings(success, response); });
+	if (success)
+	{
+		std::string url = std::string("https://ipapi.co/") + response.c_str() + std::string("/json/");
+		wifi_controller.add_to_queue(url, [](bool success, const String &response) { squixl.get_and_update_utc_settings(success, response); });
+	}
+	else
+	{
+		wifi_controller.wifi_blocking_access = false;
+	}
 }
 
 void SQUiXL::get_and_update_utc_settings(bool success, const String &response)
@@ -280,7 +287,7 @@ void SQUiXL::get_and_update_utc_settings(bool success, const String &response)
 		Serial.println("Failed to obtain UTC details");
 	}
 
-	wifi_controller.wifi_blocks_display = false;
+	wifi_controller.wifi_blocking_access = false;
 }
 
 bool SQUiXL::process_touch_full()
@@ -646,7 +653,7 @@ void SQUiXL::process_version(bool success, const String &response)
 	}
 	catch (json::exception &e)
 	{
-		Serial.println("Verions Check parse error:");
+		Serial.println("Version Check parse error:");
 		Serial.println(e.what());
 	}
 }

@@ -28,7 +28,7 @@ class WifiController
 
 		String http_request(std::string url);
 
-		bool wifi_blocks_display = false;
+		bool wifi_blocking_access = false;
 		bool wifi_prevent_disconnect = false;
 
 	private:

@@ -121,6 +121,21 @@ struct Config_widget_open_weather
 		}
 };
 
+/**
+ * @brief Settings struct for open weather widget
+ */
+struct Config_widget_rss_feed
+{
+		int poll_frequency = 60; // Open Weather poll interval - 30mins.
+		String feed_url = "";	 // API key for Open Weather
+		bool enabled = true;
+
+		bool has_url()
+		{
+			return (feed_url.length() > 1);
+		}
+};
+
 // Save data struct
 struct Config
 {
@@ -167,6 +182,9 @@ struct Config
 
 		// Open Weather specific settings - see Struct above
 		Config_widget_open_weather open_weather;
+
+		// RSS Feed specific settings - see Struct above
+		Config_widget_rss_feed rss_feed;
 
 		// Audio specific settings
 		Config_audio audio;
@@ -244,11 +262,13 @@ class Settings
 
 			settings_groups.push_back({"Haptics Settings", SettingType::MAIN});
 
-			settings_groups.push_back({"Open Weather Settings", SettingType::WIDGET, "Add your Open Weather API key here to be able to see your current weather details on your watch face."});
+			settings_groups.push_back({"Open Weather Settings", SettingType::WIDGET, "Add your Open Weather API key here to be able to see your current weather details on your SQUiXL."});
 
 			settings_groups.push_back({"MQTT Settings", SettingType::WEB});
 
 			settings_groups.push_back({"Screenie", SettingType::SCREENIE});
+
+			settings_groups.push_back({"RSS Feed Settings", SettingType::WIDGET, "Add your RSS Feed URL here to be able to see your favourte RSS feed on your SQUiXL."});
 		}
 
 		void init();
@@ -311,7 +331,7 @@ class Settings
 		// MQTT
 		SettingsOptionBool mqtt_enabled{&config.mqtt.enabled, 5, "Enabled", "NO", "YES"};
 		SettingsOptionString mqtt_broker_ip{&config.mqtt.broker_ip, 5, "Broker IP"};
-		SettingsOptionInt mqtt_broker_port{&config.mqtt.broker_port, 1, 2000, false, 5, "Broker Port"};
+		SettingsOptionInt mqtt_broker_port{&config.mqtt.broker_port, 5, 2000, false, 5, "Broker Port"};
 		SettingsOptionString mqtt_username{&config.mqtt.username, 5, "Username", 0, -1, "", false};
 		SettingsOptionString mqtt_password{&config.mqtt.password, 5, "Password", 0, -1, "", false};
 		SettingsOptionString mqtt_device_name{&config.mqtt.device_name, 5, "Device Name"};
@@ -326,6 +346,11 @@ class Settings
 		SettingsOptionFloatRange screenshot_gamma{&config.screenshot.gamma, 0.0f, 2.0f, 0.1f, false, 6, "Levels - Gamma"};
 		SettingsOptionFloatRange screenshot_saturation{&config.screenshot.saturation, 0.0f, 2.0f, 0.1f, false, 6, "Saturation"};
 		SettingsOptionFloatRange screenshot_contrast{&config.screenshot.contrast, 0.0f, 2.0f, 0.1f, false, 6, "Contrast"};
+
+		// RSS Feed
+		SettingsOptionBool widget_rss_enabled{&config.rss_feed.enabled, 7, "Enabled", "NO", "YES"};
+		SettingsOptionString widget_rss_feed_url{&config.rss_feed.feed_url, 7, "Feed URL", 0, -1, "", false};
+		SettingsOptionIntRange widget_rss_poll_interval{&config.rss_feed.poll_frequency, 10, 300, 60, false, 7, "Poll Interval (Min)"};
 
 	private:
 		static constexpr const char *filename = "/settings.json";

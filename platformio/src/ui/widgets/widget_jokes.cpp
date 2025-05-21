@@ -99,9 +99,6 @@ void widgetJokes::process_joke_data(bool success, const String &response)
 
 bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 {
-	if (squixl.switching_screens)
-		return false;
-
 	bool was_dirty = false;
 
 	if (process_next_joke)
@@ -111,30 +108,25 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 		show_next_joke();
 		return false;
 	}
-	// // we want the poll_frequency to be (mins in millis, so mins * 60 * 1000)
-	// if ((millis() - next_update > 20000 && stored_jokes.size() == 0) || next_update == 0)
-	// {
-	// we only run this once
+
 	if (!is_setup)
 	{
-		// next_update += 2000;
-
 		is_setup = true;
-		get_char_width();
-		_sprite_joke.createVirtual(_w, _h, NULL, true);
+		squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 1, &char_width, &char_height);
 
-		// Serial.println("Post is_setup jokes");
+		max_chars_per_line = int((_w - 20) / char_width); // includes padding for margins
+		max_lines = int((_h - 60) / char_height);		  // includes padding for margins ahd top heading
+
+		_sprite_joke.createVirtual(_w, _h, NULL, true);
 
 		if (settings.has_wifi_creds() && !server_path.empty() && !wifi_controller.wifi_blocking_access)
 		{
 			wifi_controller.add_to_queue(server_path, [this](bool success, const String &response) { this->process_joke_data(success, response); });
 		}
 	}
-	// }
 
 	if (is_busy)
 	{
-		// Serial.println("sis bizzzzie");
 		return false;
 	}
 
@@ -143,14 +135,11 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (is_dirty_hard)
 	{
 
-		squixl.current_screen()->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_clean.getBuffer());
-		squixl.current_screen()->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_back.getBuffer());
-		// Serial.println("Post readImage jokes");
+		ui_parent->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_clean.getBuffer());
+		ui_parent->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_back.getBuffer());
 		delay(10);
 
 		draw_window_heading();
-
-		// Serial.printf("\n***Hard Redraw JOKE Window with %d jokes loaded, fade: %d\n\n", stored_jokes.size(), fade_amount);
 
 		_sprite_joke.fillScreen(TFT_MAGENTA);
 
@@ -194,14 +183,12 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (fade_amount < 32)
 	{
 		squixl.lcd.blendSprite(&_sprite_joke, &_sprite_back, &_sprite_mixed, fade_amount, TFT_MAGENTA);
-		squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
 	}
 	else
 	{
 		squixl.lcd.blendSprite(&_sprite_joke, &_sprite_back, &_sprite_mixed, 32, TFT_MAGENTA);
-		squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-
-		// Serial.println("Tick jokes");
+		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
 	}
 
 	if (is_dirty && !was_dirty)
@@ -242,24 +229,6 @@ bool widgetJokes::process_touch(touch_event_t touch_event)
 	}
 
 	return false;
-}
-
-void widgetJokes::get_char_width()
-{
-	int16_t tempx;
-	int16_t tempy;
-	uint16_t tempw;
-	uint16_t temph;
-
-	_sprite_content.setFreeFont(UbuntuMono_R[1]);
-	_sprite_content.getTextBounds("W", 0, 0, &tempx, &tempy, &tempw, &temph);
-
-	char_width = tempw;
-	char_height = temph;
-	max_chars_per_line = int((_w - 20) / char_width); // includes padding for margins
-	max_lines = int((_h - 60) / char_height);		  // includes padding for margins ahd top heading
-
-	// Serial.printf("char width: %d, max_chars_per_line: %d\n", char_width, max_chars_per_line);
 }
 
 void widgetJokes::process_lines()

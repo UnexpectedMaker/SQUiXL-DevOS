@@ -150,10 +150,16 @@ bool save_png(BB_SPI_LCD *screen)
 	const uint8_t *raw = reinterpret_cast<const uint8_t *>(screen->getBuffer());
 	const uint32_t W = 480, H = 480;
 
-	// 3) expand into RGB888 in a single pre-sized array
-	std::vector<uint8_t> rgb;
-	rgb.resize(W * H * 3);
+	// // 3) expand into RGB888 in a single pre-sized array
+	// std::vector<uint8_t> rgb;
+	// rgb.resize(W * H * 3);
 	size_t outIdx = 0;
+
+	size_t pxCount = (size_t)W * H;
+	auto rgb = (uint8_t *)heap_caps_malloc(
+		pxCount * 3,
+		MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT
+	);
 
 	uint8_t black = norm_to_255(settings.config.screenshot.black);
 	uint8_t white = norm_to_255(settings.config.screenshot.white);
@@ -214,6 +220,10 @@ bool save_png(BB_SPI_LCD *screen)
 		LCT_RGB, // color type
 		8		 // bits per channel
 	);
+
+	heap_caps_free(rgb);
+	rgb = nullptr; // (optional, to avoid dangling pointer)
+
 	if (err)
 	{
 		Serial.printf("❌ PNG encode failed (%u): %s\n", err, lodepng_error_text(err));

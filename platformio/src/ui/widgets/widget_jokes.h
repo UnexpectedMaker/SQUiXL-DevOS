@@ -44,11 +44,8 @@ class widgetJokes : public ui_window
 
 		void process_lines();
 		void wrap_text(const String &text, int max_chars_per_line);
-		void get_char_width();
 
 		void reset_refresh_timer();
-
-		// bool deepsleep_data_stored = false;
 };
 
 extern widgetJokes widget_jokes;

@@ -555,8 +555,8 @@ String SettingsOptionString::generate_html(uint16_t index)
 
 bool SettingsOptionWiFiStations::update(int index, String _ssid, String _pass)
 {
-	(*setting_ref)[index].ssid = _ssid;
-	(*setting_ref)[index].pass = _pass;
+	(*setting_ref)[index].ssid = _ssid.c_str();
+	(*setting_ref)[index].pass = _pass.c_str();
 	settings.save(false);
 
 	return true;
@@ -565,21 +565,21 @@ bool SettingsOptionWiFiStations::update(int index, String _ssid, String _pass)
 void SettingsOptionWiFiStations::remove_if_empty()
 {
 	(*setting_ref).erase(std::remove_if((*setting_ref).begin(), (*setting_ref).end(), [](const wifi_station &station) {
-							 return station.ssid.isEmpty() && station.pass.isEmpty();
+							 return station.ssid == "" && station.pass == "";
 						 }),
 						 (*setting_ref).end());
 }
 
 uint8_t SettingsOptionWiFiStations::vector_size() { return (*setting_ref).size(); }
-String SettingsOptionWiFiStations::get_ssid(int index) { return (*setting_ref)[index].ssid; }
-String SettingsOptionWiFiStations::get_pass(int index) { return (*setting_ref)[index].pass; }
+String SettingsOptionWiFiStations::get_ssid(int index) { return String((*setting_ref)[index].ssid.c_str()); }
+String SettingsOptionWiFiStations::get_pass(int index) { return String((*setting_ref)[index].pass.c_str()); }
 
 void SettingsOptionWiFiStations::add_station(String ssid, String pass)
 {
 
 	wifi_station o = wifi_station();
-	o.ssid = ssid;
-	o.pass = pass;
+	o.ssid = ssid.c_str();
+	o.pass = pass.c_str();
 	(*setting_ref).push_back(o);
 }
 

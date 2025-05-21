@@ -140,7 +140,7 @@ uint16_t Settings::webHexToColor565(const char *hex)
  */
 bool Settings::has_wifi_creds(void)
 {
-	return config.wifi_options.size() > 0 && !config.wifi_options[0].ssid.isEmpty() && !config.wifi_options[0].pass.isEmpty();
+	return config.wifi_options.size() > 0 && config.wifi_options[0].ssid != "" && config.wifi_options[0].pass != "";
 }
 
 bool Settings::has_country_set(void) { return !config.country.isEmpty(); }
@@ -156,14 +156,14 @@ void Settings::update_wifi_credentials(String ssid, String pass)
 	if (config.wifi_options.size() == 0)
 	{
 		wifi_station station = wifi_station();
-		station.ssid = ssid;
-		station.pass = pass;
+		station.ssid = ssid.c_str();
+		station.pass = pass.c_str();
 		config.wifi_options.push_back(station);
 	}
 	else if (config.wifi_options.size() == 1)
 	{
-		config.wifi_options[0].ssid = ssid;
-		config.wifi_options[0].pass = pass;
+		config.wifi_options[0].ssid = ssid.c_str();
+		config.wifi_options[0].pass = pass.c_str();
 	}
 	// TODO:  Need to add checking of existing SSID/PASS bombo, and if not found add new entry
 	// 	config.wifi_station

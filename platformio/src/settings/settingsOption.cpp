@@ -487,7 +487,7 @@ bool SettingsOptionString::update(String *val)
 		return false;
 
 	*setting_ref = *val;
-	Serial.printf("String is now %s\n", *setting_ref);
+	Serial.printf("String is now %s\n", (*setting_ref).c_str());
 	settings.save(false);
 
 	return true;

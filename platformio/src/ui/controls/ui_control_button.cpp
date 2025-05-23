@@ -1,4 +1,4 @@
-#include "ui/controls/ui_control_Button.h"
+#include "ui/controls/ui_control_button.h"
 #include "ui/ui_screen.h"
 
 bool ui_control_button::redraw(uint8_t fade_amount, int8_t tab_group)

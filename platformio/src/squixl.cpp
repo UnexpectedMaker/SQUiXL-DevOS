@@ -4,6 +4,7 @@
 #include "ui/icons/images/ui_icons.h"
 #include "ui/controls/ui_control_textbox.h"
 #include "ui/ui_keyboard.h"
+#include "ui/ui_dialogbox.h"
 #include "PNGDisplay.inl"
 
 TaskHandle_t anim_task_handler;
@@ -292,7 +293,7 @@ void SQUiXL::get_and_update_utc_settings(bool success, const String &response)
 
 bool SQUiXL::process_touch_full()
 {
-	if (millis() - next_touch < touch_rate)
+	if (next_touch > millis() || millis() - next_touch < touch_rate)
 		return false;
 
 	next_touch = millis();
@@ -304,6 +305,8 @@ bool SQUiXL::process_touch_full()
 
 	if (keyboard.showing)
 	{
+		// We don't need a fast touch rate for key pressing
+		touch_rate = 100;
 		if (n > 0)
 		{
 			backlight_dimmer_timer = millis();
@@ -314,7 +317,7 @@ bool SQUiXL::process_touch_full()
 				currently_selected = nullptr;
 				isTouched = true;
 				keyboard.show(false, nullptr);
-				next_touch = millis() + 1000;
+				next_touch = millis() + 500;
 				return false;
 			}
 			else if (!isTouched)
@@ -333,6 +336,29 @@ bool SQUiXL::process_touch_full()
 
 		keyboard.flash_cursor();
 		return true;
+	}
+	else if (dialogbox.is_active())
+	{
+		// We don't need a fast touch rate for dialogbox buttons
+		touch_rate = 100;
+		if (n > 0)
+		{
+			if (dialogbox.check_button_hit(pts[0][0], pts[0][1]))
+			{
+				next_touch = millis() + 500;
+				audio.play_tone(500, 1);
+				currently_selected = nullptr;
+				isTouched = true;
+				return false;
+			}
+		}
+
+		next_touch = millis();
+		return true;
+	}
+	else
+	{
+		touch_rate = 25;
 	}
 
 	if (n > 0)
@@ -375,10 +401,6 @@ bool SQUiXL::process_touch_full()
 
 			tab_group_index = -1;
 
-			// currently_selected = nullptr;
-
-			// Serial.printf("touch: %d,%d\n", startX, startY);
-
 			if (current_screen() != nullptr)
 			{
 				tab_group_index = current_screen()->get_tab_group_index();
@@ -400,11 +422,6 @@ bool SQUiXL::process_touch_full()
 				else
 				{
 					currently_selected = current_screen()->find_touched_element(pts[0][0], pts[0][1], -1);
-				}
-
-				if (currently_selected != nullptr && !currently_selected->is_drag_blocked())
-				{
-					currently_selected->process_touch(touch_event_t(pts[0][0], pts[0][1], TOUCH_DRAG));
 				}
 			}
 
@@ -472,25 +489,8 @@ bool SQUiXL::process_touch_full()
 		uint16_t deltaX_abs = abs(deltaX);
 		uint16_t deltaY_abs = abs(deltaY);
 
-		// Serial.printf("start_x: %d, start_y: %d, x: %d, y: %d - deltaX: %d, deltaY: %d\n", startX, startY, moved_x, moved_y, deltaX, deltaY);
-
 		if (currently_selected != nullptr)
 		{
-			// If the current screen is blocked from dragging, if the distance from first touch to last is enough to suggest a swipe, pass a swipe to the current ui element
-			if (currently_selected->is_drag_blocked() && (deltaX_abs > 25 || deltaY_abs > 25))
-			{
-				// Calculate swipe dir to pass on
-				int8_t dir = -1;
-				if (deltaY_abs > deltaX_abs)
-					dir = (deltaY < 0) ? (int)TouchEventType::TOUCH_SWIPE_UP : (int)TouchEventType::TOUCH_SWIPE_DOWN;
-				else
-					dir = (deltaX > 0) ? (int)TouchEventType::TOUCH_SWIPE_RIGHT : (int)TouchEventType::TOUCH_SWIPE_LEFT;
-
-				if (currently_selected->process_touch(touch_event_t(moved_x, moved_y, (TouchEventType)dir, deltaX, deltaY)))
-				{
-					return true;
-				}
-			}
 
 			// If the delta from first touch to current is small enough to suggest a click, process a click or long click
 			if ((abs(deltaX) < 5 && abs(deltaY) < 5))
@@ -517,22 +517,33 @@ bool SQUiXL::process_touch_full()
 					last_was_click = true;
 				}
 			}
-			// If we have selected a drag direction, make sure the delta is long enough to activate the drag
-			else
+			// If the current screen is blocked from dragging, if the distance from first touch to last is enough to suggest a swipe, pass a swipe to the current ui element
+			else if (currently_selected->is_drag_blocked() && (deltaX_abs > 25 || deltaY_abs > 25))
 			{
-				// int distance = sqrt(pow((pts[0][0] - startX), 2) + pow((pts[0][1] - startY), 2));
-				// touchTime = millis() - touchTime;
+				// Calculate swipe dir to pass on
+				int8_t dir = -1;
+				if (deltaY_abs > deltaX_abs)
+					dir = (deltaY < 0) ? (int)TouchEventType::TOUCH_SWIPE_UP : (int)TouchEventType::TOUCH_SWIPE_DOWN;
+				else
+					dir = (deltaX > 0) ? (int)TouchEventType::TOUCH_SWIPE_RIGHT : (int)TouchEventType::TOUCH_SWIPE_LEFT;
 
-				// int16_t last_dir_x = pts[0][0] - moved_x;
-				// int16_t last_dir_y = pts[0][1] - moved_y;
-
-				// currently_selected->process_touch(touch_event_t(moved_x, moved_y, TOUCH_DRAG_END));
+				if (currently_selected->process_touch(touch_event_t(moved_x, moved_y, (TouchEventType)dir, deltaX, deltaY)))
+				{
+					return true;
+				}
+				else if (currently_selected->ui_parent != nullptr)
+				{
+					if (currently_selected->ui_parent->process_touch(touch_event_t(moved_x, moved_y, (TouchEventType)dir, deltaX, deltaY)))
+					{
+						return true;
+					}
+				}
 			}
 		}
 	}
 
 	// If there was a pervious click, and the time past has been longer than what a double click would trigger, process the original single click
-	if (millis() - last_touch > 150 && last_was_click)
+	if (last_was_click && millis() - last_touch > 150)
 	{
 		last_was_click = false;
 		if (currently_selected != nullptr)
@@ -555,7 +566,7 @@ void SQUiXL::set_current_screen(ui_screen *screen)
 	_current_screen = screen;
 	_current_screen->create_buffers();
 
-	log_heap("Screen Switch");
+	// log_heap("Screen Switch");
 }
 
 ui_screen *SQUiXL::current_screen()
@@ -664,6 +675,58 @@ void SQUiXL::take_screenshot()
 	hint_take_screenshot = save_png(&lcd);
 	if (webserver.is_running())
 		webserver.web_event.send("hello", "refresh", millis());
+}
+
+void SQUiXL::split_text_into_lines(const String &text, int max_chars_per_line, std::vector<String> &lines)
+{
+	String currentLine = "";
+	int pos = 0;
+
+	while (pos < text.length())
+	{
+		// Find the next space starting from pos.
+		int spaceIndex = text.indexOf(' ', pos);
+		String word;
+
+		// If no more spaces, grab the rest of the string.
+		if (spaceIndex == -1)
+		{
+			word = text.substring(pos);
+			pos = text.length();
+		}
+		else
+		{
+			word = text.substring(pos, spaceIndex);
+			pos = spaceIndex + 1; // Move past the space.
+		}
+
+		// If currentLine is empty, start it with the word.
+		if (currentLine.length() == 0)
+		{
+			currentLine = word;
+		}
+		// Otherwise, check if adding the next word (with a space) would exceed the limit.
+		else if (currentLine.length() + 1 + word.length() <= max_chars_per_line)
+		{
+			currentLine += " " + word;
+		}
+		// If it would exceed the limit, push the current line and start a new one.
+		else
+		{
+			currentLine.replace("\n", " ");
+			currentLine.replace("\r", " ");
+			lines.push_back(currentLine);
+			currentLine = word;
+		}
+	}
+
+	// Add the last line if not empty.
+	if (currentLine.length() > 0)
+	{
+		currentLine.replace("\n", " ");
+		currentLine.replace("\r", " ");
+		lines.push_back(currentLine);
+	}
 }
 
 SQUiXL squixl;

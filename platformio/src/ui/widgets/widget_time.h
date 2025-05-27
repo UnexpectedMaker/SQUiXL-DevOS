@@ -20,8 +20,6 @@ class widgetTime : public ui_element
 		uint8_t current_fade = 0;
 		bool fade_dir = true;
 
-		bool calculate_text_size(bool forced = false);
-
 		unsigned long next_update = 0;
 
 		bool swap_sprite = false;
@@ -29,10 +27,16 @@ class widgetTime : public ui_element
 		std::string _time_string = "";
 		std::string _date_string = "";
 
-		uint16_t timeh;
-		uint16_t dateh;
-		uint16_t timew;
-		uint16_t datew;
+		uint8_t _time_string_len = 0;
+		uint8_t _date_string_len = 0;
+
+		uint16_t _time_w_pixels = 0;
+		uint16_t _date_w_pixels = 0;
+
+		uint8_t datew = 0;
+		uint8_t dateh = 0;
+		uint8_t timew = 0;
+		uint8_t timeh = 0;
 
 		bool has_data = false;
 		bool should_redraw = false;

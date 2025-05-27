@@ -423,7 +423,7 @@ bool SettingsOptionBool::update(bool val)
 	*setting_ref = val;
 	settings.save(false);
 
-	Serial.printf("toggle now %d\n", *setting_ref);
+	// Serial.printf("toggle now %d\n", *setting_ref);
 
 	return true;
 }

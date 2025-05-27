@@ -137,7 +137,7 @@ void widgetRSSFeeds::process_article_data(bool success, const String &response)
 				pos = item_end + 7;
 			}
 		}
-		Serial.printf("Added articles, you now have %d\n\n", stored_articles.size());
+		Serial.printf("Added RSS Feed articles, you now have %d\n\n", stored_articles.size());
 	}
 	catch (std::exception &e)
 	{
@@ -316,60 +316,28 @@ bool widgetRSSFeeds::process_touch(touch_event_t touch_event)
 
 void widgetRSSFeeds::process_lines()
 {
-	Serial.println("process_lines");
+	// Serial.println("process_lines");
 	lines.clear();
-	wrap_text(stored_articles[0].headline, max_chars_per_line);
+	squixl.split_text_into_lines(stored_articles[0].headline, max_chars_per_line, lines);
+
 	lines.push_back("*nl*");
-	String metadata = stored_articles[0].date + " | " + stored_articles[0].creator + " | " + stored_articles[0].subject + " | " + stored_articles[0].comments + " comments.";
-	wrap_text(metadata, max_chars_per_line);
+
+	String metadata;
+	metadata.reserve(128); // Optional, if you expect the metadata to be long
+	metadata += stored_articles[0].date;
+	metadata += " | ";
+	metadata += stored_articles[0].creator;
+	metadata += " | ";
+	metadata += stored_articles[0].subject;
+	metadata += " | ";
+	metadata += stored_articles[0].comments;
+	metadata += " comments.";
+
+	// String metadata = stored_articles[0].date + " | " + stored_articles[0].creator + " | " + stored_articles[0].subject + " | " + stored_articles[0].comments + " comments.";
+	squixl.split_text_into_lines(metadata, max_chars_per_line, lines);
+
 	_sprite_article.fillScreen(TFT_MAGENTA);
 	is_aniamted_cached = false;
-}
-
-void widgetRSSFeeds::wrap_text(const String &text, int max_chars_per_line)
-{
-	String currentLine = "";
-	int pos = 0;
-
-	while (pos < text.length())
-	{
-		int spaceIndex = text.indexOf(' ', pos);
-		String word;
-
-		if (spaceIndex == -1)
-		{
-			word = text.substring(pos);
-			pos = text.length();
-		}
-		else
-		{
-			word = text.substring(pos, spaceIndex);
-			pos = spaceIndex + 1;
-		}
-
-		if (currentLine.length() == 0)
-		{
-			currentLine = word;
-		}
-		else if (currentLine.length() + 1 + word.length() <= max_chars_per_line)
-		{
-			currentLine += " " + word;
-		}
-		else
-		{
-			currentLine.replace("\n", " ");
-			currentLine.replace("\r", " ");
-			lines.push_back(currentLine);
-			currentLine = word;
-		}
-	}
-
-	if (currentLine.length() > 0)
-	{
-		currentLine.replace("\n", " ");
-		currentLine.replace("\r", " ");
-		lines.push_back(currentLine);
-	}
 }
 
 unsigned long widgetRSSFeeds::parse_iso8601_date(const String &date_str)

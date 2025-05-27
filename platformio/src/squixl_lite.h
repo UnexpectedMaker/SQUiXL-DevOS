@@ -202,6 +202,11 @@ struct font_size_t
 		{
 			Serial.printf("font: weight %d, size %d with (%d, %d)\n", weight, size, width, height);
 		}
+
+		bool check_fit(uint8_t _size, FONT_SPEC _weight)
+		{
+			return (size == _size && weight == _weight);
+		}
 };
 
 class SQUiXL_LITE

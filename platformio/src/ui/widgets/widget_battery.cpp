@@ -151,14 +151,7 @@ bool widgetBattery::process_touch(touch_event_t touch_event)
 			if (millis() - next_click_update > 1000)
 			{
 				next_click_update = millis();
-				// if (!wifi_controller.is_connected())
-				// {
-				// 	Serial.println("Open the wifi manager UI");
-				// 	squixl.set_current_screen(wifiSetup.screen());
-				// 	squixl.current_screen()->refresh(true);
-				// 	audio.play_tone(300, 2);
-
-				// 	return true;
+				return false;
 			}
 		}
 	}

@@ -10,6 +10,10 @@ void widgetTime::create(int16_t x, int16_t y, uint16_t color, TEXT_ALIGN alignme
 	_h = 0;
 
 	_align = alignment;
+
+	// Cache the font sizes for the time and date for quick calcs
+	squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 5, &timew, &timeh);
+	squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 1, &datew, &dateh);
 }
 
 void widgetTime::capture_clean_sprite()
@@ -20,7 +24,6 @@ void widgetTime::capture_clean_sprite()
 
 bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 {
-
 	unsigned long start_time = millis();
 
 	// This is busy if something else is drawing this
@@ -46,14 +49,36 @@ bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 		is_dirty_hard = false;
 	}
 
-	if (rtc.did_time_change())
+	if (rtc.did_time_change() || !is_setup)
 	{
 		_time_string = rtc.get_time_string_seconds(true, true).c_str();
 		_date_string = rtc.get_date_string(true, false).c_str();
 
-		if (calculate_text_size(!is_setup))
+		bool changed = false;
+		if (_time_string_len != _time_string.length())
 		{
-			// Serial.println("text calc size changed");
+			changed = true;
+			_time_string_len = _time_string.length();
+			_time_w_pixels = _time_string_len * timew;
+		}
+		if (_date_string_len != _date_string.length())
+		{
+			changed = true;
+			_date_string_len = _date_string.length();
+			_date_w_pixels = _date_string_len * datew;
+		}
+
+		if (changed)
+		{
+			uint16_t tempw = max(_time_w_pixels, _date_w_pixels);
+			uint16_t temph = timeh + dateh + 10; // extra padding for 2 lines
+
+			// Set new width and height for sprites
+			if (tempw != _w || temph != _h)
+			{
+				_w = tempw;
+				_h = temph;
+			}
 
 			// Work out new X,Y coordinates based on alingment
 			if (_align == TEXT_ALIGN::ALIGN_LEFT)
@@ -74,7 +99,6 @@ bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 
 			if (_sprite_clean.getBuffer())
 			{
-				// Serial.println("closed sprites");
 				_sprite_content.freeVirtual();
 				_sprite_mixed.freeVirtual();
 				_sprite_clean.freeVirtual();
@@ -90,9 +114,9 @@ bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 			is_setup = true;
 		}
 
-		uint16_t max_width = max(timew, datew);
-		uint8_t offset_x_time = max_width - timew;
-		uint8_t offset_x_date = max_width - datew;
+		uint16_t max_width = max(_time_w_pixels, _date_w_pixels);
+		uint8_t offset_x_time = max_width - _time_w_pixels;
+		uint8_t offset_x_date = max_width - _date_w_pixels;
 
 		_sprite_content.fillScreen(TFT_MAGENTA);
 
@@ -114,55 +138,12 @@ bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 	else
 	{
 		squixl.current_screen()->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
-		// Serial.println("Tick time");
 		next_refresh = millis();
 	}
-
-	// Serial.printf("time redraw time: %u ms\n", (millis() - start_time));
 
 	is_dirty = false;
 	is_busy = false;
 	return true;
-}
-
-// Private
-
-bool widgetTime::calculate_text_size(bool forced)
-{
-	int16_t tempx;
-	int16_t tempy;
-
-	bool changed = false;
-
-	BB_SPI_LCD font_check;
-
-	font_check.setFreeFont(UbuntuMono_R[5]);
-	font_check.getTextBounds(_time_string.c_str(), 0, 0, &tempx, &tempy, &timew, &timeh);
-	font_check.setFreeFont(UbuntuMono_R[1]);
-	font_check.getTextBounds(_date_string.c_str(), 0, 0, &tempx, &tempy, &datew, &dateh);
-
-	font_check.freeVirtual();
-
-	uint16_t tempw = max(timew, datew);
-	uint16_t temph = timeh + dateh + 10; // extra padding for 2 lines
-
-	if (tempw != _w || temph != _h || forced)
-	{
-		changed = true;
-
-		// if (_adj_x != 0 && _adj_y != 0)
-		// {
-		// 	// put the clean background back using the old with data
-		// 	squixl.lcd.drawSprite(_adj_x, _adj_y, &_sprite_clean, 1.0, -1, DRAW_TO_LCD);
-		// }
-
-		_w = tempw;
-		_h = temph;
-
-		// Serial.printf("Time Widget: %s - New Width: %d, Height: %d\n", _time_string.c_str(), _w, _h);
-	}
-
-	return changed;
 }
 
 bool widgetTime::process_touch(touch_event_t touch_event)

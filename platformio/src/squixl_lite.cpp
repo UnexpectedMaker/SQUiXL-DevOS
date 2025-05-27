@@ -208,7 +208,7 @@ bool SQUiXL_LITE::mux_switch_to(MUX_STATE new_state)
 
 	delay(50);
 
-	// Now do teh switch
+	// Now do the switch
 	if (new_state == MUX_STATE::MUX_I2S)
 	{
 		ioex.write(MUX_SEL, HIGH); // HIGH is I2S, LOW is SD
@@ -335,13 +335,12 @@ void SQUiXL_LITE::get_cached_char_sizes(FONT_SPEC weight, uint8_t size, uint8_t 
 
 	for (int i = 0; i < font_char_sizes.size(); i++)
 	{
-		// font_char_sizes[i].print();
-		if (font_char_sizes[i].weight == (int)weight && font_char_sizes[i].size == size)
+		// if (font_char_sizes[i].weight == (int)weight && font_char_sizes[i].size == size)
+		if (font_char_sizes[i].check_fit(size, weight))
 		{
 			*width = font_char_sizes[i].width;
 			*height = font_char_sizes[i].height;
 			return;
-			// Serial.println("**found**");
 		}
 	}
 }

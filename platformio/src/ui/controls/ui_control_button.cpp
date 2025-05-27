@@ -81,15 +81,15 @@ bool ui_control_button::process_touch(touch_event_t touch_event)
 			redraw(32);
 			squixl.current_screen()->refresh(true);
 
-			if (callbackFunction != nullptr)
-				callbackFunction();
-
 			audio.play_tone(500, 1);
 
 			delay(10);
 			flash = false;
 			redraw(32);
 			squixl.current_screen()->refresh(true);
+
+			if (callbackFunction != nullptr)
+				callbackFunction();
 
 			return true;
 		}

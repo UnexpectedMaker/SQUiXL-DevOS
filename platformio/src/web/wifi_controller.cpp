@@ -34,6 +34,8 @@ void WifiController::kill_controller_task()
 {
 	Serial.println("Killing WiFi queue task!");
 	vTaskDelete(wifi_task_handler);
+	vQueueDelete(wifi_task_queue);
+	vQueueDelete(wifi_callback_queue);
 }
 
 // Return the busy state of the WiFi queue
@@ -44,7 +46,7 @@ bool WifiController::is_connected() { return (WiFi.status() == WL_CONNECTED); }
 // Connect to the WiFi network
 bool WifiController::connect()
 {
-	Serial.println("Conecting to wifi");
+	// Serial.println("Conecting to wifi");
 	if (WiFi.status() == WL_CONNECTED)
 	{
 		// Serial.println("Already connected to Wifi");
@@ -84,8 +86,6 @@ bool WifiController::connect()
 
 			if (WiFi.status() != WL_CONNECTED)
 			{
-				// WiFi.disconnect(true);
-				// delay(500);
 				stations_to_try--;
 
 				settings.config.current_wifi_station++;
@@ -111,8 +111,8 @@ bool WifiController::connect()
 		if (settings.config.current_wifi_station != start_index)
 			settings.save(true);
 
-		Serial.print("IP Address: ");
-		Serial.println(WiFi.localIP());
+		// Serial.print("IP Address: ");
+		// Serial.println(WiFi.localIP());
 	}
 	else
 	{
@@ -158,17 +158,13 @@ String WifiController::http_request(std::string url)
 	String payload = "ERROR";
 
 	int http_code = -1;
-	// unsigned long timer = millis();
-
 	String url_lower = String(url.c_str());
 	url_lower.toLowerCase();
 
-	Serial.printf("http_request: %s\n", url_lower.c_str());
+	// Serial.printf("http_request: %s\n", url_lower.c_str());
 
 	bool is_https = (url_lower.substring(0, 5) == "https");
 
-	// while (millis() - timer < 4000)
-	// {
 	WiFiClient client;
 	HTTPClient http;
 
@@ -189,10 +185,7 @@ String WifiController::http_request(std::string url)
 	{
 		payload = http.getString();
 		http.end();
-		// break;
 	}
-	// delay(2000);
-	// }
 
 	return payload;
 }
@@ -254,18 +247,16 @@ void WifiController::add_to_queue(std::string url, _CALLBACK callback)
 	item->url = url;
 	item->callback = callback;
 
-	if (item->url == "")
-		Serial.println("Adding request to connect to wifi if not connected!");
-	else
-		Serial.println("Adding request to " + String(item->url.c_str()));
+	// if (item->url == "")
+	// 	Serial.println("Adding request to connect to wifi if not connected!");
+	// else
+	// 	Serial.println("Adding request to " + String(item->url.c_str()));
 
 	xQueueSend(wifi_task_queue, &item, portMAX_DELAY);
 
-	Serial.printf("\nHeap Log: WIFI\nHeap Size: %u of %u\n", ESP.getFreeHeap(), ESP.getHeapSize());
-	Serial.printf("Min Heap Size: %u, Max Alloc Heap Size: %u, ", ESP.getMinFreeHeap(), ESP.getMaxAllocHeap());
-	Serial.printf("PSRAM Size: %u\n\n", ESP.getFreePsram());
-
-	// xQueueSend(wifi_task_queue, &item, portMAX_DELAY);
+	// Serial.printf("\nHeap Log: WIFI\nHeap Size: %u of %u\n", ESP.getFreeHeap(), ESP.getHeapSize());
+	// Serial.printf("Min Heap Size: %u, Max Alloc Heap Size: %u, ", ESP.getMinFreeHeap(), ESP.getMaxAllocHeap());
+	// Serial.printf("PSRAM Size: %u\n\n", ESP.getFreePsram());
 }
 
 WifiController wifi_controller;

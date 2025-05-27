@@ -195,6 +195,9 @@ class SQUiXL : public SQUiXL_LITE
 		bool hint_take_screenshot = false;
 		void take_screenshot();
 
+		// Helpers
+		void split_text_into_lines(const String &text, int max_chars_per_line, std::vector<String> &lines);
+
 	protected:
 		float current_backlight_pwm = 0.0f;
 		unsigned long backlight_dimmer_timer = 0;

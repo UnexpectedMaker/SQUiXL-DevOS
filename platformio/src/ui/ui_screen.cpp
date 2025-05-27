@@ -1,5 +1,6 @@
 #include "ui/ui_screen.h"
 #include "ui/ui_keyboard.h"
+#include "ui/ui_dialogbox.h"
 #include "settings/settings.h"
 #include "JPEGDisplay.inl"
 
@@ -473,6 +474,13 @@ bool ui_screen::redraw(uint8_t fade_amount, int8_t tab_group)
 	// 	_sprite_content.createVirtual(480, 480, NULL, true);
 	// 	_sprite_content.fillScreen(TFT_MAGENTA);
 	// }
+
+	// If the dialog box is open, we insert it last onto the current screen, over the content
+	// This allows the content in the background to continue to update, like the time.
+	if (dialogbox.is_active())
+	{
+		dialogbox.draw();
+	}
 
 	if (fade_amount < 32)
 	{

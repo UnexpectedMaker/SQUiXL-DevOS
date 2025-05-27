@@ -18,6 +18,7 @@
 #include "ui/ui_label.h"
 
 #include "ui/controls/ui_control_tabgroup.h"
+#include "ui/ui_dialogbox.h"
 
 #include "mqtt/mqtt.h"
 #include "utils/littlefs_cli.h"
@@ -83,11 +84,30 @@ ui_control_slider slider_screenshot_lvl_gamma;
 ui_control_slider slider_screenshot_saturation;
 ui_control_slider slider_screenshot_contrast;
 
+ui_control_button button_dialogbox_test;
+
 ui_label label_version;
+
+void button_press_ok()
+{
+	Serial.println("\n\nPressed OK!\n\n");
+}
+
+void button_press_cancelled()
+{
+	Serial.println("\n\nPressed CANCEL!\n\n");
+}
+
+void dialogbox_example()
+{
+	dialogbox.set_button_ok("Continue", button_press_ok);
+	dialogbox.set_button_cancel("goodbye!", button_press_cancelled);
+	dialogbox.show("Test Dialog Box", "Lot's of stuff about being careful not to overflow the heap and then get rubbbish on sceen - or spelling mistakes!");
+	// dialogbox.show("Imperial Checkpoint", "These aren't the droids you're looking for... He can go about his business");
+}
 
 void create_ui_elements()
 {
-
 	// screen_wifi_manager.setup(0x5AEB, false);
 	// widget_wifimanager.create();
 	// // widget_wifimanager.set_back_screen(&screen_main);
@@ -130,15 +150,19 @@ void create_ui_elements()
 	toggle_sleep_vbus.set_options_data(&settings.setting_sleep_vbus);
 	settings_tab_group.add_child_ui(&toggle_sleep_vbus, 0);
 
-	toggle_time_mode.create_on_grid(3, 1, "TIME FORMAT");
+	toggle_time_mode.create_on_grid(2, 1, "TIME FORMAT");
 	toggle_time_mode.set_toggle_text("12H", "24H");
 	toggle_time_mode.set_options_data(&settings.setting_time_24hour);
 	settings_tab_group.add_child_ui(&toggle_time_mode, 0);
 
-	toggle_date_mode.create_on_grid(3, 1, "DATE FORMAT");
+	toggle_date_mode.create_on_grid(2, 1, "DATE FORMAT");
 	toggle_date_mode.set_toggle_text("D-M-Y", "M-D-Y");
 	toggle_date_mode.set_options_data(&settings.setting_time_dateformat);
 	settings_tab_group.add_child_ui(&toggle_date_mode, 0);
+
+	button_dialogbox_test.create_on_grid(2, 1, "TEST");
+	button_dialogbox_test.set_callback(dialogbox_example);
+	settings_tab_group.add_child_ui(&button_dialogbox_test, 0);
 
 	slider_UTC.create_on_grid(6, 1);
 	slider_UTC.set_value_type(VALUE_TYPE::INT);
@@ -390,7 +414,7 @@ void setup()
 	every_second = millis();
 
 	// This is a bit awkward - we need to see if the user has no wifi credentials,
-	// or if they havn't set their country code, or f teh RTC is state.
+	// or if they havn't set their country code, or f the RTC is state.
 	if (rtc.requiresNTP || !settings.has_wifi_creds() || !settings.has_country_set())
 	{
 		// No wifi credentials yet, so start the wifi manager
@@ -429,7 +453,7 @@ void setup()
 		}
 	}
 
-	Serial.printf("\n>>> Setup done in %0.2f ms\n\n", (millis() - timer));
+	// Serial.printf("\n>>> Setup done in %0.2f ms\n\n", (millis() - timer));
 
 	// Setup delayed timer for webserver starting, to alloqw other web traffic to complete first
 	delay_webserver_start = millis();
@@ -479,7 +503,7 @@ void loop()
 			squixl.animate_backlight(0, 100, 500);
 		}
 
-		Serial.printf("\n>>> UI build done in %0.2f ms\n\n", (millis() - timer));
+		// Serial.printf("\n>>> UI build done in %0.2f ms\n\n", (millis() - timer));
 		// squixl.log_heap("main");
 
 		return;
@@ -552,7 +576,7 @@ void loop()
 		}
 		else if (squixl.current_screen() == nullptr)
 		{
-			// We were showing teh first boot screen, so no current screen is set yet.
+			// We were showing the first boot screen, so no current screen is set yet.
 			squixl.set_current_screen(&screen_main);
 			screen_main.show_random_background(true);
 		}

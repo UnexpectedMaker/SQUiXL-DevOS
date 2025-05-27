@@ -43,7 +43,7 @@ class widgetJokes : public ui_window
 		BB_SPI_LCD _sprite_joke;
 
 		void process_lines();
-		void wrap_text(const String &text, int max_chars_per_line);
+		// void wrap_text(const String &text, int max_chars_per_line);
 
 		void reset_refresh_timer();
 };

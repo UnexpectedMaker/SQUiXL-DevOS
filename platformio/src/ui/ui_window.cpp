@@ -17,8 +17,6 @@ void ui_window::create(int16_t pos_x, int16_t pos_y, int16_t width, int16_t heig
 
 	_font = UbuntuMono_R[1];
 
-	// squixl.log_heap("UI window #1");
-
 	_sprite_back.createVirtual(_w, _h, NULL, true);
 	_sprite_content.createVirtual(_w, _h, NULL, true);
 	_sprite_mixed.createVirtual(_w, _h, NULL, true);
@@ -27,11 +25,7 @@ void ui_window::create(int16_t pos_x, int16_t pos_y, int16_t width, int16_t heig
 	// read whatever is on the screen alrady at x,y,w,h and store it in the sprite
 	// we will draw over that with whatever is on the screen
 	_sprite_clean.createVirtual(_w, _h, NULL, true);
-
-	// squixl.log_heap("UI window #2");
 	squixl.lcd.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_clean.getBuffer());
-
-	// move(_x, _y, true);
 
 	calculate_text_size(true);
 
@@ -39,15 +33,10 @@ void ui_window::create(int16_t pos_x, int16_t pos_y, int16_t width, int16_t heig
 
 	is_dirty = true;
 	is_dirty_hard = true;
-
-	// Serial.printf("\nCreated window %s with transparency of %d - x: %d, y: %d, w: %d, h: %d\n\n", _title.c_str(), _t, _x, _y, _w, _h);
-
-	// squixl.log_heap("UI window #3");
 }
 
 void ui_window::draw_window_heading()
 {
-	// Serial.println("Pre draw_window_heading");
 	// Draw the window background and title bar
 	_sprite_content.fillScreen(TFT_MAGENTA);
 	_sprite_content.fillRoundRect(0, 0, _w, _h, 7, _c, DRAW_TO_RAM); // white will be our mask
@@ -56,15 +45,11 @@ void ui_window::draw_window_heading()
 	_sprite_content.fillRoundRect(0, 0, _w, 24, 7, _c, DRAW_TO_RAM); // white will be our mask
 	squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_back, min(_t * 2, 16), TFT_MAGENTA);
 
-	// Serial.println("Mid draw_window_heading");
-
 	// Draw the window title left jusified
 	_sprite_back.setTextColor(TFT_WHITE, -1);
 	_sprite_back.setFreeFont(UbuntuMono_R[1]);
 	_sprite_back.setCursor(padding.left, _text_height + 7);
 	_sprite_back.print(_title.c_str());
-
-	// Serial.println("Post draw_window_heading");
 }
 
 bool ui_window::redraw(uint8_t fade_amount, int8_t tab_group)
@@ -90,7 +75,7 @@ bool ui_window::redraw(uint8_t fade_amount, int8_t tab_group)
 		_sprite_back.setTextColor(TFT_WHITE, -1);
 		_sprite_back.setFreeFont(_font);
 		_sprite_back.setCursor(_w / 2 - _text_width / 2, _text_height + 10);
-		// Serial.printf("redraw() title: %s ||\n", _title.c_str());
+
 		_sprite_back.print(_title.c_str());
 
 		for (int w = 0; w < ui_children.size(); w++)
@@ -99,10 +84,6 @@ bool ui_window::redraw(uint8_t fade_amount, int8_t tab_group)
 			ui_children[w]->redraw(32);
 		}
 	}
-
-	// // We dont want to fade back in to less transparency then we wanted when we created the window
-	// if (fade_amount > _t)
-	// 	return;
 
 	if (fade_amount < 32)
 	{
@@ -189,8 +170,6 @@ bool ui_window::calculate_text_size(bool forced)
 
 		_text_width = tempw;
 		_text_height = temph;
-
-		// Serial.printf("Update Label: %s - New Width: %d, Height: %d, pos_x: %d, pos_y: %d\n", _title.c_str(), _text_width, _text_height, _text_pos_x, _text_pos_y);
 
 		// Work out new X,Y coordinates based on alingment
 		if (_align == TEXT_ALIGN::ALIGN_LEFT)

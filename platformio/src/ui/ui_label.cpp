@@ -1,7 +1,7 @@
 #include "ui/ui_label.h"
 #include "ui/ui_screen.h"
 
-static std::vector<ui_label *> labels;
+// static std::vector<ui_label *> labels;
 
 void ui_label::create(int16_t x, int16_t y, const char *title, uint16_t color, TEXT_ALIGN alignment)
 {
@@ -12,11 +12,16 @@ void ui_label::create(int16_t x, int16_t y, const char *title, uint16_t color, T
 
 	_align = alignment;
 
-	// using the new directly stored char sizes
-	_w = _title.length() * UbuntuMono_R_Char_Sizes[1][0];
-	_h = UbuntuMono_R_Char_Sizes[1][1] + 4; // extra buffer just in case
+	uint8_t char_width = 0;
+	uint8_t char_height = 0;
+
+	squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 1, &char_width, &char_height);
+	_w = _title.length() * char_width;
+	_h = char_height + 4; // extra buffer just in case
 
 	calculate_alignment();
+
+	// Serial.printf("\n*** Creaeted label with %d,%d \n", _w, _h);
 
 	// We need the font set before we can calculate the size
 	_sprite_back.createVirtual(_w, _h, NULL, true);
@@ -46,12 +51,12 @@ bool ui_label::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	if (fade_amount < 32)
 	{
-
 		squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_back, fade_amount);
-		ui_parent->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_back, 1.0f, -1, DRAW_TO_RAM);
+		get_ui_parent()->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_back, 1.0f, -1, DRAW_TO_RAM);
 	}
 	else
 	{
+		// Serial.printf("drawing %s at %d,%d - element_tab_group: %d\n", get_title(), _adj_x, _adj_y, element_tab_group);
 		ui_parent->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
 		next_refresh = millis() + refresh_interval;
 	}

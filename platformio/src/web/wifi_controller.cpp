@@ -105,7 +105,7 @@ bool WifiController::connect()
 
 	if (WiFi.status() == WL_CONNECTED)
 	{
-		Serial.printf("SQUiXL WiFI: Connected to WiFi Router using index %d - %s %s\n", settings.config.current_wifi_station, settings.config.wifi_options[settings.config.current_wifi_station].ssid.c_str(), settings.config.wifi_options[settings.config.current_wifi_station].pass.c_str());
+		// Serial.printf("SQUiXL WiFI: Connected to WiFi Router using index %d - %s %s\n", settings.config.current_wifi_station, settings.config.wifi_options[settings.config.current_wifi_station].ssid.c_str(), settings.config.wifi_options[settings.config.current_wifi_station].pass.c_str());
 
 		// If we are connected and it's on a different network than last time, we save the settings with the new connection index
 		if (settings.config.current_wifi_station != start_index)

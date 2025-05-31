@@ -6,7 +6,6 @@
 #include <vector>
 #include "WiFi.h"
 
-class ui_screen;
 extern std::vector<ui_screen *> screens;
 
 class ui_screen : public ui_element

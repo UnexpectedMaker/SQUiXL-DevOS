@@ -311,6 +311,8 @@ void SQUiXL_LITE::cache_text_sizes()
 		UbuntuMono_R_Char_Sizes[i][1] = temph;
 		count++;
 
+		// Serial.printf("FONT: UbuntuMono_R[%d] %d %d\n", i, UbuntuMono_R_Char_Sizes[i][0], UbuntuMono_R_Char_Sizes[i][1]);
+
 		// font_size_t size;
 		// size.weight = FONT_SPEC::FONT_WEIGHT_R;
 		// size.size = i;
@@ -327,6 +329,8 @@ void SQUiXL_LITE::cache_text_sizes()
 		UbuntuMono_B_Char_Sizes[i][0] = tempw;
 		UbuntuMono_B_Char_Sizes[i][1] = temph;
 		count++;
+
+		// Serial.printf("FONT: UbuntuMono_B[%d] %d %d\n", i, UbuntuMono_B_Char_Sizes[i][0], UbuntuMono_B_Char_Sizes[i][1]);
 		// font_size_t size;
 		// size.weight = FONT_SPEC::FONT_WEIGHT_R;
 		// size.size = i;

@@ -304,15 +304,18 @@ bool ui_screen::position_children(bool force_children)
 			}
 		}
 		// Now do screen UI children
+		// Serial.printf("ui_children.size()? %d\n", ui_children.size());
+
 		for (int w = 0; w < ui_children.size(); w++)
 		{
 			ui_element *child = ui_children[w];
 			if (child != nullptr)
 			{
+				// Serial.printf("Found non grid child: %s\n", child->get_title());
 				if (force_children || child->should_refresh())
 				{
-					// if (force_children)
-					// 	child->set_dirty(true);
+					if (force_children)
+						child->set_dirty(true);
 
 					if (child->redraw(32))
 						child_dirty = true;
@@ -394,7 +397,7 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 		{
 			// Serial.println("Setup for new drag");
 
-			drag_step_timer = millis();
+			// drag_step_timer = millis();
 
 			// Serial.printf("starting drag @ %u\n", drag_step_timer);
 
@@ -464,7 +467,7 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 			drag_neighbours[0] = nullptr;
 			drag_neighbours[1] = nullptr;
 
-			squixl.log_heap("finshed drag");
+			// squixl.log_heap("finshed drag");
 		}
 		else
 		{
@@ -552,30 +555,6 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 
 		return false;
 	}
-	// else if (int(touch_event.type) >= 3 && int(touch_event.type) < 7)
-	// {
-	// 	String sw_dir[4] = {"SWIPE UP", "SWIPE RIGHT", "SWIPE DOWN", "SWIPE LEFT"};
-
-	// 	bool swipe_ok = false;
-	// 	// get the direction from the wipe dir
-	// 	int nav_dir = int(touch_event.type) - 3;
-
-	// 	// Serial.printf("touch event: %d, (%d, %d) sw_dir: %s, nav_dir: %d\n", int(touch_event.type), touch_event.x, touch_event.y, sw_dir[int(touch_event.type) - 3], nav_dir);
-
-	// 	if (navigation[nav_dir] != nullptr)
-	// 	{
-	// 		squixl.set_current_screen(navigation[nav_dir]);
-	// 		swipe_ok = true;
-
-	// 		squixl.current_screen()->animate_pos((Directions)nav_dir, 250, tween_ease_t::EASE_OUT, nullptr);
-	// 	}
-
-	// 	if (swipe_ok)
-	// 	{
-	// 		// Serial.printf("New screen index: %d\n", settings.config.current_screen);
-	// 		return true;
-	// 	}
-	// }
 
 	return false;
 }
@@ -749,21 +728,8 @@ void ui_screen::clean_neighbour_sprites()
 
 void ui_screen::draw_draggable()
 {
-	// bool created = false;
-	// // we only need this sprite temporarly if we are blending content
-	// if (!_sprite_drag.getBuffer())
-	// {
-	// 	_sprite_drag.createVirtual(480, 480, NULL, true);
-	// 	Serial.println("created _sprite_drag in draw_draggable()");
-	// 	created = true;
-	// 	// _sprite_drag.fillScreen(0);
-	// }
-
 	if (_sprite_drag.getBuffer())
 	{
-		// squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_mixed, 32, TFT_MAGENTA);
-		// _sprite_drag.drawSprite(drag_x, drag_y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-
 		squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_content, 32, TFT_MAGENTA);
 		_sprite_drag.drawSprite(drag_x, drag_y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
 
@@ -827,7 +793,10 @@ void ui_screen::setup_draggable_neighbour(bool state)
 	if (state)
 	{
 		create_buffers();
-		position_children(true);
+		if (position_children(true))
+		{
+			// Serial.println("Children ready for drag");
+		}
 	}
 	else if (!state)
 	{

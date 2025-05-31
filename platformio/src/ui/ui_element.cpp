@@ -9,6 +9,18 @@ void ui_element::add_child_ui(ui_element *child, int8_t tab_group)
 	tab_group_children[tab_group].push_back(child);
 }
 
+// hepler for getting the ui elements parent - for screen reference
+ui_element *ui_element::get_ui_parent()
+{
+	if (element_tab_group > -1)
+	{
+		if (ui_parent->ui_parent != nullptr)
+			return ui_parent->ui_parent;
+	}
+
+	return ui_parent;
+}
+
 void ui_element::set_refresh_interval(uint16_t interval)
 {
 	refresh_interval = interval;

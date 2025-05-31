@@ -100,10 +100,9 @@ void button_press_cancelled()
 
 void dialogbox_example()
 {
-	dialogbox.set_button_ok("Continue", button_press_ok);
-	dialogbox.set_button_cancel("goodbye!", button_press_cancelled);
-	dialogbox.show("Test Dialog Box", "Lot's of stuff about being careful not to overflow the heap and then get rubbbish on sceen - or spelling mistakes!");
-	// dialogbox.show("Imperial Checkpoint", "These aren't the droids you're looking for... He can go about his business");
+	dialogbox.set_button_ok("OK", button_press_ok);
+	dialogbox.set_button_cancel("CANCEL!", button_press_cancelled);
+	dialogbox.show("Example Dialog Box", "Being careful not to overflow the heap and then get rubbbish on sceen - or spelling mistakes!");
 }
 
 void create_ui_elements()
@@ -285,7 +284,7 @@ void create_ui_elements()
 	slider_screenshot_wb_tint.set_options_data(&settings.screenshot_wb_tint);
 	settings_tab_group.add_child_ui(&slider_screenshot_wb_tint, 5);
 
-	label_version.create(240, 460, squixl.version_firmware.c_str(), TFT_GREY);
+	label_version.create(240, 460, squixl.get_version().c_str(), TFT_GREY);
 	screen_settings.add_child_ui(&label_version);
 
 	screen_settings.set_can_cycle_back_color(true);
@@ -336,7 +335,7 @@ void setup()
 
 	// Set PWM for backlight chage pump IC
 	pinMode(BL_PWM, OUTPUT);
-	ledcAttach(BL_PWM, 6000, LEDC_TIMER_12_BIT);
+	ledcAttach(BL_PWM, 6500, LEDC_TIMER_12_BIT);
 
 	Serial.begin(115200);
 	Serial.setDebugOutput(true); // sends all log_e(), log_i() messages to USB HW CDC

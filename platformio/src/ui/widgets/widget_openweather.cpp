@@ -149,7 +149,7 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 	{
 		// squixl.lcd.drawSprite(_x, _y, &_sprite_clean, 1.0f, -1, DRAW_TO_LCD);
 		// _sprite_content.fillScreen(TFT_MAGENTA);
-		squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
 
 		// Serial.printf("should_redraw? %d, fade_amount %d\n", should_redraw, fade_amount);
 		should_redraw = false;
@@ -159,7 +159,7 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (is_dirty || is_dirty_hard)
 	{
 		// Read the region of the clean screen wallpaper into the local clean sprite
-		squixl.current_screen()->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_back.getBuffer());
+		ui_parent->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_back.getBuffer());
 		delay(10);
 		_sprite_clean.fillScreen(TFT_MAGENTA);
 		_sprite_clean.fillRoundRect(0, 0, _w, _h, 7, _c, DRAW_TO_RAM); // white will be our mask
@@ -233,12 +233,12 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 		if (fade_amount < 32)
 		{
 			squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, fade_amount);
-			squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+			ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
 		}
 		else
 		{
 			squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, 32);
-			squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+			ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
 
 			// Serial.println("Tick weather");
 

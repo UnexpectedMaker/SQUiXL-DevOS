@@ -26,13 +26,25 @@ void SQUiXL::display_logo(bool show)
 {
 	if (show)
 	{
-		logo_squixl.createVirtual(280, 60, NULL, true);
-		logo_black.createVirtual(280, 60, NULL, true);
+		if (!logo_squixl.createVirtual(280, 60, NULL, true))
+		{
+			Serial.println("Failed to create buffer: logo_squixl");
+		}
+		if (!logo_black.createVirtual(280, 60, NULL, true))
+		{
+			Serial.println("Failed to create buffer: logo_black");
+		}
 		squixl.loadPNG_into(&logo_squixl, 0, 0, squixl_logo_blue, sizeof(squixl_logo_blue));
 		logo_black.fillScreen(TFT_BLACK);
 
-		by_um.createVirtual(200, 20, NULL, true);
-		by_um_black.createVirtual(200, 20, NULL, true);
+		if (!by_um.createVirtual(200, 20, NULL, true))
+		{
+			Serial.println("Failed to create buffer: by_um");
+		}
+		if (!by_um_black.createVirtual(200, 20, NULL, true))
+		{
+			Serial.println("Failed to create buffer: by_um_black");
+		}
 		squixl.loadPNG_into(&by_um, 0, 0, by_um_white, sizeof(by_um_white));
 		by_um_black.fillScreen(TFT_BLACK);
 
@@ -356,6 +368,10 @@ bool SQUiXL::process_touch_full()
 		next_touch = millis();
 		return true;
 	}
+	else if (drag_lock != DRAGABLE::DRAG_BOTH)
+	{
+		touch_rate = 10;
+	}
 	else
 	{
 		touch_rate = 25;
@@ -395,11 +411,16 @@ bool SQUiXL::process_touch_full()
 			prevent_long_press = false;
 			touchTime = millis();
 
+			clamp_delta_low = -20;
+			clamp_delta_high = 20;
+
 			last_touch = millis();
 			drag_rate = millis();
 			last_finger_move = millis();
 
 			tab_group_index = -1;
+
+			drag_lock = DRAGABLE::DRAG_BOTH;
 
 			if (current_screen() != nullptr)
 			{
@@ -409,7 +430,7 @@ bool SQUiXL::process_touch_full()
 					if (current_screen()->ui_tab_group->process_touch(touch_event_t(pts[0][0], pts[0][1], TOUCH_TAP)))
 					{
 						isTouched = false;
-						next_touch = millis() + 1000;
+						next_touch = millis() + 250;
 						currently_selected = nullptr;
 						// Serial.printf("BLOCKED!!!! @ millis() %u -> next %u\n", millis(), next_touch);
 						return false;
@@ -440,8 +461,8 @@ bool SQUiXL::process_touch_full()
 			deltaX = int16_t(pts[0][0]) - int16_t(startX);
 			deltaY = int16_t(pts[0][1]) - int16_t(startY);
 
-			uint16_t moved_much_x = pts[0][0] - moved_x;
-			uint16_t moved_much_y = pts[0][1] - moved_y;
+			int16_t moved_much_x = pts[0][0] - moved_x;
+			int16_t moved_much_y = pts[0][1] - moved_y;
 
 			moved_x = pts[0][0];
 			moved_y = pts[0][1];
@@ -450,11 +471,64 @@ bool SQUiXL::process_touch_full()
 
 			last_touch = millis();
 
-			if (currently_selected != nullptr && !currently_selected->is_drag_blocked() && (abs(deltaX) > move_margin_for_drag || abs(deltaY) > move_margin_for_drag))
+			if (abs(deltaX) > move_margin_for_drag || abs(deltaY) > move_margin_for_drag)
 			{
-				// currently_selected->drag(deltaX, deltaY, moved_much_x, moved_much_y, pts[0][0], pts[0][1]);
-				currently_selected->process_touch(touch_event_t(moved_x, moved_y, TOUCH_DRAG));
+				// the user is dragging their finger - if the currently selected item is not the screen, we need to see if it's draggable
+				if (currently_selected != nullptr && currently_selected != current_screen())
+				{
+					// the element is not draggable, so fallback to the screen so the user can grab the screen
+					if (currently_selected->is_dragable() == DRAGABLE::DRAG_NONE)
+					{
+						currently_selected = current_screen();
+						// Serial.println("switched element to screen because the user is dragging.");
+					}
+					else
+					{
+						// Ok, the item is draggable, but is it draggable in the direction the user is dragging?
+						// The user is dragging horizontally
+						if (abs(deltaX) > abs(deltaY) && currently_selected->is_dragable() != DRAG_HORIZONTAL)
+						{
+							currently_selected = current_screen();
+							// Serial.println("element can't be dragged horizontally, so switcing to screen");
+						}
+						else if (abs(deltaX) < abs(deltaY) && currently_selected->is_dragable() != DRAG_VERTICAL)
+						{
+							currently_selected = current_screen();
+							// Serial.println("element can't be dragged vertically, so switcing to screen");
+						}
+					}
+				}
+			}
 
+			if (currently_selected == current_screen() && (abs(deltaX) > move_margin_for_drag || abs(deltaY) > move_margin_for_drag))
+			{
+				if (drag_lock == DRAGABLE::DRAG_BOTH)
+				{
+					drag_lock = (abs(deltaX) > abs(deltaY)) ? DRAGABLE::DRAG_HORIZONTAL : DRAGABLE::DRAG_VERTICAL;
+					current_screen()->adjust_navigation_range(drag_lock, &clamp_delta_low, &clamp_delta_high);
+					// Serial.printf("Set drag constraints to %d <-> %d\n", clamp_delta_low, clamp_delta_high);
+				}
+
+				// Calculate the range of movement based on the locked axis and if the screen has linked neighbours
+				if (drag_lock == DRAGABLE::DRAG_HORIZONTAL)
+				{
+					deltaX = constrain(deltaX, clamp_delta_low, clamp_delta_high);
+					moved_much_x = constrain(moved_much_x, clamp_delta_low, clamp_delta_high);
+					currently_selected->process_touch(touch_event_t(deltaX, 0, SCREEN_DRAG_H, moved_much_x, 0));
+				}
+				else
+				{
+					deltaY = constrain(deltaY, clamp_delta_low, clamp_delta_high);
+					moved_much_y = constrain(moved_much_y, clamp_delta_low, clamp_delta_high);
+					currently_selected->process_touch(touch_event_t(0, deltaY, SCREEN_DRAG_V, 0, moved_much_y));
+				}
+				prevent_long_press = true;
+				// Serial.printf("touch: dragging @ %u\n", millis());
+				return true;
+			}
+			else if (currently_selected != nullptr && currently_selected->is_dragable() != DRAGABLE::DRAG_NONE && (abs(deltaX) > move_margin_for_drag || abs(deltaY) > move_margin_for_drag))
+			{
+				currently_selected->process_touch(touch_event_t(moved_x, moved_y, TOUCH_DRAG));
 				prevent_long_press = true;
 			}
 			else if (!prevent_long_press && last_touch - touchTime > 600)
@@ -518,31 +592,40 @@ bool SQUiXL::process_touch_full()
 				}
 			}
 			// If the current screen is blocked from dragging, if the distance from first touch to last is enough to suggest a swipe, pass a swipe to the current ui element
-			else if (currently_selected->is_drag_blocked() && (deltaX_abs > 25 || deltaY_abs > 25))
-			{
-				// Calculate swipe dir to pass on
-				int8_t dir = -1;
-				if (deltaY_abs > deltaX_abs)
-					dir = (deltaY < 0) ? (int)TouchEventType::TOUCH_SWIPE_UP : (int)TouchEventType::TOUCH_SWIPE_DOWN;
-				else
-					dir = (deltaX > 0) ? (int)TouchEventType::TOUCH_SWIPE_RIGHT : (int)TouchEventType::TOUCH_SWIPE_LEFT;
+			// else if (currently_selected == current_screen() && (deltaX_abs > 25 || deltaY_abs > 25))
+			// {
+			// 	// Calculate swipe dir to pass on
+			// 	int8_t dir = -1;
+			// 	if (deltaY_abs > deltaX_abs)
+			// 		dir = (deltaY < 0) ? (int)TouchEventType::TOUCH_SWIPE_UP : (int)TouchEventType::TOUCH_SWIPE_DOWN;
+			// 	else
+			// 		dir = (deltaX > 0) ? (int)TouchEventType::TOUCH_SWIPE_RIGHT : (int)TouchEventType::TOUCH_SWIPE_LEFT;
 
-				if (currently_selected->process_touch(touch_event_t(moved_x, moved_y, (TouchEventType)dir, deltaX, deltaY)))
-				{
-					return true;
-				}
-				else if (currently_selected->ui_parent != nullptr)
-				{
-					if (currently_selected->ui_parent->process_touch(touch_event_t(moved_x, moved_y, (TouchEventType)dir, deltaX, deltaY)))
-					{
-						return true;
-					}
-				}
-			}
+			// 	if (currently_selected->process_touch(touch_event_t(moved_x, moved_y, (TouchEventType)dir, deltaX, deltaY)))
+			// 	{
+			// 		return true;
+			// 	}
+			// 	else if (currently_selected->ui_parent != nullptr)
+			// 	{
+			// 		if (currently_selected->ui_parent->process_touch(touch_event_t(moved_x, moved_y, (TouchEventType)dir, deltaX, deltaY)))
+			// 		{
+			// 			return true;
+			// 		}
+			// 	}
+			// }
 		}
 	}
 
 	// If there was a pervious click, and the time past has been longer than what a double click would trigger, process the original single click
+	if (!isTouched && drag_lock != DRAGABLE::DRAG_BOTH && currently_selected != nullptr)
+	{
+		// Serial.printf("touch: let go of drag @ %u\n", millis());
+		currently_selected->process_touch(touch_event_t(moved_x, moved_y, TOUCH_UNKNOWN));
+		currently_selected = nullptr;
+		drag_lock = DRAGABLE::DRAG_BOTH;
+		clamp_delta_low = -20;
+		clamp_delta_high = 20;
+	}
 	if (last_was_click && millis() - last_touch > 150)
 	{
 		last_was_click = false;

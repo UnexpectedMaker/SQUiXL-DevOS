@@ -81,6 +81,14 @@ enum CPU_SPEED
 	CPU_CHANGE_HIGH = 1,
 };
 
+enum DRAGABLE
+{
+	DRAG_NONE = 0,
+	DRAG_VERTICAL = 1,
+	DRAG_HORIZONTAL = 2,
+	DRAG_BOTH = 3,
+};
+
 typedef std::function<void(void)> _CALLBACK_DS;
 
 class ui_element;
@@ -100,7 +108,9 @@ enum TouchEventType
 	TOUCH_SWIPE_LEFT = 6,
 	TOUCH_DRAG = 7,
 	TOUCH_DRAG_END = 8,
-	TOUCH_UNKNOWN = 9,
+	SCREEN_DRAG_H = 9,
+	SCREEN_DRAG_V = 10,
+	TOUCH_UNKNOWN = 99,
 };
 
 struct touch_event_t
@@ -159,15 +169,17 @@ class SQUiXL : public SQUiXL_LITE
 		bool vbus_changed();
 		void change_cpu_frequency(bool increase);
 
-		const String version_firmware = "Alpha v0.1";
+		const String version_firmware = "Alpha v0.2";
 		const String version_year = "2025";
 		const uint16_t version_build = 2;
 		uint16_t version_latest = 0;
 
+		const String get_version() { return (version_firmware + " build " + version_build); }
+
 		void process_version(bool success, const String &response);
 		bool update_available() { return (version_latest > version_build); }
 
-		void log_heap(String title)
+		void log_heap(const char *title)
 		{
 			Serial.printf("\nHeap Log: %s\nHeap Size: %u of %u\n", title, ESP.getFreeHeap(), ESP.getHeapSize());
 			Serial.printf("Min Heap Size: %u, Max Alloc Heap Size: %u, ", ESP.getMinFreeHeap(), ESP.getMaxAllocHeap());
@@ -216,8 +228,12 @@ class SQUiXL : public SQUiXL_LITE
 		uint16_t moved_y = 0;
 		uint16_t startX = 0;
 		uint16_t startY = 0;
+		int16_t clamp_delta_low = -20;
+		int16_t clamp_delta_high = 20;
+
 		uint touchTime = 0;
 		int8_t tab_group_index = -1;
+		DRAGABLE drag_lock = DRAGABLE::DRAG_BOTH;
 		bool last_was_click = false;
 		bool last_was_long = false;
 		bool prevent_long_press = false;

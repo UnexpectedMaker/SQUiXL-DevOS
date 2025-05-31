@@ -152,8 +152,8 @@ void ui_dialogbox::close()
 
 	squixl.current_screen()->refresh(true);
 
-	sprite_dialog_content.freeBuffer();
-	sprite_dialog_clean.freeBuffer();
+	sprite_dialog_content.freeVirtual();
+	sprite_dialog_clean.freeVirtual();
 
 	_button_cancel = "";
 	_button_ok = "";

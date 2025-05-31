@@ -10,7 +10,6 @@ void ui_screen::set_page_tabgroup(ui_control_tabgroup *tabgroup)
 {
 	ui_tab_group = tabgroup;
 	tabgroup->ui_parent = this;
-	// ui_children.push_back(this);
 }
 
 int8_t ui_screen::get_tab_group_index()
@@ -30,17 +29,11 @@ void ui_screen::setup(uint16_t _back_color, bool add)
 
 	back_color = _back_color;
 
-	// _sprite_back.createVirtual(480, 480, NULL, true);
-	// _sprite_back.fillScreen(back_color);
-
-	// _sprite_content.createVirtual(480, 480, NULL, true);
-	// _sprite_content.fillScreen(TFT_MAGENTA);
-
 	set_refresh_interval(20);
 
 	calc_new_tints();
 
-	// squixl.add_screen(this);
+	set_draggable(DRAGABLE::DRAG_BOTH);
 }
 
 void ui_screen::calc_new_tints()
@@ -59,23 +52,33 @@ void ui_screen::create_buffers()
 	if (!_sprite_back.getBuffer())
 	{
 		_sprite_back.createVirtual(480, 480, NULL, true);
-		_sprite_back.fillScreen(back_color);
+		// _sprite_back.fillScreen(back_color);
+		_sprite_back.fillRect(0, 0, 480, 480, back_color);
 	}
 
 	if (!_sprite_content.getBuffer())
 	{
 		_sprite_content.createVirtual(480, 480, NULL, true);
-		_sprite_content.fillScreen(TFT_MAGENTA);
+		_sprite_content.fillRect(0, 0, 480, 480, TFT_MAGENTA);
+		// _sprite_content.fillScreen(TFT_MAGENTA);
 	}
 }
 
 void ui_screen::clear_buffers()
 {
 	if (!dont_destroy_back_sprite && _sprite_back.getBuffer())
-		_sprite_back.freeBuffer();
+		_sprite_back.freeVirtual();
 
 	if (_sprite_content.getBuffer())
-		_sprite_content.freeBuffer();
+		_sprite_content.freeVirtual();
+
+	if (_sprite_drag.getBuffer())
+		_sprite_drag.freeVirtual();
+
+	if (_sprite_mixed.getBuffer())
+		_sprite_mixed.freeVirtual();
+
+	is_dragging = false;
 }
 
 void ui_screen::set_navigation(Directions from, ui_screen *screen, bool set_reversed)
@@ -93,6 +96,25 @@ void ui_screen::set_navigation(Directions from, ui_screen *screen, bool set_reve
 	}
 }
 
+ui_screen *ui_screen::get_navigation(Directions from)
+{
+	return navigation[(int)from];
+}
+
+void ui_screen::adjust_navigation_range(DRAGABLE axis, int16_t *clamp_delta_low, int16_t *clamp_delta_high)
+{
+	if (axis == DRAGABLE::DRAG_HORIZONTAL)
+	{
+		*clamp_delta_low = (navigation[(int)Directions::LEFT] == nullptr ? -20 : -480);
+		*clamp_delta_high = (navigation[(int)Directions::RIGHT] == nullptr ? 20 : 480);
+	}
+	else if (axis == DRAGABLE::DRAG_VERTICAL)
+	{
+		*clamp_delta_low = (navigation[(int)Directions::UP] == nullptr ? -20 : -480);
+		*clamp_delta_high = (navigation[(int)Directions::DOWN] == nullptr ? 20 : 480);
+	}
+}
+
 void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 {
 	is_busy = true;
@@ -100,18 +122,6 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 	int w, h, bpp;
 
 	_sprite_clean.createVirtual(480, 480, NULL, true);
-
-	// if (!_sprite_back.getBuffer())
-	// {
-	// 	_sprite_back.createVirtual(480, 480, NULL, true);
-	// 	_sprite_back.fillScreen(back_color);
-	// }
-
-	// if (!_sprite_content.getBuffer())
-	// {
-	// 	_sprite_content.createVirtual(480, 480, NULL, true);
-	// 	_sprite_content.fillScreen(TFT_MAGENTA);
-	// }
 
 	bool has_content = false;
 	if (background_size == 0)
@@ -172,7 +182,7 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 		Serial.printf("JPG not loaded - size was %d :(\n", jpg_size);
 	}
 
-	_sprite_clean.freeBuffer();
+	_sprite_clean.freeVirtual();
 
 	/*
 	TODO: Need to add tab group support to this?
@@ -244,6 +254,20 @@ void ui_screen::show_random_background(bool fade)
 void ui_screen::clear_content()
 {
 	_sprite_content.fillScreen(TFT_MAGENTA);
+}
+
+void ui_screen::clear_tabbed_children()
+{
+	if (ui_tab_group != nullptr)
+	{
+		int8_t tab_group = ui_tab_group->get_current_tab();
+		for (int w = 0; w < ui_tab_group->tab_group_children[tab_group].size(); w++)
+		{
+			ui_control *child = static_cast<ui_control *>(ui_tab_group->tab_group_children[tab_group][w]);
+			if (child != nullptr)
+				child->clear_sprites();
+		}
+	}
 }
 
 bool ui_screen::position_children(bool force_children)
@@ -322,6 +346,12 @@ bool ui_screen::position_children(bool force_children)
 
 void ui_screen::refresh(bool forced, bool force_children)
 {
+	if (is_dragging)
+	{
+		// position_children(false);
+		return;
+	}
+
 	unsigned long start_time = millis();
 
 	if (is_busy)
@@ -357,6 +387,97 @@ void ui_screen::refresh(bool forced, bool force_children)
 
 bool ui_screen::process_touch(touch_event_t touch_event)
 {
+	// Serial.printf(">> SCREEN TOUCH TYPE: %d\n", touch_event.type);
+	if (touch_event.type == SCREEN_DRAG_H || touch_event.type == SCREEN_DRAG_V)
+	{
+		if (!is_dragging)
+		{
+			// Serial.println("Setup for new drag");
+
+			drag_step_timer = millis();
+
+			// Serial.printf("starting drag @ %u\n", drag_step_timer);
+
+			is_dragging = true;
+			drag_axis = (touch_event.type == SCREEN_DRAG_H ? DRAGABLE::DRAG_HORIZONTAL : DRAGABLE::DRAG_VERTICAL);
+
+			if (drag_axis == DRAGABLE::DRAG_HORIZONTAL)
+			{
+				drag_neighbours[0] = get_navigation(Directions::LEFT);
+				drag_neighbours[1] = get_navigation(Directions::RIGHT);
+			}
+			else
+			{
+				drag_neighbours[0] = get_navigation(Directions::UP);
+				drag_neighbours[1] = get_navigation(Directions::DOWN);
+			}
+
+			// If we have a neighbour we are going to drag, ensure it has it's sprites initialised so we can draw it
+			if (drag_neighbours[0] != nullptr)
+				drag_neighbours[0]->setup_draggable_neighbour(true);
+
+			if (drag_neighbours[1] != nullptr)
+				drag_neighbours[1]->setup_draggable_neighbour(true);
+
+			// we only need this sprite temporarly if we are blending content
+			if (!_sprite_drag.getBuffer())
+			{
+				if (!_sprite_drag.createVirtual(480, 480, NULL, true))
+				{
+					squixl.log_heap("_sprite_drag");
+				}
+			}
+		}
+		drag_x = touch_event.x;
+		drag_y = touch_event.y;
+
+		last_delta_x = touch_event.d_x;
+		last_delta_y = touch_event.d_y;
+
+		if (drag_x != cached_drag_x || drag_y != cached_drag_y)
+		{
+			// Serial.printf("deltas %d and %d\n", last_delta_x, last_delta_y);
+			draw_draggable();
+		}
+		cached_drag_x = drag_x;
+		cached_drag_y = drag_y;
+
+		is_dragging = true;
+		return false;
+	}
+	else if (is_dragging)
+	{
+		// Serial.printf("Finished dragging with %d and %d\n", last_delta_x, last_delta_y);
+		// Serial.printf("starting finish_drag @ %u - duration from start %u\n", millis(), (millis() - drag_step_timer));
+
+		if (abs(last_delta_x) > 25 || abs(last_delta_y) > 25)
+		{
+			Directions finish_dir = Directions::NONE;
+			if (abs(last_delta_x) > abs(last_delta_y))
+				finish_dir = last_delta_x < 0 ? Directions::LEFT : Directions::RIGHT;
+			else
+				finish_dir = last_delta_y < 0 ? Directions::UP : Directions::DOWN;
+
+			// Force animation of dragging the new screen into place and then switch to it.
+			finish_drag(finish_dir, drag_x, drag_y);
+
+			drag_neighbours[0] = nullptr;
+			drag_neighbours[1] = nullptr;
+
+			squixl.log_heap("finshed drag");
+		}
+		else
+		{
+			// force Animate the screen back to 0,0 position
+			cancel_drag();
+		}
+
+		// Reset drag and neighbours
+		is_dragging = false;
+		drag_axis = DRAGABLE::DRAG_NONE;
+		return false;
+	}
+
 	int8_t tab_group = -1;
 	if (ui_tab_group != nullptr)
 	{
@@ -399,7 +520,7 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 		{
 			audio.play_tone(1500, 1);
 			back_color = background_colors[random(5)];
-			_sprite_back.fillScreen(back_color);
+			_sprite_back.fillRect(0, 0, 480, 480, back_color);
 			calc_new_tints();
 
 			int8_t tabgroup = -1;
@@ -431,30 +552,30 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 
 		return false;
 	}
-	else if (int(touch_event.type) >= 3 && int(touch_event.type) < 7)
-	{
-		String sw_dir[4] = {"SWIPE UP", "SWIPE RIGHT", "SWIPE DOWN", "SWIPE LEFT"};
+	// else if (int(touch_event.type) >= 3 && int(touch_event.type) < 7)
+	// {
+	// 	String sw_dir[4] = {"SWIPE UP", "SWIPE RIGHT", "SWIPE DOWN", "SWIPE LEFT"};
 
-		bool swipe_ok = false;
-		// get the direction from the wipe dir
-		int nav_dir = int(touch_event.type) - 3;
+	// 	bool swipe_ok = false;
+	// 	// get the direction from the wipe dir
+	// 	int nav_dir = int(touch_event.type) - 3;
 
-		// Serial.printf("touch event: %d, (%d, %d) sw_dir: %s, nav_dir: %d\n", int(touch_event.type), touch_event.x, touch_event.y, sw_dir[int(touch_event.type) - 3], nav_dir);
+	// 	// Serial.printf("touch event: %d, (%d, %d) sw_dir: %s, nav_dir: %d\n", int(touch_event.type), touch_event.x, touch_event.y, sw_dir[int(touch_event.type) - 3], nav_dir);
 
-		if (navigation[nav_dir] != nullptr)
-		{
-			squixl.set_current_screen(navigation[nav_dir]);
-			swipe_ok = true;
+	// 	if (navigation[nav_dir] != nullptr)
+	// 	{
+	// 		squixl.set_current_screen(navigation[nav_dir]);
+	// 		swipe_ok = true;
 
-			squixl.current_screen()->animate_pos((Directions)nav_dir, 250, tween_ease_t::EASE_OUT, nullptr);
-		}
+	// 		squixl.current_screen()->animate_pos((Directions)nav_dir, 250, tween_ease_t::EASE_OUT, nullptr);
+	// 	}
 
-		if (swipe_ok)
-		{
-			// Serial.printf("New screen index: %d\n", settings.config.current_screen);
-			return true;
-		}
-	}
+	// 	if (swipe_ok)
+	// 	{
+	// 		// Serial.printf("New screen index: %d\n", settings.config.current_screen);
+	// 		return true;
+	// 	}
+	// }
 
 	return false;
 }
@@ -462,18 +583,6 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 bool ui_screen::redraw(uint8_t fade_amount, int8_t tab_group)
 {
 	unsigned long start_time = millis();
-
-	// if (!_sprite_back.getBuffer())
-	// {
-	// 	_sprite_back.createVirtual(480, 480, NULL, true);
-	// 	_sprite_back.fillScreen(back_color);
-	// }
-
-	// if (!_sprite_content.getBuffer())
-	// {
-	// 	_sprite_content.createVirtual(480, 480, NULL, true);
-	// 	_sprite_content.fillScreen(TFT_MAGENTA);
-	// }
 
 	// If the dialog box is open, we insert it last onto the current screen, over the content
 	// This allows the content in the background to continue to update, like the time.
@@ -533,102 +642,196 @@ void ui_screen::show_overlay(bool show, unsigned long duration, std::function<vo
 				} }));
 }
 
-void ui_screen::animate_pos(Directions direction, unsigned long duration, tween_ease_t ease, std::function<void()> completion_callback)
+void ui_screen::cancel_drag()
 {
-	float from_x = 0.0;
+	// Serial.println("Cancelling drag");
+
+	while (drag_x != 0 || drag_y != 0)
+	{
+		drag_x = round(drag_x / 2);
+		drag_y = round(drag_y / 2);
+		// Serial.printf(">Screen drag back %d,%d\n", drag_x, drag_y);
+		draw_draggable();
+	}
+
+	if (_sprite_drag.getBuffer())
+		_sprite_drag.freeVirtual();
+
+	clean_neighbour_sprites();
+}
+
+void ui_screen::finish_drag(Directions direction, int16_t dx, int16_t dy)
+{
+	float from_x = (float)dx;
 	float to_x = 0.0;
-	float from_y = 0.0;
+	float from_y = (float)dy;
 	float to_y = 0.0;
 	switch (direction)
 	{
 	case LEFT:
-		from_x = 480.0;
+		to_x = -480.0;
 		break;
 	case RIGHT:
-		from_x = -480.0;
+		to_x = 480.0;
 		break;
 	case UP:
-		from_y = 480.0;
+		to_y = -480.0;
 		break;
 	case DOWN:
-		from_y = -480.0;
-		break;
-	case UL:
-		from_x = 480.0;
-		from_y = 480.0;
-		break;
-	case DR:
-		from_x = -480.0;
-		from_y = -480.0;
-		to_x = 0.0;
-		to_y = 0.0;
+		to_y = 480.0;
 		break;
 	}
 
 	squixl.switching_screens = true;
 
 	unsigned long start_time = millis();
+	float duration = 250.0;
 	float t = 0.0;
 
-	bool child_dirty = position_children(true);
-
-	// we only need this sprite temporarly if we are blending content
-	if (!_sprite_mixed.getBuffer())
-		_sprite_mixed.createVirtual(480, 480, NULL, true);
-
-	bool s_content = _sprite_content.getBuffer();
-	bool s_back = _sprite_back.getBuffer();
-	bool s_mixed = _sprite_mixed.getBuffer();
-
-	// Serial.printf("s_content %d, s_back %d, s_mixed %d\n", s_content, s_back, s_mixed);
-
-	if (s_content && s_back && s_mixed)
-		squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_mixed, 32, TFT_MAGENTA);
-
-	while (t < 1.0 || _x != (int)to_x || _y != (int)to_y)
+	while (t < 1.0 || drag_x != (int)to_x || drag_y != (int)to_y)
 	{
 		unsigned long now = millis();
-		t = (now - start_time) / (float)duration;
+		t = (now - start_time) / duration;
 		if (t >= 1.0f)
 		{
 			t = 1.0f;
 		}
 
-		// Choose your easing function based on an 'ease' member.
-		float eased_t;
-		switch (ease)
-		{
-		case EASE_LINEAR:
-			eased_t = t;
-			break;
-		case EASE_IN:
-			eased_t = t * t;
-			break;
-		case EASE_OUT:
-			eased_t = t * (2 - t);
-			break;
-		case EASE_IN_OUT:
-			eased_t = (t < 0.5f) ? (2 * t * t) : (-1 + (4 - 2 * t) * t);
-			break;
-		default:
-			eased_t = t;
-			break;
-		}
+		// EASE_OUT
+		float eased_t = t * (2 - t);
+		// switch (tween_ease_t::EASE_OUT)
+		// {
+		// case EASE_LINEAR:
+		// 	eased_t = t;
+		// 	break;
+		// case EASE_IN:
+		// 	eased_t = t * t;
+		// 	break;
+		// case EASE_OUT:
+		// 	eased_t = t * (2 - t);
+		// 	break;
+		// case EASE_IN_OUT:
+		// 	eased_t = (t < 0.5f) ? (2 * t * t) : (-1 + (4 - 2 * t) * t);
+		// 	break;
+		// default:
+		// 	eased_t = t;
+		// 	break;
+		// }
 
-		float current_x = from_x + (to_x - from_x) * eased_t;
-		float current_y = from_y + (to_y - from_y) * eased_t;
+		drag_x = int16_t(from_x + (to_x - from_x) * eased_t);
+		drag_y = int16_t(from_y + (to_y - from_y) * eased_t);
 
-		_x = (int)current_x;
-		_y = (int)current_y;
-		redraw(32);
+		draw_draggable();
 
-		delay(5);
+		// delay(2);
 	}
 
-	// Clear this buffer
-	if (_sprite_mixed.getBuffer())
-		_sprite_mixed.freeVirtual();
+	is_dragging = false;
+
+	squixl.set_current_screen(navigation[(int)direction]);
+	squixl.current_screen()->clean_neighbour_sprites();
 
 	squixl.switching_screens = false;
 	squixl.current_screen()->refresh(true, true);
+}
+
+void ui_screen::clean_neighbour_sprites()
+{
+	for (int i = 0; i < 4; i++)
+	{
+		if (navigation[i] != nullptr)
+		{
+			// Serial.printf("clearing buffers in neighbour %d\n", i);
+			navigation[i]->clear_buffers();
+		}
+	}
+}
+
+void ui_screen::draw_draggable()
+{
+	// bool created = false;
+	// // we only need this sprite temporarly if we are blending content
+	// if (!_sprite_drag.getBuffer())
+	// {
+	// 	_sprite_drag.createVirtual(480, 480, NULL, true);
+	// 	Serial.println("created _sprite_drag in draw_draggable()");
+	// 	created = true;
+	// 	// _sprite_drag.fillScreen(0);
+	// }
+
+	if (_sprite_drag.getBuffer())
+	{
+		// squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_mixed, 32, TFT_MAGENTA);
+		// _sprite_drag.drawSprite(drag_x, drag_y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+
+		squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_content, 32, TFT_MAGENTA);
+		_sprite_drag.drawSprite(drag_x, drag_y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+
+		if (drag_x != 0)
+		{
+			if (drag_x > 0)
+			{
+				if (drag_neighbours[1] == nullptr)
+					_sprite_drag.fillRect(0, 0, drag_x, 480, 0, DRAW_TO_RAM);
+				else
+					drag_neighbours[1]->draw_draggable_neighbour(&_sprite_drag, drag_x - 480, 0);
+			}
+			else
+			{
+				if (drag_neighbours[0] == nullptr)
+					_sprite_drag.fillRect(480 - abs(drag_x), 0, abs(drag_x), 480, 0, DRAW_TO_RAM);
+				else
+					drag_neighbours[0]->draw_draggable_neighbour(&_sprite_drag, drag_x + 480, 0);
+			}
+		}
+		else
+		{
+			if (drag_y > 0)
+			{
+				if (drag_neighbours[1] == nullptr)
+					_sprite_drag.fillRect(0, 0, 480, drag_y, 0, DRAW_TO_RAM);
+				else
+					drag_neighbours[1]->draw_draggable_neighbour(&_sprite_drag, 0, drag_y - 480);
+			}
+			else
+			{
+				if (drag_neighbours[0] == nullptr)
+					_sprite_drag.fillRect(0, 480 - abs(drag_y), 480, abs(drag_y), 0, DRAW_TO_RAM);
+				else
+					drag_neighbours[0]->draw_draggable_neighbour(&_sprite_drag, 0, drag_y + 480);
+			}
+		}
+
+		squixl.lcd.blendSprite(&_sprite_drag, &squixl.lcd, &squixl.lcd, 32);
+		// squixl.lcd.drawSprite(0, 0, &_sprite_drag, 1.0f, -1, DRAW_TO_RAM);
+	}
+	else
+	{
+		// Serial.printf("missing sprite? %d, drag? %d, mixed? %d\n", is_dragging, _sprite_drag.getBuffer(), _sprite_mixed.getBuffer());
+	}
+
+	// Serial.printf("refresh time (draw borders): %u ms\n", (millis() - start_time));
+}
+
+void ui_screen::draw_draggable_neighbour(BB_SPI_LCD *sprite, int16_t dx, int16_t dy)
+{
+	if (_sprite_content.getBuffer() && _sprite_back.getBuffer())
+	{
+		sprite->blendSprite(&_sprite_content, &_sprite_back, &_sprite_content, 32, TFT_MAGENTA);
+		sprite->drawSprite(dx, dy, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+	}
+}
+
+void ui_screen::setup_draggable_neighbour(bool state)
+{
+	if (state)
+	{
+		create_buffers();
+		position_children(true);
+	}
+	else if (!state)
+	{
+		// not being called anymore
+		clear_buffers();
+	}
 }

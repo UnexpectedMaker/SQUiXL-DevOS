@@ -58,6 +58,9 @@ class Keyboard
 		int16_t _w = 480; // Width
 		int16_t _h = 280; // Height
 
+		uint8_t box_char_width = 0;
+		uint8_t box_char_height = 0;
+
 		uint8_t char_width = 0;
 		uint8_t char_height = 0;
 

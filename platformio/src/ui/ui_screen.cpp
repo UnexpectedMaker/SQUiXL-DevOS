@@ -309,7 +309,7 @@ bool ui_screen::position_children(bool force_children)
 		for (int w = 0; w < ui_children.size(); w++)
 		{
 			ui_element *child = ui_children[w];
-			if (child != nullptr)
+			if (child != nullptr && child->check_tab_group(-1))
 			{
 				// Serial.printf("Found non grid child: %s\n", child->get_title());
 				if (force_children || child->should_refresh())

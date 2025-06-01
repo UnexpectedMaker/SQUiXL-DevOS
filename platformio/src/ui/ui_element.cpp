@@ -5,14 +5,8 @@ void ui_element::add_child_ui(ui_element *child, int8_t tab_group)
 {
 	child->set_tab_group(tab_group);
 	child->ui_parent = this;
-	if (tab_group < 0)
-	{
-		ui_children.push_back(child);
-	}
-	else
-	{
-		tab_group_children[tab_group].push_back(child);
-	}
+	ui_children.push_back(child);
+	tab_group_children[tab_group].push_back(child);
 }
 
 // hepler for getting the ui elements parent - for screen reference

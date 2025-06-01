@@ -44,6 +44,7 @@ class ui_element
 		bool should_refresh();
 
 		void add_child_ui(ui_element *child, int8_t tab_group = -1);
+		ui_element *get_ui_parent();
 
 		const char *get_title();
 
@@ -62,8 +63,8 @@ class ui_element
 		float normalise_float(float current, float min, float max);
 		float normalise_int(int x, int minX, int maxX);
 
-		bool is_drag_blocked() { return block_dragging; }
-		void set_draggable(bool state) { block_dragging = !state; }
+		DRAGABLE is_dragable() { return drag_able; }
+		void set_draggable(DRAGABLE state) { drag_able = state; }
 
 		void set_touchable(bool state) { is_touchable = state; }
 		bool touchable() { return is_touchable; }
@@ -116,8 +117,7 @@ class ui_element
 		unsigned long next_click_update = 0;
 
 		bool is_touchable = true;
-		bool is_draggable = false;
-		bool block_dragging = true;
+		DRAGABLE drag_able = DRAGABLE::DRAG_NONE;
 
 		unsigned long click_hold_start_timer = 0;
 

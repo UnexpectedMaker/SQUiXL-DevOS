@@ -2058,4 +2058,13 @@ static const GFXfont *UbuntuMono_R[] = {
 };
 static const int UbuntuMono_R_count = sizeof(UbuntuMono_R) / sizeof(UbuntuMono_R[0]);
 
+static uint8_t UbuntuMono_R_Char_Sizes[][2] = {
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0}
+};
+
 #endif /* FONTS_R_H */

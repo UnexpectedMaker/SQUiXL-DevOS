@@ -28,12 +28,12 @@ bool ui_control_tabgroup::process_touch(touch_event_t touch_event)
 
 			if (new_tab != current_tab)
 			{
+				static_cast<ui_screen *>(get_ui_parent())->clear_tabbed_children();
+				// clear_sprites
 				current_tab = new_tab;
 
-				// Serial.printf("New tab group tab is %d\n", current_tab);
-
-				squixl.current_screen()->clear_content();
-				squixl.current_screen()->refresh(true, true);
+				static_cast<ui_screen *>(get_ui_parent())->clear_content();
+				static_cast<ui_screen *>(get_ui_parent())->refresh(true, true);
 
 				audio.play_tone(500, 1);
 
@@ -55,12 +55,19 @@ bool ui_control_tabgroup::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	is_busy = true;
 
-	if (is_dirty_hard)
+	if (!_sprite_content.getBuffer())
 	{
-		_sprite_clean.fillScreen(TFT_MAGENTA);
-
-		is_dirty_hard = false;
+		_sprite_content.createVirtual(_w, _h, NULL, true);
+		// _sprite_clean.createVirtual(_w, _h, NULL, true);
+		// _sprite_mixed.createVirtual(_w, _h, NULL, true);
 	}
+
+	// if (is_dirty_hard)
+	// {
+	// 	// _sprite_clean.fillScreen(TFT_MAGENTA);
+
+	// 	is_dirty_hard = false;
+	// }
 
 	// Clear the content sprite
 	_sprite_content.fillScreen(TFT_MAGENTA);
@@ -70,7 +77,7 @@ bool ui_control_tabgroup::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 1, &char_width, &char_height);
 
-	_sprite_content.fillRoundRect(5, 5, _w - 10, _h - 10, 5, squixl.current_screen()->dark_tint[4], DRAW_TO_RAM);
+	_sprite_content.fillRoundRect(5, 5, _w - 10, _h - 10, 5, static_cast<ui_screen *>(get_ui_parent())->dark_tint[4], DRAW_TO_RAM);
 
 	uint8_t num_tabs = tab_names.size();
 	uint8_t tab_width = 470 / num_tabs;
@@ -79,18 +86,17 @@ bool ui_control_tabgroup::redraw(uint8_t fade_amount, int8_t tab_group)
 	{
 		// If this tab is me, draw a rect behind the tab group name
 		if (current_tab == i)
-			_sprite_content.fillRoundRect(7 + i * tab_width, 7, tab_width - 4, _h - 14, 4, squixl.current_screen()->dark_tint[2], DRAW_TO_RAM);
+			_sprite_content.fillRoundRect(7 + i * tab_width, 7, tab_width - 4, _h - 14, 4, static_cast<ui_screen *>(get_ui_parent())->dark_tint[2], DRAW_TO_RAM);
 
-		_sprite_content.setTextColor(current_tab == i ? squixl.squixl_blue : squixl.current_screen()->light_tint[4], -1);
+		_sprite_content.setTextColor(current_tab == i ? squixl.squixl_blue : static_cast<ui_screen *>(get_ui_parent())->light_tint[4], -1);
 		uint16_t pos_x = 5 + i * tab_width + tab_width / 2 - (tab_names[i].length() * char_width) / 2;
 		_sprite_content.setCursor(pos_x, _h / 2 + char_height / 2 - 2);
 		_sprite_content.print(tab_names[i].c_str());
 	}
 
 	// Blend and draw the sprite to the current ui_screen content sprite
-	squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
-	// squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-	ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+	// squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
+	get_ui_parent()->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
 
 	if (fade_amount == 32)
 		next_refresh = millis();

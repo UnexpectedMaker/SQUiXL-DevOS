@@ -24,32 +24,42 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	is_busy = true;
 
-	if (is_dirty_hard)
+	if (!_sprite_content.getBuffer())
 	{
-		_sprite_clean.fillScreen(TFT_MAGENTA);
-		is_dirty_hard = false;
+		_sprite_content.createVirtual(_w, _h, NULL, true);
+		// _sprite_clean.createVirtual(_w, _h, NULL, true);
+		// _sprite_mixed.createVirtual(_w, _h, NULL, true);
 	}
+
+	// if (is_dirty_hard)
+	// {
+	// 	_sprite_clean.fillScreen(TFT_MAGENTA);
+	// 	is_dirty_hard = false;
+	// }
 
 	// Clear the content sprite
 	_sprite_content.fillScreen(TFT_MAGENTA);
 
 	// Calculate the string pixel sizes to allow for text centering
 	// This is only needed once
+	// uses different font sizes based no string length
 	if (char_width == 0 || string_len_pixels == 0)
 	{
-		squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 2, &char_width, &char_height);
 		uint8_t string_len = _text.length();
+		if (string_len < 40)
+			squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 2, &char_width, &char_height);
+		else
+			squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 1, &char_width, &char_height);
+
 		string_len_pixels = string_len * char_width;
-		// string_len_pixels = constrain(string_len_pixels, 0, _w);
-		// Serial.printf("string %s len %d, pixels %d, x %d, w %d, pos %d\n", _text.c_str(), string_len, string_len_pixels, _x, _w, (_w / 2) - (string_len_pixels / 2));
 	}
 
-	_sprite_content.fillRoundRect(0, 0, _w, _h, 8, squixl.current_screen()->dark_tint[1], DRAW_TO_RAM);
-	_sprite_content.fillRoundRect(5, 20, _w - 10, 35, 6, squixl.current_screen()->dark_tint[3], DRAW_TO_RAM);
+	_sprite_content.fillRoundRect(0, 0, _w, _h, 8, static_cast<ui_screen *>(get_ui_parent())->dark_tint[1], DRAW_TO_RAM);
+	_sprite_content.fillRoundRect(5, 20, _w - 10, 35, 6, static_cast<ui_screen *>(get_ui_parent())->dark_tint[3], DRAW_TO_RAM);
 
 	_sprite_content.setTextColor(TFT_WHITE, -1);
 
-	_sprite_content.setFreeFont(UbuntuMono_R[2]);
+	_sprite_content.setFreeFont(UbuntuMono_R[(_text.length() < 40 ? 2 : 1)]);
 	_sprite_content.setCursor((_w / 2) - (string_len_pixels / 2), 40 + char_height / 2);
 	_sprite_content.print(_text.c_str());
 
@@ -58,14 +68,14 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 	{
 		_sprite_content.setFreeFont(UbuntuMono_R[0]);
 		_sprite_content.setCursor((_w / 2) - (title_len_pixels / 2), char_height + 2);
-		_sprite_content.setTextColor(squixl.current_screen()->light_tint[5], -1);
+		_sprite_content.setTextColor(static_cast<ui_screen *>(get_ui_parent())->light_tint[5], -1);
 		_sprite_content.print(_title.c_str());
 	}
 
 	// Blend and draw the sprite to the current ui_screen content sprite
-	squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
+	// squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
 
-	squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+	get_ui_parent()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
 
 	if (fade_amount == 32)
 		next_refresh = millis();
@@ -98,7 +108,7 @@ bool ui_control_textbox::process_touch(touch_event_t touch_event)
 			keyboard.show(true, this);
 			// flash = true;
 			// redraw(32);
-			// squixl.current_screen()->refresh(true);
+			// static_cast<ui_screen *>(get_ui_parent())->refresh(true);
 
 			// if (callbackFunction != nullptr)
 			// 	callbackFunction();
@@ -108,7 +118,7 @@ bool ui_control_textbox::process_touch(touch_event_t touch_event)
 			// delay(10);
 			// flash = false;
 			// redraw(32);
-			// squixl.current_screen()->refresh(true);
+			// static_cast<ui_screen *>(get_ui_parent())->refresh(true);
 
 			return true;
 		}

@@ -17,14 +17,8 @@ class ui_label : public ui_element
 		int16_t _adj_x; // alignment adjusted draw pos x
 		int16_t _adj_y; // alignment adjusted draw pos y
 
-		uint8_t char_width = 0;
-		uint8_t char_height = 0;
-
-		// std::string _title;
-		const GFXfont *_font;
-
 		uint8_t current_fade = 0;
 		bool fade_dir = true;
 
-		void calculate_text_size();
+		void calculate_alignment();
 };

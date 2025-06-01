@@ -145,6 +145,9 @@ void Keyboard::show(bool state, ui_control_textbox *target)
 		squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 1, &titlechar_width, &titlechar_height);
 		squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 2, &char_width, &char_height);
 		squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 3, &keychar_width, &keychar_height);
+
+		box_char_width = char_width;
+		box_char_height = char_height;
 	}
 
 	if (state && target != nullptr)
@@ -168,6 +171,14 @@ void Keyboard::show(bool state, ui_control_textbox *target)
 		cursor_pos = -1;
 		squixl.current_screen()->refresh(true, true);
 		audio.play_tone(800, 0.5);
+
+		if (_sprite_keyboard.getBuffer())
+		{
+			_sprite_keyboard.freeVirtual();
+			_sprite_background.freeVirtual();
+		}
+
+		// squixl.log_heap("close KB");
 	}
 }
 
@@ -190,8 +201,8 @@ void Keyboard::update(touch_event_t t)
 							: tx);
 
 		// 2) convert into a 0-based “which character cell” index
-		int rel = cx - x0;			 // 0…string_len_pixels
-		int cell = rel / char_width; // 0…(string_len–1)
+		int rel = cx - x0;				 // 0…string_len_pixels
+		int cell = rel / box_char_width; // 0…(string_len–1)
 
 		// 3) cursor goes *after* that cell, so +1
 		int idx = cell + 1;
@@ -199,7 +210,7 @@ void Keyboard::update(touch_event_t t)
 			idx = string_len;
 
 		cursor_pos = idx;
-		move_cursor(x0 + idx * char_width);
+		move_cursor(x0 + idx * box_char_width);
 		audio.play_tone(900, 0.3);
 	}
 	else if (auto key = find_key_at(tx, ty))
@@ -228,7 +239,7 @@ void Keyboard::update(touch_event_t t)
 				}
 				print_text();
 				// reposition pixel cursor: start + (char index * char width)
-				cursor_pos_x = string_start_pos_x + cursor_pos * char_width;
+				cursor_pos_x = string_start_pos_x + cursor_pos * box_char_width;
 			}
 
 			break;
@@ -260,7 +271,7 @@ void Keyboard::update(touch_event_t t)
 
 			print_text();
 			// update pixel position of cursor
-			cursor_pos_x = string_start_pos_x + cursor_pos * char_width;
+			cursor_pos_x = string_start_pos_x + cursor_pos * box_char_width;
 		}
 		break;
 
@@ -277,7 +288,7 @@ void Keyboard::update(touch_event_t t)
 			cursor_pos++;
 
 			print_text();
-			cursor_pos_x = string_start_pos_x + cursor_pos * char_width;
+			cursor_pos_x = string_start_pos_x + cursor_pos * box_char_width;
 		}
 		break;
 		}
@@ -330,21 +341,31 @@ void Keyboard::print_text()
 	// 8,8,45,472
 
 	string_len = _edited_text.length();
-	string_len_pixels = string_len * char_width;
-	string_start_pos_x = 240 - (string_len_pixels / 2);
-	// string_len_pixels = constrain(string_len_pixels, 0, _w);
-	// Serial.printf("text box string %s len %d, pixels %d, x %d, w %d, pos %d\n", _edited_text.c_str(), string_len, string_len_pixels, _x, _w, (_w / 2) - (string_len_pixels / 2));
 
-	_sprite_keyboard.setFreeFont(UbuntuMono_R[2]);
+	if (string_len < 40)
+	{
+		box_char_width = char_width;
+		box_char_height = char_height;
+	}
+	else
+	{
+		box_char_width = titlechar_width;
+		box_char_height = titlechar_height;
+	}
+
+	string_len_pixels = string_len * box_char_width;
+	string_start_pos_x = 240 - (string_len_pixels / 2);
+
+	_sprite_keyboard.setFreeFont(UbuntuMono_R[(string_len < 40 ? 2 : 1)]);
 	_sprite_keyboard.fillRect(10, 30, 460, 34, RGB(60, 60, 59));
 	_sprite_keyboard.setTextColor(TFT_WHITE, -1);
-	_sprite_keyboard.setCursor(string_start_pos_x, 46 + (char_height / 2));
+	_sprite_keyboard.setCursor(string_start_pos_x, 46 + (box_char_height / 2));
 	_sprite_keyboard.print(_edited_text.c_str());
 
 	if (cursor_pos < 0)
 	{
 		cursor_pos = string_len;
-		cursor_pos_x = string_start_pos_x + cursor_pos * char_width;
+		cursor_pos_x = string_start_pos_x + cursor_pos * box_char_width;
 	}
 
 	// _sprite_keyboard.setCursor(20, 26 + (char_height / 2));

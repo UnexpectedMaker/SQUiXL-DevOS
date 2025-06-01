@@ -73,8 +73,8 @@ void SQUiXL_LITE::init()
 		Serial.println("Display buffer allocated successfully!");
 	}
 
-	// Set the SPI frequency for the screen to 6Mhz to remove contention between PSRAM (frame buffer) and Flash.
-	RGBChangeFreq(6000000);
+	// Set the SPI frequency for the screen to 7Mhz to remove contention between PSRAM (frame buffer) and Flash.
+	RGBChangeFreq(7000000);
 }
 
 void SQUiXL_LITE::screen_init_spi_bitbanged(const uint8_t *data)
@@ -288,9 +288,10 @@ bool SQUiXL_LITE::vbus_present()
 
 void SQUiXL_LITE::cache_text_sizes()
 {
-	// If the size is more than 0 we have alrady cached, so exit.
-	if (font_char_sizes.size() > 0)
+	if (char_sizes_cached)
 		return;
+
+	char_sizes_cached = true;
 
 	int16_t tempx;
 	int16_t tempy;
@@ -299,17 +300,25 @@ void SQUiXL_LITE::cache_text_sizes()
 
 	BB_SPI_LCD _font_checker;
 
+	int count = 0;
+
 	// Regular
 	for (int i = 0; i < UbuntuMono_R_count; i++)
 	{
 		_font_checker.setFreeFont(UbuntuMono_R[i]);
 		_font_checker.getTextBounds("W", 0, 0, &tempx, &tempy, &tempw, &temph);
-		font_size_t size;
-		size.weight = FONT_SPEC::FONT_WEIGHT_R;
-		size.size = i;
-		size.width = tempw;
-		size.height = temph;
-		font_char_sizes.push_back(size);
+		UbuntuMono_R_Char_Sizes[i][0] = tempw;
+		UbuntuMono_R_Char_Sizes[i][1] = temph;
+		count++;
+
+		// Serial.printf("FONT: UbuntuMono_R[%d] %d %d\n", i, UbuntuMono_R_Char_Sizes[i][0], UbuntuMono_R_Char_Sizes[i][1]);
+
+		// font_size_t size;
+		// size.weight = FONT_SPEC::FONT_WEIGHT_R;
+		// size.size = i;
+		// size.width = tempw;
+		// size.height = temph;
+		// font_char_sizes.push_back(size);
 	}
 
 	// Bold
@@ -317,15 +326,20 @@ void SQUiXL_LITE::cache_text_sizes()
 	{
 		_font_checker.setFreeFont(UbuntuMono_B[i]);
 		_font_checker.getTextBounds("W", 0, 0, &tempx, &tempy, &tempw, &temph);
-		font_size_t size;
-		size.weight = FONT_SPEC::FONT_WEIGHT_R;
-		size.size = i;
-		size.width = tempw;
-		size.height = temph;
-		font_char_sizes.push_back(size);
+		UbuntuMono_B_Char_Sizes[i][0] = tempw;
+		UbuntuMono_B_Char_Sizes[i][1] = temph;
+		count++;
+
+		// Serial.printf("FONT: UbuntuMono_B[%d] %d %d\n", i, UbuntuMono_B_Char_Sizes[i][0], UbuntuMono_B_Char_Sizes[i][1]);
+		// font_size_t size;
+		// size.weight = FONT_SPEC::FONT_WEIGHT_R;
+		// size.size = i;
+		// size.width = tempw;
+		// size.height = temph;
+		// font_char_sizes.push_back(size);
 	}
 
-	Serial.printf("Added %d cached char sizes for UbuntuMono_R & Ubuntu_Mono_B\n", font_char_sizes.size());
+	Serial.printf("Added %d cached char sizes for UbuntuMono_R & Ubuntu_Mono_B\n", count);
 }
 
 void SQUiXL_LITE::get_cached_char_sizes(FONT_SPEC weight, uint8_t size, uint8_t *width, uint8_t *height)
@@ -333,15 +347,15 @@ void SQUiXL_LITE::get_cached_char_sizes(FONT_SPEC weight, uint8_t size, uint8_t 
 	*width = 0;
 	*height = 0;
 
-	for (int i = 0; i < font_char_sizes.size(); i++)
+	if (weight == FONT_SPEC::FONT_WEIGHT_R)
 	{
-		// if (font_char_sizes[i].weight == (int)weight && font_char_sizes[i].size == size)
-		if (font_char_sizes[i].check_fit(size, weight))
-		{
-			*width = font_char_sizes[i].width;
-			*height = font_char_sizes[i].height;
-			return;
-		}
+		*width = UbuntuMono_R_Char_Sizes[size][0];
+		*height = UbuntuMono_R_Char_Sizes[size][1];
+	}
+	else
+	{
+		*width = UbuntuMono_B_Char_Sizes[size][0];
+		*height = UbuntuMono_B_Char_Sizes[size][1];
 	}
 }
 
@@ -353,17 +367,17 @@ void SQUiXL_LITE::show_error(String error, bool fade)
 	// Cach the font sizes (if required) so we can easily source any sized character wisth and height
 	cache_text_sizes();
 
-	uint8_t char_width = 0;
-	uint8_t char_height = 0;
+	// uint8_t char_width = 0;
+	// uint8_t char_height = 0;
 	// Load char_width & char_height with the cached sized for Regular sized 3
-	get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 3, &char_width, &char_height);
+	// get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 3, &char_width, &char_height);
 	sprite.fillScreen(TFT_RED);
 	sprite.setFreeFont(UbuntuMono_R[3]);
 	sprite.setTextColor(TFT_WHITE, -1);
 
-	uint16_t pixels = error.length() * char_width;
+	uint16_t pixels = error.length() * UbuntuMono_R_Char_Sizes[3][0];
 	// Set the text to the center of the screen
-	sprite.setCursor(240 - pixels / 2, 240 + char_height / 2);
+	sprite.setCursor(240 - pixels / 2, 240 + UbuntuMono_R_Char_Sizes[3][1] / 2);
 	sprite.print(error);
 
 	if (fade)
@@ -378,7 +392,7 @@ void SQUiXL_LITE::show_error(String error, bool fade)
 	{
 		squixl_lite.lcd.drawSprite(0, 0, &sprite, 1.0, -1);
 	}
-	sprite.freeBuffer();
+	sprite.freeVirtual();
 }
 
 bool SQUiXL_LITE::process_touch_lite(uint16_t *x, uint16_t *y)

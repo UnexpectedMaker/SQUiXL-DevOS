@@ -10,13 +10,20 @@ bool ui_control_button::redraw(uint8_t fade_amount, int8_t tab_group)
 		return false;
 	}
 
+	if (!_sprite_content.getBuffer())
+	{
+		_sprite_content.createVirtual(_w, _h, NULL, true);
+		// _sprite_clean.createVirtual(_w, _h, NULL, true);
+		// _sprite_mixed.createVirtual(_w, _h, NULL, true);
+	}
+
 	is_busy = true;
 
-	if (is_dirty_hard)
-	{
-		_sprite_clean.fillScreen(TFT_MAGENTA);
-		is_dirty_hard = false;
-	}
+	// if (is_dirty_hard)
+	// {
+	// 	_sprite_clean.fillScreen(TFT_MAGENTA);
+	// 	is_dirty_hard = false;
+	// }
 
 	// Clear the content sprite
 	_sprite_content.fillScreen(TFT_MAGENTA);
@@ -31,9 +38,6 @@ bool ui_control_button::redraw(uint8_t fade_amount, int8_t tab_group)
 		// Serial.printf("string len %d, pixels %d, x %d, w %d, pos %d\n", string_len, string_len_pixels, _x, _w, (_w / 2) - (string_len_pixels / 2));
 	}
 
-	// uint16_t dark_shade = darken565(squixl.current_screen()->background_color(), 0.2f);
-	// uint16_t light_shade = lighten565(squixl.current_screen()->background_color(), 0.4f);
-
 	_sprite_content.setFreeFont(UbuntuMono_R[2]);
 	_sprite_content.setTextColor(TFT_WHITE, -1);
 	_sprite_content.setCursor((_w / 2) - (string_len_pixels / 2), _h / 2 + char_height / 2);
@@ -41,20 +45,20 @@ bool ui_control_button::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (flash)
 	{
 		_sprite_content.fillRoundRect(0, 0, _w, _h, 9, TFT_WHITE, DRAW_TO_RAM);
-		_sprite_content.setTextColor(squixl.current_screen()->background_color(), -1);
+		_sprite_content.setTextColor(static_cast<ui_screen *>(get_ui_parent())->background_color(), -1);
 	}
 	else
 	{
-		_sprite_content.fillRoundRect(0, 0, _w, _h, 9, squixl.current_screen()->dark_tint[1], DRAW_TO_RAM);
-		_sprite_content.drawRoundRect(0, 0, _w, _h, 9, squixl.current_screen()->light_tint[3], DRAW_TO_RAM);
+		_sprite_content.fillRoundRect(0, 0, _w, _h, 9, static_cast<ui_screen *>(get_ui_parent())->dark_tint[1], DRAW_TO_RAM);
+		_sprite_content.drawRoundRect(0, 0, _w, _h, 9, static_cast<ui_screen *>(get_ui_parent())->light_tint[3], DRAW_TO_RAM);
 		_sprite_content.setTextColor(TFT_WHITE, -1);
 	}
 	_sprite_content.print(_title.c_str());
 
 	// Blend and draw the sprite to the current ui_screen content sprite
-	squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
+	// squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
 
-	squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+	get_ui_parent()->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
 
 	if (fade_amount == 32)
 		next_refresh = millis();
@@ -79,14 +83,14 @@ bool ui_control_button::process_touch(touch_event_t touch_event)
 		{
 			flash = true;
 			redraw(32);
-			squixl.current_screen()->refresh(true);
+			static_cast<ui_screen *>(get_ui_parent())->refresh(true);
 
 			audio.play_tone(500, 1);
 
 			delay(10);
 			flash = false;
 			redraw(32);
-			squixl.current_screen()->refresh(true);
+			static_cast<ui_screen *>(get_ui_parent())->refresh(true);
 
 			if (callbackFunction != nullptr)
 				callbackFunction();

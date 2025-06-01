@@ -12,9 +12,9 @@ void ui_control::create(uint16_t _pos_x, uint16_t _pos_y, uint16_t _width, uint1
 
 	_title = title;
 
-	_sprite_content.createVirtual(_w, _h, NULL, true);
-	_sprite_clean.createVirtual(_w, _h, NULL, true);
-	_sprite_mixed.createVirtual(_w, _h, NULL, true);
+	// _sprite_content.createVirtual(_w, _h, NULL, true);
+	// _sprite_clean.createVirtual(_w, _h, NULL, true);
+	// _sprite_mixed.createVirtual(_w, _h, NULL, true);
 
 	// Serial.printf("created control %d, %d, %d, %d\n", _x, _y, _w, _h);
 
@@ -64,6 +64,12 @@ void ui_control::create_on_grid(uint8_t _span_c, uint8_t _span_r, const char *ti
 	// Serial.printf("%s is grid created as _w %d, _h %d, _span %d\n", get_title(), _width, _height, _span_c);
 
 	create(0, 0, _width, _height, title);
+}
+
+void ui_control::clear_sprites()
+{
+	if (_sprite_content.getBuffer())
+		_sprite_content.freeVirtual();
 }
 
 void ui_control::set_label_sizes()

@@ -28,9 +28,16 @@ bool ui_control_toggle::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	is_busy = true;
 
+	if (!_sprite_content.getBuffer())
+	{
+		_sprite_content.createVirtual(_w, _h, NULL, true);
+		// _sprite_clean.createVirtual(_w, _h, NULL, true);
+		// _sprite_mixed.createVirtual(_w, _h, NULL, true);
+	}
+
 	if (is_dirty_hard)
 	{
-		_sprite_clean.fillScreen(TFT_MAGENTA);
+		// _sprite_clean.fillScreen(TFT_MAGENTA);
 
 		// Get the initial value from the setting, if one if set
 		if (setting_option != nullptr)
@@ -57,15 +64,15 @@ bool ui_control_toggle::redraw(uint8_t fade_amount, int8_t tab_group)
 	_sprite_content.setFreeFont(UbuntuMono_R[2]);
 	_sprite_content.setTextColor(TFT_WHITE, -1);
 
-	_sprite_content.fillRoundRect(0, 0, _w, _h, 8, squixl.current_screen()->dark_tint[1], DRAW_TO_RAM);
-	_sprite_content.fillRoundRect(5, 20, _w / 2 - 5, 35, 6, squixl.current_screen()->dark_tint[3], DRAW_TO_RAM);
+	_sprite_content.fillRoundRect(0, 0, _w, _h, 8, static_cast<ui_screen *>(get_ui_parent())->dark_tint[1], DRAW_TO_RAM);
+	_sprite_content.fillRoundRect(5, 20, _w / 2 - 5, 35, 6, static_cast<ui_screen *>(get_ui_parent())->dark_tint[3], DRAW_TO_RAM);
 
 	// If the control has a title, show it at the top center
 	if (_title.length() > 0)
 	{
 		_sprite_content.setFreeFont(UbuntuMono_R[0]);
 		_sprite_content.setCursor((_w / 2) - (title_len_pixels / 2), char_height + 2);
-		_sprite_content.setTextColor(squixl.current_screen()->light_tint[5], -1);
+		_sprite_content.setTextColor(static_cast<ui_screen *>(get_ui_parent())->light_tint[5], -1);
 		_sprite_content.print(_title.c_str());
 	}
 
@@ -78,9 +85,9 @@ bool ui_control_toggle::redraw(uint8_t fade_amount, int8_t tab_group)
 	uint8_t toggle_half_way = (_w / 2 - 5);
 
 	if (toggle_state)
-		_sprite_content.fillRoundRect(_w / 4, 25, 30, 25, 6, squixl.current_screen()->light_tint[4], DRAW_TO_RAM);
+		_sprite_content.fillRoundRect(_w / 4, 25, 30, 25, 6, static_cast<ui_screen *>(get_ui_parent())->light_tint[4], DRAW_TO_RAM);
 	else
-		_sprite_content.fillRoundRect(10, 25, 30, 25, 6, squixl.current_screen()->light_tint[0], DRAW_TO_RAM);
+		_sprite_content.fillRoundRect(10, 25, 30, 25, 6, static_cast<ui_screen *>(get_ui_parent())->light_tint[0], DRAW_TO_RAM);
 
 	_sprite_content.print(get_state_text());
 
@@ -89,7 +96,7 @@ bool ui_control_toggle::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (toggle_state)
 	{
 		_sprite_content.fillRoundRect(0, 0, _w, _h, 7, TFT_WHITE, DRAW_TO_RAM);
-		_sprite_content.setTextColor(squixl.current_screen()->background_color(), -1);
+		_sprite_content.setTextColor(static_cast<ui_screen *>(get_ui_parent())->background_color(), -1);
 		_sprite_content.setCursor((_w / 2) - (string_on_len_pixels / 2), _h / 2 + char_height / 2);
 		_sprite_content.printf(toggle_text_on.c_str());
 	}
@@ -103,8 +110,8 @@ bool ui_control_toggle::redraw(uint8_t fade_amount, int8_t tab_group)
 	*/
 
 	// Blend and draw the sprite to the current ui_screen content sprite
-	squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
-	squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+	// squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
+	get_ui_parent()->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
 
 	if (fade_amount == 32)
 		next_refresh = millis();
@@ -135,7 +142,7 @@ bool ui_control_toggle::process_touch(touch_event_t touch_event)
 				static_cast<SettingsOptionBool *>(setting_option)->update(toggle_state);
 			}
 			redraw(32);
-			squixl.current_screen()->refresh(true);
+			static_cast<ui_screen *>(get_ui_parent())->refresh(true);
 
 			if (callbackFunction != nullptr)
 				callbackFunction();

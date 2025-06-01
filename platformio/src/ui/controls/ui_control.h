@@ -22,7 +22,9 @@ class ui_control : public ui_element
 		void set_callback(CallbackFunction callback);
 		void set_control_icon(const void *image_data, int image_data_size);
 		void set_grid_padding(uint8_t padding) { grid_padding = padding; }
+		void clear_sprites();
 
+		// Virtual funcs
 		virtual void set_options_data(SettingsOptionBase *sett) { setting_option = sett; }
 		virtual void set_label_sizes();
 

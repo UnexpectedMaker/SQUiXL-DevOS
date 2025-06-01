@@ -6,17 +6,16 @@
 #include <vector>
 #include "WiFi.h"
 
-class ui_screen;
 extern std::vector<ui_screen *> screens;
 
 class ui_screen : public ui_element
 {
 	public:
-		// ui_screen();
-
 		void setup(uint16_t back_color, bool add = true);
 
 		void set_navigation(Directions from, ui_screen *screen, bool set_reversed = false);
+		ui_screen *get_navigation(Directions from);
+		void adjust_navigation_range(DRAGABLE axis, int16_t *clamp_delta_low, int16_t *clamp_delta_high);
 
 		using CallbackFunction = void (*)();
 
@@ -27,6 +26,7 @@ class ui_screen : public ui_element
 
 		void refresh(bool forced = false, bool force_children = false);
 		void clear_content();
+		void clear_tabbed_children();
 
 		void create_buffers();
 		void clear_buffers();
@@ -46,7 +46,10 @@ class ui_screen : public ui_element
 		void show_overlay(bool show, unsigned long duration, std::function<void()> completion_callback);
 		void fade_overlay(uint8_t fade_amount);
 
-		void animate_pos(Directions direction, unsigned long duration, tween_ease_t ease, std::function<void()> completion_callback);
+		// void animate_pos(Directions direction, unsigned long duration, tween_ease_t ease, std::function<void()> completion_callback);
+
+		void finish_drag(Directions direction, int16_t dx, int16_t dy);
+		void cancel_drag();
 
 		int8_t get_tab_group_index();
 		bool position_children(bool force_children = false);
@@ -64,6 +67,28 @@ class ui_screen : public ui_element
 		bool blend_transparency = true;
 		uint8_t overlay_alpha = 0;
 		bool switching_screens = false;
+
+		int16_t drag_x = 0;
+		int16_t drag_y = 0;
+		int16_t cached_drag_x = 0;
+		int16_t cached_drag_y = 0;
+
+		int16_t last_delta_x = 0;
+		int16_t last_delta_y = 0;
+
+		unsigned long drag_step_timer = 0;
+
+		bool is_dragging = false;
+		DRAGABLE drag_axis = DRAG_NONE;
+		ui_screen *drag_neighbours[2] = {nullptr, nullptr};
+
+		void draw_draggable();
+		void setup_draggable_neighbour(bool state);
+		void draw_draggable_neighbour(BB_SPI_LCD *sprite, int16_t dx, int16_t dy);
+
+		void clean_neighbour_sprites();
+
+		BB_SPI_LCD _sprite_drag;
 
 		int8_t current_tab_group = -1;
 

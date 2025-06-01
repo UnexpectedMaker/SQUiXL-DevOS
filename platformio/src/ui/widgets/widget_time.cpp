@@ -133,11 +133,11 @@ bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (fade_amount < 32)
 	{
 		squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
-		squixl.current_screen()->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+		ui_parent->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
 	}
 	else
 	{
-		squixl.current_screen()->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+		ui_parent->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
 		next_refresh = millis();
 	}
 

@@ -85,6 +85,14 @@ bool widgetBattery::redraw(uint8_t fade_amount, int8_t tab_group)
 	{
 		_sprite_content.drawSprite(0, 0, &wifi_icons[4], 1.0f, 0x0, DRAW_TO_RAM);
 		_sprite_content.print(WiFi.localIP());
+		if (showSSID)
+		{
+			_sprite_content.print(" (CH ");
+			_sprite_content.print(WiFi.channel());
+			_sprite_content.print(")");
+			_sprite_content.setCursor(40, 34);
+			_sprite_content.print(WiFi.SSID());
+		}
 		if (squixl.update_available())
 		{
 			_sprite_content.setCursor(40, 34);
@@ -151,6 +159,10 @@ bool widgetBattery::process_touch(touch_event_t touch_event)
 			if (millis() - next_click_update > 1000)
 			{
 				next_click_update = millis();
+				
+				// Show/Hide SSID (and beep)
+				showSSID = !showSSID;
+				audio.play_tone(505, 12);
 				return false;
 			}
 		}

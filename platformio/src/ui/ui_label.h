@@ -20,5 +20,8 @@ class ui_label : public ui_element
 		uint8_t current_fade = 0;
 		bool fade_dir = true;
 
+		uint8_t char_width = 0;
+		uint8_t char_height = 0;
+
 		void calculate_alignment();
 };

@@ -21,6 +21,7 @@ class ui_screen : public ui_element
 
 		// void show_background_png(const void *png, int png_size, bool fade = true);
 		void show_background_jpg(const void *jpg, int jpg_size, bool fade = true);
+		bool show_user_background_jpg(bool fade = true);
 		void show_next_background();
 		void show_random_background(bool fade = true);
 

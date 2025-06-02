@@ -19,7 +19,7 @@ void SQUiXL_LITE::init()
 		ioex.pin_mode(LCD_RST, OUTPUT, HIGH);
 
 		// Screen backlight EN
-		ioex.pin_mode(BL_EN, OUTPUT, HIGH);
+		ioex.pin_mode(BL_EN, OUTPUT, LOW);
 
 		// Screen soft power EN
 		// ioex.pin_mode(SOFT_PWR, OUTPUT, LOW);
@@ -73,8 +73,10 @@ void SQUiXL_LITE::init()
 		Serial.println("Display buffer allocated successfully!");
 	}
 
-	// Set the SPI frequency for the screen to 7Mhz to remove contention between PSRAM (frame buffer) and Flash.
-	RGBChangeFreq(7000000);
+	// Set the SPI frequency for the screen to 6.5Mhz to remove contention between PSRAM (frame buffer) and Flash.
+	RGBChangeFreq(6500000);
+
+	// ioex.write(BL_EN, HIGH);
 }
 
 void SQUiXL_LITE::screen_init_spi_bitbanged(const uint8_t *data)

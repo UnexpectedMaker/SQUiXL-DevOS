@@ -12,9 +12,6 @@ void ui_label::create(int16_t x, int16_t y, const char *title, uint16_t color, T
 
 	_align = alignment;
 
-	uint8_t char_width = 0;
-	uint8_t char_height = 0;
-
 	squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 1, &char_width, &char_height);
 	_w = _title.length() * char_width;
 	_h = char_height + 4; // extra buffer just in case

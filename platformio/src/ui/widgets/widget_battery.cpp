@@ -159,9 +159,10 @@ bool widgetBattery::process_touch(touch_event_t touch_event)
 			if (millis() - next_click_update > 1000)
 			{
 				next_click_update = millis();
-				
+
 				// Show/Hide SSID (and beep)
 				showSSID = !showSSID;
+				redraw(32);
 				audio.play_tone(505, 12);
 				return false;
 			}

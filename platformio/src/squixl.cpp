@@ -148,7 +148,7 @@ void SQUiXL::display_first_boot(bool show)
 void SQUiXL::set_backlight_level(float pwm_level_percent)
 {
 	// Screen is LOW side, so 0 is full bright, and 4096 of dimmest
-	uint16_t pwm_level = 4090 - (int)((pwm_level_percent / 100.0f) * 4090.0);
+	uint16_t pwm_level = 4090 - (uint16_t)((pwm_level_percent / 100.0f) * 4090.0);
 	ledcWrite(BL_PWM, pwm_level);
 	current_backlight_pwm = pwm_level_percent;
 }
@@ -649,12 +649,25 @@ void SQUiXL::set_current_screen(ui_screen *screen)
 	_current_screen = screen;
 	_current_screen->create_buffers();
 
+	if (_main_screen == nullptr)
+	{
+		// first screen being added, so make it the main screen
+		_main_screen = screen;
+
+		Serial.printf("Set main screen - is same as current? %d\n", (_main_screen == _current_screen));
+	}
+
 	// log_heap("Screen Switch");
 }
 
 ui_screen *SQUiXL::current_screen()
 {
 	return _current_screen;
+}
+
+ui_screen *SQUiXL::main_screen()
+{
+	return _main_screen;
 }
 
 void SQUiXL::toggle_settings()

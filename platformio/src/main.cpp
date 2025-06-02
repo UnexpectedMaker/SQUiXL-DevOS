@@ -7,7 +7,7 @@
 #include "ui/widgets/widget_jokes.h"
 #include "ui/widgets/widget_rss_feeds.h"
 #include "ui/widgets/widget_time.h"
-#include "ui/widgets/widget_mqtt_sensors.h"
+// #include "ui/widgets/widget_mqtt_sensors.h"
 #include "ui/widgets/widget_battery.h"
 #include "ui/widgets/widget_wifimanager.h"
 
@@ -16,6 +16,7 @@
 #include "ui/controls/ui_control_slider.h"
 #include "ui/controls/ui_control_textbox.h"
 #include "ui/ui_label.h"
+#include "ui/ui_scrollarea.h"
 
 #include "ui/controls/ui_control_tabgroup.h"
 #include "ui/ui_dialogbox.h"
@@ -47,6 +48,7 @@ ui_control_slider slider_backlight_timer_battery;
 ui_control_slider slider_backlight_timer_vbus;
 ui_control_toggle toggle_sleep_vbus;
 ui_control_toggle toggle_sleep_battery;
+ui_control_toggle toggle_wallpaper;
 // Time
 ui_control_toggle toggle_time_mode;
 ui_control_toggle toggle_date_mode;
@@ -54,26 +56,22 @@ ui_control_slider slider_UTC;
 // WiFi
 ui_control_toggle toggle_OTA_updates;
 ui_control_toggle toggle_Notify_updates;
-
 // Audio
 ui_control_toggle toggle_audio_ui;
 ui_control_toggle toggle_audio_alarm;
 ui_control_slider slider_volume;
 // Haptics
 ui_control_toggle toggle_haptics_enable;
-
 // Open Weather
 ui_control_toggle toggle_ow_enable;
 ui_control_slider slider_ow_refresh;
 ui_control_textbox text_ow_api_key;
 ui_control_textbox text_ow_country;
 ui_control_textbox text_ow_city;
-
 // RSS Feed
 ui_control_toggle toggle_rss_enable;
 ui_control_slider slider_rss_refresh;
 ui_control_textbox text_rss_feed_url;
-
 // Screenshot stuff
 ui_control_toggle toggle_screenshot_enable;
 ui_control_slider slider_screenshot_wb_temp;
@@ -87,6 +85,7 @@ ui_control_slider slider_screenshot_contrast;
 ui_control_button button_dialogbox_test;
 
 ui_label label_version;
+ui_scrollarea mqtt_notifications;
 
 void button_press_ok()
 {
@@ -103,6 +102,11 @@ void dialogbox_example()
 	dialogbox.set_button_ok("OK", button_press_ok);
 	dialogbox.set_button_cancel("CANCEL!", button_press_cancelled);
 	dialogbox.show("Example Dialog Box", "Being careful not to overflow the heap and then get rubbbish on sceen - or spelling mistakes!");
+}
+
+void update_wallpaper()
+{
+	squixl.main_screen()->show_random_background();
 }
 
 void create_ui_elements()
@@ -159,9 +163,15 @@ void create_ui_elements()
 	toggle_date_mode.set_options_data(&settings.setting_time_dateformat);
 	settings_tab_group.add_child_ui(&toggle_date_mode, 0);
 
-	button_dialogbox_test.create_on_grid(2, 1, "TEST");
-	button_dialogbox_test.set_callback(dialogbox_example);
-	settings_tab_group.add_child_ui(&button_dialogbox_test, 0);
+	toggle_wallpaper.create_on_grid(2, 1, "WALLPAPER PREF");
+	toggle_wallpaper.set_toggle_text("SYS", "USER");
+	toggle_wallpaper.set_options_data(&settings.setting_wallpaper);
+	toggle_wallpaper.set_callback(update_wallpaper);
+	settings_tab_group.add_child_ui(&toggle_wallpaper, 0);
+
+	// button_dialogbox_test.create_on_grid(2, 1, "TEST");
+	// button_dialogbox_test.set_callback(dialogbox_example);
+	// settings_tab_group.add_child_ui(&button_dialogbox_test, 0);
 
 	slider_UTC.create_on_grid(6, 1);
 	slider_UTC.set_value_type(VALUE_TYPE::INT);
@@ -321,9 +331,13 @@ void create_ui_elements()
 	*/
 
 	screen_mqtt.setup(darken565(0x5AEB, 0.5), true);
-	widget_mqtt_sensors.create(10, 120, 460, 240, TFT_BLACK, 12, 0, "MQTT Messages");
-	widget_mqtt_sensors.set_refresh_interval(1000);
-	screen_mqtt.add_child_ui(&widget_mqtt_sensors);
+	mqtt_notifications.create(20, 20, 440, 440, "MQTT Messages", TFT_GREY);
+	mqtt_notifications.set_scrollable(false, true);
+
+	// widget_mqtt_sensors.create(10, 120, 460, 240, TFT_BLACK, 12, 0, "MQTT Messages");
+	// widget_mqtt_sensors.set_refresh_interval(1000);
+	screen_mqtt.add_child_ui(&mqtt_notifications);
+	screen_mqtt.set_refresh_interval(0);
 
 	screen_main.set_navigation(Directions::LEFT, &screen_mqtt, true);
 	screen_main.set_navigation(Directions::DOWN, &screen_settings, true);
@@ -336,6 +350,7 @@ void setup()
 	// Set PWM for backlight chage pump IC
 	pinMode(BL_PWM, OUTPUT);
 	ledcAttach(BL_PWM, 6500, LEDC_TIMER_12_BIT);
+	ledcWrite(BL_PWM, 4090);
 
 	Serial.begin(115200);
 	Serial.setDebugOutput(true); // sends all log_e(), log_i() messages to USB HW CDC

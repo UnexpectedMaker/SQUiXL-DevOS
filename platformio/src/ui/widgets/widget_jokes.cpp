@@ -27,9 +27,7 @@ void widgetJokes::show_next_joke()
 
 	if (stored_jokes.size() > 0)
 	{
-		// Serial.println("Show Next Joke");
 		process_lines();
-
 		fade(0.0, 1.0, 500, false, true, nullptr);
 	}
 

@@ -3,10 +3,58 @@
 #include "peripherals/haptics.h"
 #include "settings/settings.h"
 #include "web/wifi_controller.h"
+#include "ui/ui_screen.h"
 
 // HTML Templates
 #include "web/www/www_general.h"
 #include "web/www/www_settings_main.h"
+
+static String file_size_helper(const size_t bytes)
+{
+	if (bytes < 1024)
+		return String(bytes) + " B";
+	else if (bytes < (1024 * 1024))
+		return String(bytes / 1024.0) + " KB";
+	else
+		return String(bytes / 1024.0 / 1024.0) + " MB";
+}
+
+static String file_system_list(bool ishtml)
+{
+
+	// LittleFS.remove("/IMG_2614.jpg");
+	// LittleFS.remove("/wallpaper_example.jpg");
+
+	String returnText = "";
+	Serial.println("Listing files stored on LittleFS");
+	File root = LittleFS.open("/");
+	File foundfile = root.openNextFile();
+
+	if (ishtml)
+	{
+		returnText += "<table style='font-size:20px;'><tr><th align='left'>Name</th><th align='left'>Size</th></tr>";
+	}
+	while (foundfile)
+	{
+		if (ishtml)
+		{
+			returnText += "<tr align='left'><td>" + String(foundfile.name()) + "</td><td>" + file_size_helper(foundfile.size()) + "</td></tr>";
+		}
+		else
+		{
+			returnText += "File: " + String(foundfile.name()) + "\n";
+		}
+
+		foundfile = root.openNextFile();
+	}
+	if (ishtml)
+	{
+		returnText += "</table>";
+	}
+	root.close();
+	foundfile.close();
+	return returnText;
+}
 
 String WebServer::processor(const String &var)
 {
@@ -17,6 +65,10 @@ String WebServer::processor(const String &var)
 	if (var == "FOOTER")
 	{
 		return String(footer);
+	}
+	else if (var == "FOOTER_WALLPAPER")
+	{
+		return String(footer_wallpaper);
 	}
 	else if (var == "THEME")
 	{
@@ -116,6 +168,24 @@ String WebServer::processor(const String &var)
 		}
 
 		return html;
+	}
+	else if (var == "FILELIST")
+	{
+		return file_system_list(true);
+	}
+	else if (var == "LFS_FREE")
+	{
+		return file_size_helper((LittleFS.totalBytes() - LittleFS.usedBytes()));
+	}
+
+	else if (var == "LFS_USED")
+	{
+		return file_size_helper(LittleFS.usedBytes());
+	}
+
+	else if (var == "LFS_TOTAL")
+	{
+		return file_size_helper(LittleFS.totalBytes());
 	}
 
 	return "";
@@ -352,7 +422,13 @@ void WebServer::start_callback(bool success, const String &response)
 
 		web_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_html, processor); });
 
+		web_server.on("/wifi", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_wifi_html, processor); });
+
+		web_server.on("/widgets", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_widgets_html, processor); });
+
 		web_server.on("/screenie", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", screenie_html, processor); });
+
+		web_server.on("/wallpaper", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", wallpaper_html, processor); });
 
 		web_server.on("/take_screenshot", HTTP_GET, [](AsyncWebServerRequest *request) {
 			squixl.delayed_take_screenshot();
@@ -363,6 +439,13 @@ void WebServer::start_callback(bool success, const String &response)
 			// save_png(&squixl.lcd);
 			request->send(LittleFS, "/screenshot.png", "image/png");
 		});
+
+		web_server.on("/get_wallpaper", HTTP_GET, [](AsyncWebServerRequest *request) {
+			// save_png(&squixl.lcd);
+			request->send(LittleFS, "/user_wallpaper.jpg", "image/jpg");
+		});
+
+		web_server.on("/upload_wallpaper", HTTP_POST, [](AsyncWebServerRequest *request) { request->send(200); }, do_upload);
 
 		web_event.onConnect([](AsyncEventSourceClient *client) {
 			Serial.printf("SSE Client connected! ID: %" PRIu32 "\n", client->lastId());
@@ -667,6 +750,42 @@ void WebServer::stop(bool restart)
 	wifi_controller.wifi_prevent_disconnect = false;
 	wifi_controller.disconnect(true);
 	_running = false;
+}
+
+void WebServer::do_upload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
+{
+	// String logmessage = "Client:" + request->client()->remoteIP().toString() + " " + request->url();
+	// Serial.println(logmessage);
+
+	filename = "user_wallpaper.jpg";
+
+	String logmessage = "";
+
+	if (!index)
+	{
+		logmessage = "Upload Start: " + String(filename);
+		// open the file on first call and store the file handle in the request object
+		request->_tempFile = LittleFS.open("/" + filename, "w");
+		Serial.println(logmessage);
+	}
+
+	if (len)
+	{
+		// stream the incoming chunk to the opened file
+		request->_tempFile.write(data, len);
+		// logmessage = "Writing file: " + String(filename) + " index=" + String(index) + " len=" + String(len);
+		Serial.println(logmessage);
+	}
+
+	if (final)
+	{
+		logmessage = "Upload Complete: " + String(filename) + ",size: " + String(index + len);
+		// close the file handle as the upload is now done
+		request->_tempFile.close();
+		Serial.println(logmessage);
+		squixl.main_screen()->show_user_background_jpg(false);
+		request->redirect("/");
+	}
 }
 
 void WebServer::process() {}

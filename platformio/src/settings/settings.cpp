@@ -21,7 +21,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_open_weather, enab
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_rss_feed, enabled, feed_url, poll_frequency);
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, mdns_name, case_color, city, country, utc_offset, time_24hour, time_dateformat, volume, current_background, backlight_time_step_battery, backlight_time_step_vbus, sleep_vbus, sleep_battery, open_weather, rss_feed, audio, mqtt, haptics, screenshot);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, mdns_name, case_color, city, country, utc_offset, time_24hour, time_dateformat, volume, current_background, backlight_time_step_battery, backlight_time_step_vbus, sleep_vbus, sleep_battery, open_weather, rss_feed, audio, mqtt, haptics, screenshot, user_wallpaper);
 
 unsigned long Settings::reset_screen_dim_time()
 {
@@ -37,6 +37,7 @@ void Settings::init()
 	settings_backlight_timer_vbus.register_option();
 	setting_sleep_vbus.register_option();
 	setting_sleep_battery.register_option();
+	setting_wallpaper.register_option();
 
 	// Web and WiFi
 	setting_OTA_start.register_option();
@@ -77,14 +78,12 @@ void Settings::init()
 	mqtt_device_name.register_option();
 	mqtt_topic_listen.register_option();
 
-
 	// Audio UI
 	setting_audio_ui.register_option();
 	setting_audio_alarm.register_option();
 	setting_audio_on_hour.register_option();
 	setting_audio_charge.register_option();
 	setting_audio_volume.register_option();
-
 
 	// Snapshot Image Settings
 	screenshot_saturation.register_option();

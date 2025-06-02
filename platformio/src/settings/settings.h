@@ -126,8 +126,8 @@ struct Config_widget_open_weather
  */
 struct Config_widget_rss_feed
 {
-		int poll_frequency = 60; // Open Weather poll interval - 30mins.
-		String feed_url = "";	 // API key for Open Weather
+		int poll_frequency = 60;											// RSS poll interval - 60mins.
+		String feed_url = "https://rss.slashdot.org/slashdot/slashdotmain"; // Default RSS Feed URL
 		bool enabled = true;
 
 		bool has_url()
@@ -145,8 +145,7 @@ struct Config
 
 		int current_screen = 0;
 
-		bool beep_buttons = true;
-		bool beep_activity = true;
+		bool user_wallpaper = true;
 
 		bool autostart_webserver = false;
 
@@ -290,6 +289,8 @@ class Settings
 		// Add any SettingsOption values here for any settings you want to bind with a tw_Control
 		SettingsOptionBool setting_time_24hour{&config.time_24hour, 0, "Time Mode", "12H", "24H"};
 		SettingsOptionBool setting_time_dateformat{&config.time_dateformat, 0, "Date FMT", "DMY", "MDY"};
+		SettingsOptionBool setting_wallpaper{&config.user_wallpaper, 0, "Wallpaper", "SYSTEM", "USER"};
+
 		SettingsOptionColor565 setting_case_color{&config.case_color, 0, "Case Color"};
 		SettingsOptionIntRange settings_backlight_timer_battery{&config.backlight_time_step_battery, 5, 30, 1, false, 0, "Battery Backlight Dimmer Time (secs)"};
 		SettingsOptionIntRange settings_backlight_timer_vbus{&config.backlight_time_step_vbus, 5, 60, 1, false, 0, "5V Backlight Dimmer Time (secs)"};

@@ -21,6 +21,8 @@ class WebServer
 		void process();
 		bool is_running();
 
+		static void do_upload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
+
 		static String processor(const String &var);
 
 		static String generate_settings_html(int group_id);

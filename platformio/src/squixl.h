@@ -169,9 +169,9 @@ class SQUiXL : public SQUiXL_LITE
 		bool vbus_changed();
 		void change_cpu_frequency(bool increase);
 
-		const String version_firmware = "Alpha v0.2";
+		const String version_firmware = "Alpha v0.3";
 		const String version_year = "2025";
-		const uint16_t version_build = 2;
+		const uint16_t version_build = 3;
 		uint16_t version_latest = 0;
 
 		const String get_version() { return (version_firmware + " build " + version_build); }
@@ -190,6 +190,7 @@ class SQUiXL : public SQUiXL_LITE
 		bool showing_settings = false;
 
 		ui_screen *current_screen();
+		ui_screen *main_screen();
 		void set_current_screen(ui_screen *screen);
 
 		void toggle_settings();
@@ -240,6 +241,7 @@ class SQUiXL : public SQUiXL_LITE
 
 		ui_element *currently_selected = nullptr;
 		ui_screen *_current_screen = nullptr;
+		ui_screen *_main_screen = nullptr;
 
 		// Deep sleep stuff
 		std::vector<_CALLBACK_DS> pre_ds_callbacks;

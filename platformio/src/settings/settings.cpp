@@ -263,7 +263,7 @@ bool Settings::load()
 
 	Serial.printf("Country: %s, utc offset is %u\n", config.country, config.utc_offset);
 
-	if (config.mqtt.broker_ip = "" || config.mqtt.broker_ip == "mqtt://192.168.1.70")
+	if (config.mqtt.broker_ip == "" || config.mqtt.broker_ip == "mqtt://192.168.1.70")
 	{
 		config.mqtt.broker_ip = "192.168.1.70";
 	}

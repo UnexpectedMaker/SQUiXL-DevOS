@@ -92,7 +92,7 @@ void MQTT_Stuff::mqtt_reconnect()
 	Serial.println(WiFi.localIP());
 	Serial.println();
 	// Attempt to connect
-	if (mqtt_client.connect(settings.config.mqtt.device_name.c_str()))
+	if (mqtt_client.connect(settings.config.mqtt.device_name.c_str(), settings.config.mqtt.username.c_str(), settings.config.mqtt.password.c_str()))
 	{
 		Serial.println("** mqtt connected **");
 		// Subscribe

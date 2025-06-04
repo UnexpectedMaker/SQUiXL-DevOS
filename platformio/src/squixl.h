@@ -169,9 +169,9 @@ class SQUiXL : public SQUiXL_LITE
 		bool vbus_changed();
 		void change_cpu_frequency(bool increase);
 
-		const String version_firmware = "Alpha v0.3";
+		const String version_firmware = "Alpha v0.31";
 		const String version_year = "2025";
-		const uint16_t version_build = 3;
+		const uint16_t version_build = 4;
 		uint16_t version_latest = 0;
 
 		const String get_version() { return (version_firmware + " build " + version_build); }

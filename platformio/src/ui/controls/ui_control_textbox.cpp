@@ -75,7 +75,7 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 	// Blend and draw the sprite to the current ui_screen content sprite
 	// squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
 
-	get_ui_parent()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+	get_ui_parent()->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
 
 	if (fade_amount == 32)
 		next_refresh = millis();

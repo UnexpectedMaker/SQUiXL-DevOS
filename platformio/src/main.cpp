@@ -541,8 +541,9 @@ void loop()
 	if (squixl.hint_reload_wallpaper)
 	{
 		squixl.hint_reload_wallpaper = false; // squixl.main_screen()->show_user_background_jpg(false);
-		squixl.main_screen()->show_user_background_jpg(false);
 		settings.config.user_wallpaper = true;
+		squixl.main_screen()->show_user_background_jpg(false);
+
 		webserver.web_event.send("hello", "refresh", millis());
 	}
 

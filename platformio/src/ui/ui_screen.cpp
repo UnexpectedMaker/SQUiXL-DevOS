@@ -241,8 +241,6 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 
 	is_busy = false;
 	next_refresh = millis();
-
-	webserver.web_event.send("hello", "refresh", millis());
 }
 
 void ui_screen::show_next_background()

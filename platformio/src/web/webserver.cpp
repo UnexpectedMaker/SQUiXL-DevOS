@@ -781,9 +781,8 @@ void WebServer::do_upload(AsyncWebServerRequest *request, String filename, size_
 			[request, upload](bool ok) {
 				if (ok)
 				{
-					// squixl.main_screen()->show_user_background_jpg(false);
-					squixl.main_screen()->show_background_jpg(upload->buffer, upload->buffer_size, false);
-								}
+					squixl.hint_reload_wallpaper = true;
+				}
 				else
 				{
 					request->send(500, "text/plain", "Failed to save image");

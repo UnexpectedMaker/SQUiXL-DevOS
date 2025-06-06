@@ -538,6 +538,14 @@ void loop()
 
 	screenie_tick();
 
+	if (squixl.hint_reload_wallpaper)
+	{
+		squixl.hint_reload_wallpaper = false; // squixl.main_screen()->show_user_background_jpg(false);
+		squixl.main_screen()->show_user_background_jpg(false);
+		settings.config.user_wallpaper = true;
+		webserver.web_event.send("hello", "refresh", millis());
+	}
+
 	// If we have a current screen selected and it should be refreshed, refresh it!
 	if (squixl.current_screen() != nullptr && squixl.current_screen()->should_refresh())
 	{

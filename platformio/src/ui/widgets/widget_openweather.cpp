@@ -161,7 +161,8 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 		// Read the region of the clean screen wallpaper into the local clean sprite
 		ui_parent->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_back.getBuffer());
 		delay(10);
-		_sprite_clean.fillScreen(TFT_MAGENTA);
+		// _sprite_clean.fillScreen(TFT_MAGENTA);
+		_sprite_clean.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 		_sprite_clean.fillRoundRect(0, 0, _w, _h, 7, _c, DRAW_TO_RAM); // white will be our mask
 		squixl.lcd.blendSprite(&_sprite_clean, &_sprite_back, &_sprite_back, _t, TFT_MAGENTA);
 
@@ -184,6 +185,7 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 		// Serial.printf("is_dirty_hard? %d, is_dirty %d\n", is_dirty_hard, is_dirty);
 
 		is_dirty_hard = false;
+		is_dirty = true;
 	}
 
 	if (is_dirty)
@@ -229,21 +231,21 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 			_sprite_back.setCursor(10, 38);
 			_sprite_back.print("WAITING...");
 		}
+	}
 
-		if (fade_amount < 32)
-		{
-			squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, fade_amount);
-			ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-		}
-		else
-		{
-			squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, 32);
-			ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+	if (fade_amount < 32)
+	{
+		squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, fade_amount);
+		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+	}
+	else
+	{
+		squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, 32);
+		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
 
-			// Serial.println("Tick weather");
+		// Serial.println("Tick weather");
 
-			next_refresh = millis();
-		}
+		next_refresh = millis();
 	}
 
 	if (is_dirty && !was_dirty)

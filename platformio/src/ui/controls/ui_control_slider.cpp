@@ -1,12 +1,8 @@
 #include "ui/controls/ui_control_slider.h"
 #include "ui/ui_screen.h"
 
-void ui_control_slider::set_options_data(SettingsOptionBase *sett)
+void ui_control_slider::update_values()
 {
-	if (sett == nullptr)
-		return;
-
-	setting_option = sett;
 
 	if (value_type == VALUE_TYPE::INT)
 	{
@@ -27,6 +23,16 @@ void ui_control_slider::set_options_data(SettingsOptionBase *sett)
 		value_step = opt->get_step_value();
 		// Serial.printf("\n@@@ current_value (FLOAT): %0.1f - min: %0.1f, max %0.1f \n\n", current_value, value_min, value_max);
 	}
+}
+
+void ui_control_slider::set_options_data(SettingsOptionBase *sett)
+{
+	if (sett == nullptr)
+		return;
+
+	setting_option = sett;
+
+	update_values();
 
 	_title = setting_option->fieldname.c_str();
 	squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 0, &char_width_title, &char_height_title);
@@ -80,7 +86,9 @@ bool ui_control_slider::redraw(uint8_t fade_amount, int8_t tab_group)
 	// }
 
 	// Clear the content sprite
-	_sprite_content.fillScreen(TFT_MAGENTA);
+	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
+
+	update_values();
 
 	// This is only needed once, and noly if the control is not bound to an OptionSetting
 	if (char_width == 0)

@@ -27,18 +27,15 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (!_sprite_content.getBuffer())
 	{
 		_sprite_content.createVirtual(_w, _h, NULL, true);
-		// _sprite_clean.createVirtual(_w, _h, NULL, true);
-		// _sprite_mixed.createVirtual(_w, _h, NULL, true);
 	}
 
-	// if (is_dirty_hard)
-	// {
-	// 	_sprite_clean.fillScreen(TFT_MAGENTA);
-	// 	is_dirty_hard = false;
-	// }
+	// Always get the latest value to ensure changes done externally (like web server) are reflected
+	auto *opt = static_cast<SettingsOptionString *>(setting_option);
+	_text = opt->get().c_str();
 
 	// Clear the content sprite
-	_sprite_content.fillScreen(TFT_MAGENTA);
+	// _sprite_content.fillScreen(TFT_MAGENTA);
+	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 
 	// Calculate the string pixel sizes to allow for text centering
 	// This is only needed once

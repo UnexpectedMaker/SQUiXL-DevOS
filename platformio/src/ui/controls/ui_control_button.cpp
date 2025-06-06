@@ -26,7 +26,8 @@ bool ui_control_button::redraw(uint8_t fade_amount, int8_t tab_group)
 	// }
 
 	// Clear the content sprite
-	_sprite_content.fillScreen(TFT_MAGENTA);
+	// _sprite_content.fillScreen(TFT_MAGENTA);
+	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 
 	// Calculate the string pixel sizes to allow for text centering
 	// This is only needed once

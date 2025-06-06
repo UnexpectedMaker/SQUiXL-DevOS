@@ -213,6 +213,7 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 	}
 
 	_sprite_clean.freeVirtual();
+	clear_content();
 
 	/*
 	TODO: Need to add tab group support to this?
@@ -283,7 +284,11 @@ void ui_screen::show_random_background(bool fade)
 
 void ui_screen::clear_content()
 {
-	_sprite_content.fillScreen(TFT_MAGENTA);
+	// _sprite_content.fillScreen(TFT_MAGENTA);
+	if (_sprite_content.getBuffer())
+	{
+		_sprite_content.fillRect(0, 0, 480, 480, TFT_MAGENTA);
+	}
 }
 
 void ui_screen::clear_tabbed_children()

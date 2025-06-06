@@ -16,6 +16,7 @@ class ui_control_slider : public ui_control
 		// Virtual funcs
 		void set_options_data(SettingsOptionBase *sett) override;
 		void set_label_sizes() override;
+        void update_values();
 
 	protected:
 		std::string value_text = "50";

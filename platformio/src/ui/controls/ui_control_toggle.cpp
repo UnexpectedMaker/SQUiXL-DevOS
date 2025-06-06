@@ -37,12 +37,6 @@ bool ui_control_toggle::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	if (is_dirty_hard)
 	{
-		// _sprite_clean.fillScreen(TFT_MAGENTA);
-
-		// Get the initial value from the setting, if one if set
-		if (setting_option != nullptr)
-			toggle_state = static_cast<SettingsOptionBool *>(setting_option)->get();
-
 		// Calculate the string pixel sizes to allow for text centering
 		// This is only needed once
 		if (char_width == 0 || string_off_len_pixels == 0)
@@ -58,8 +52,12 @@ bool ui_control_toggle::redraw(uint8_t fade_amount, int8_t tab_group)
 		is_dirty_hard = false;
 	}
 
+	auto *opt = static_cast<SettingsOptionBool *>(setting_option);
+	toggle_state = opt->get();
+
 	// Clear the content sprite
-	_sprite_content.fillScreen(TFT_MAGENTA);
+	// _sprite_content.fillScreen(TFT_MAGENTA);
+	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 
 	_sprite_content.setFreeFont(UbuntuMono_R[2]);
 	_sprite_content.setTextColor(TFT_WHITE, -1);

@@ -70,7 +70,8 @@ bool ui_control_tabgroup::redraw(uint8_t fade_amount, int8_t tab_group)
 	// }
 
 	// Clear the content sprite
-	_sprite_content.fillScreen(TFT_MAGENTA);
+	// _sprite_content.fillScreen(TFT_MAGENTA);
+	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 
 	_sprite_content.setFreeFont(UbuntuMono_R[1]);
 	_sprite_content.setTextColor(TFT_WHITE, -1);

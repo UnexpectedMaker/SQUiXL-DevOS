@@ -483,18 +483,6 @@ void setup()
 
 void loop()
 {
-
-	if (squixl.wanted_clock_freq != squixl.current_clock_freq)
-	{
-		if (vsync_flag)
-		{
-			Serial.printf("Setting clk freq to %d\n", squixl.wanted_clock_freq);
-			vsync_flag = false;
-			RGBChangeFreq(squixl.wanted_clock_freq);
-			squixl.current_clock_freq = squixl.wanted_clock_freq;
-		}
-	}
-
 	if (squixl.switching_screens)
 		return;
 

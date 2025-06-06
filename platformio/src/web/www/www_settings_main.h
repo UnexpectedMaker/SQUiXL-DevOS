@@ -333,6 +333,26 @@ const char wallpaper_html[] PROGMEM = R"rawliteral(
                 </div>
 	
 			%FOOTER_WALLPAPER%
+
+            <script>
+                if (!!window.EventSource)
+                {
+                    var source = new EventSource('/event');
+                    source.onopen = function(e) {
+                        console.log("Events Connected");
+                    };
+                    source.addEventListener('refresh', function(e) {
+                        console.log("refresh");
+                        window.location.reload();
+                    }, false);
+                    source.addEventListener('message', function(e) {
+                        console.log("message", e.data);
+                    }, false);
+                    source.addEventListener('heartbeat', function(e) {
+                        console.log("heartbeat", e.data);
+                    }, false);
+                }
+             </script>
 	
 	)rawliteral";
 

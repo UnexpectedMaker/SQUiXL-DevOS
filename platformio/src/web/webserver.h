@@ -8,9 +8,16 @@
 #include <HTTPClient.h>
 #include <WiFi.h>
 #include "settings/settings_async.h"
+#include <functional>
 
 class WebServer
 {
+
+		struct BufferRequestCtx
+		{
+				AsyncWebServerRequest *request;
+				// Optionally: any other info you want to store
+		};
 
 	public:
 		WebServer() : web_server(80), web_event("/event") {}

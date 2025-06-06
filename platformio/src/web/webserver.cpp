@@ -441,7 +441,6 @@ void WebServer::start_callback(bool success, const String &response)
 		});
 
 		web_server.on("/get_wallpaper", HTTP_GET, [](AsyncWebServerRequest *request) {
-			// save_png(&squixl.lcd);
 			request->send(LittleFS, "/user_wallpaper.jpg", "image/jpg");
 		});
 
@@ -456,40 +455,7 @@ void WebServer::start_callback(bool success, const String &response)
 			Serial.printf("SSE Client disconnected! ID: %" PRIu32 "\n", client->lastId());
 		});
 
-		// web_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(404, "text/plain", "Hello SQUiXL!"); });
-
-		// web_server.on("/index.htm", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_html, processor); });
-
-		// web_server.on("/index.html", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_html, processor); });
-
-		// web_server.on("/web_settings_apps.html", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_settings_apps_html, processor); });
-
-		// web_server.on("/debug_logs.html", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", debug_logs_html, processor); });
-
-		// web_server.on("/web_settings_widgets.html", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_settings_widgets_html, processor); });
-
-		// web_server.on("/web_settings_themes.html", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_settings_themes_html, processor); });
-
-		// web_server.on("/web_settings_web.html", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_settings_web_html, processor); });
-
 		web_server.onNotFound([](AsyncWebServerRequest *request) { request->send(404, "text/plain", "Not found"); });
-
-		// web_server.on("/update_widget_ow", HTTP_POST, [](AsyncWebServerRequest *request) {
-		// 	AsyncWebParameter *ow_enable = request->getParam("_set_widget_ow_enable", true);
-		// 	settings.config.open_weather.enabled = (String(ow_enable->value().c_str()) == "1");
-
-		// 	AsyncWebParameter *ow_api_key = request->getParam("_set_widget_ow_api_key", true);
-		// 	settings.config.open_weather.api_key = String(ow_api_key->value().c_str());
-		// 	settings.config.open_weather.api_key.trim();
-
-		// 	AsyncWebParameter *ow_poll_frequency = request->getParam("_set_widget_ow_poll_frequency", true);
-		// 	settings.config.open_weather.poll_frequency = String(ow_poll_frequency->value().c_str()).toInt();
-
-		// 	Serial.println("Widget OW Save!");
-
-		// 	Buzzer({{2000, 100}});
-		// 	request->send(200, "text/plain", "Settings Saved!");
-		// });
 
 		web_server.on("/update_settings_group", HTTP_POST, [](AsyncWebServerRequest *request) {
 			if (request->hasParam("group_id", true))
@@ -808,9 +774,6 @@ void WebServer::do_upload(AsyncWebServerRequest *request, String filename, size_
 	{
 		logmessage = "Upload Complete: " + String(filename) + ",size: " + String(index + len);
 
-		// Now pass the buffer to an async save function from your settings code
-		// Assume you add: settings.save_buffer_async("/user_wallpaper.jpg", upload->buffer, upload->buffer_size, [](bool ok) { /* ... */ });
-
 		settings.save_buffer_async(
 			"/user_wallpaper.jpg",
 			upload->buffer,
@@ -820,16 +783,11 @@ void WebServer::do_upload(AsyncWebServerRequest *request, String filename, size_
 				{
 					// squixl.main_screen()->show_user_background_jpg(false);
 					squixl.main_screen()->show_background_jpg(upload->buffer, upload->buffer_size, false);
-					request->redirect("/");
-				}
+								}
 				else
 				{
 					request->send(500, "text/plain", "Failed to save image");
 				}
-				// Clean up buffer
-				// The Async save frees and cleans up
-				// free(upload->buffer);
-				// delete upload;
 			}
 		);
 

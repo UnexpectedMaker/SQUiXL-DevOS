@@ -74,9 +74,9 @@ void SQUiXL_LITE::init()
 	}
 
 	// Set the SPI frequency for the screen to 6.5Mhz to remove contention between PSRAM (frame buffer) and Flash.
-	// RGBChangeFreq(6500000);
+	RGBChangeFreq(6500000);
 	// RGBChangeFreq(7990000);
-	// RGBChangeFreq(7500000);
+	// RGBChangeFreq(6000000);
 
 	// ioex.write(BL_EN, HIGH);
 }

@@ -772,7 +772,7 @@ void SQUiXL::take_screenshot()
 	hint_take_screenshot = false;
 
 	if (screenie_start(&lcd, [](bool ok) {
-        squixl.set_clock_freq(12000000);
+        squixl.set_clock_freq(7000000);
         Serial.printf("Screenshot %s\n", ok ? "ok" : "fail");
         if (ok)
         {

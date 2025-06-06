@@ -15,6 +15,9 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_open_weather, enab
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_rss_feed, enabled, feed_url, poll_frequency);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, mdns_name, case_color, ntp_server, city, country, utc_offset, time_24hour, time_dateformat, volume, current_background, backlight_time_step_battery, backlight_time_step_vbus, sleep_vbus, sleep_battery, open_weather, rss_feed, audio, mqtt, haptics, screenshot, user_wallpaper, screen);
 
+static uint32_t min_clk_freq = 6000000;
+static uint32_t max_clk_freq = 7000000;
+
 // === VSYNC SUPPORT ===
 extern volatile bool vsync_flag; // You must set this true in your panel VSYNC callback
 inline void wait_for_vsync()
@@ -67,7 +70,7 @@ void Settings::async_task(void *pv)
 				bool ok = false;
 
 				wait_for_vsync(); // <---- Added VSYNC WAIT
-				RGBChangeFreq(6000000);
+				RGBChangeFreq(min_clk_freq);
 				wait_for_vsync(); // <---- Added VSYNC WAIT
 
 				File file = LittleFS.open(req.buffer_save->path.c_str(), FILE_WRITE);
@@ -93,13 +96,13 @@ void Settings::async_task(void *pv)
 				delete req.buffer_save;
 
 				wait_for_vsync(); // <---- Added VSYNC WAIT
-				RGBChangeFreq(12000000);
+				RGBChangeFreq(max_clk_freq);
 				wait_for_vsync(); // <---- Added VSYNC WAIT
 			}
 			else if (req.load_buffer_req)
 			{
 				wait_for_vsync();
-				RGBChangeFreq(6000000);
+				RGBChangeFreq(min_clk_freq);
 				wait_for_vsync();
 
 				File file = LittleFS.open(req.load_buffer_req->path.c_str(), FILE_READ);
@@ -127,7 +130,7 @@ void Settings::async_task(void *pv)
 				delete req.load_buffer_req;
 
 				wait_for_vsync();
-				RGBChangeFreq(12000000);
+				RGBChangeFreq(max_clk_freq);
 				wait_for_vsync();
 			}
 			self->busy = false;
@@ -144,6 +147,10 @@ bool Settings::load()
 
 bool Settings::save(bool force)
 {
+
+	if (!force && millis() - last_save_time < max_time_between_saves)
+		return false;
+
 	_schedule_async(force ? SAVE_FORCE : SAVE_NONFORCE, force);
 	return true;
 }
@@ -152,7 +159,7 @@ bool Settings::save(bool force)
 bool Settings::_load_sync()
 {
 	wait_for_vsync(); // <---- Added VSYNC WAIT
-	RGBChangeFreq(6000000);
+	RGBChangeFreq(min_clk_freq);
 	wait_for_vsync(); // <---- Added VSYNC WAIT
 
 	Serial.println("Loading settings");
@@ -192,6 +199,11 @@ bool Settings::_load_sync()
 
 	file.close();
 
+	bool user_wallpaper_exists = LittleFS.exists("/user_wallpaper.jpg");
+	Serial.printf("** LOAD: Wallpaper stuff: user_wallpaper_exists ? %d, config.user_wallpaper? %d\n\n", user_wallpaper_exists, config.user_wallpaper);
+	if (config.user_wallpaper && !user_wallpaper_exists)
+		config.user_wallpaper = false;
+
 	config.current_wifi_station = 0;
 	config.open_weather.poll_frequency = 5;
 	if (config.city == "Sydney")
@@ -207,7 +219,7 @@ bool Settings::_load_sync()
 	Serial.println("Settings: Load complete!");
 
 	wait_for_vsync(); // <---- Added VSYNC WAIT
-	RGBChangeFreq(12000000);
+	RGBChangeFreq(max_clk_freq);
 	wait_for_vsync(); // <---- Added VSYNC WAIT
 
 	return true;
@@ -215,10 +227,6 @@ bool Settings::_load_sync()
 
 bool Settings::_save_sync(bool force)
 {
-
-	if (!force && millis() - last_save_time < max_time_between_saves)
-		return false;
-
 	json data = config;
 
 	if (!force && data == config.last_saved_data && !ui_forced_save)
@@ -228,7 +236,7 @@ bool Settings::_save_sync(bool force)
 	}
 
 	wait_for_vsync(); // <---- Added VSYNC WAIT
-	RGBChangeFreq(6000000);
+	RGBChangeFreq(min_clk_freq);
 	wait_for_vsync(); // <---- Added VSYNC WAIT
 
 	ui_forced_save = false;
@@ -254,7 +262,7 @@ bool Settings::_save_sync(bool force)
 	last_save_time = millis();
 
 	wait_for_vsync(); // <---- Added VSYNC WAIT
-	RGBChangeFreq(12000000);
+	RGBChangeFreq(max_clk_freq);
 	wait_for_vsync(); // <---- Added VSYNC WAIT
 
 	return true;

@@ -134,7 +134,7 @@ struct Config
 
 		int current_screen = 0;
 
-		bool user_wallpaper = true;
+		bool user_wallpaper = false;
 
 		bool autostart_webserver = false;
 

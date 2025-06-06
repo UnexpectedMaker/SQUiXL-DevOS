@@ -1,7 +1,7 @@
 #include "squixl.h"
 #include "web/webserver.h"
 #include "peripherals/haptics.h"
-#include "settings/settings.h"
+#include "settings/settings_async.h"
 #include "web/wifi_controller.h"
 #include "ui/ui_screen.h"
 
@@ -752,39 +752,92 @@ void WebServer::stop(bool restart)
 	_running = false;
 }
 
+struct UploadState
+{
+		uint8_t *buffer = nullptr;
+		size_t buffer_size = 0;
+		size_t buffer_capacity = 0;
+};
+
 void WebServer::do_upload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
 {
-	// String logmessage = "Client:" + request->client()->remoteIP().toString() + " " + request->url();
-	// Serial.println(logmessage);
+	// Store upload state in the request
+	UploadState *upload = reinterpret_cast<UploadState *>(request->_tempObject);
 
 	filename = "user_wallpaper.jpg";
-
 	String logmessage = "";
 
+	// On first chunk
 	if (!index)
 	{
 		logmessage = "Upload Start: " + String(filename);
-		// open the file on first call and store the file handle in the request object
-		request->_tempFile = LittleFS.open("/" + filename, "w");
+		// Allocate buffer in PSRAM (big enough for most images)
+		size_t alloc_size = 1024 * 1024 * 2; // 2MB, adjust as needed
+		upload = new UploadState;
+		upload->buffer = (uint8_t *)heap_caps_malloc(alloc_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+		if (!upload->buffer)
+		{
+			Serial.println("Failed to allocate PSRAM upload buffer");
+			request->send(500, "text/plain", "Upload buffer alloc fail");
+			return;
+		}
+		upload->buffer_capacity = alloc_size;
+		upload->buffer_size = 0;
+		request->_tempObject = upload;
 		Serial.println(logmessage);
 	}
 
-	if (len)
+	// Add data chunk to buffer
+	if (len && upload)
 	{
-		// stream the incoming chunk to the opened file
-		request->_tempFile.write(data, len);
-		// logmessage = "Writing file: " + String(filename) + " index=" + String(index) + " len=" + String(len);
-		Serial.println(logmessage);
+		if (upload->buffer_size + len > upload->buffer_capacity)
+		{
+			Serial.println("Upload too large for PSRAM buffer");
+			request->send(413, "text/plain", "Upload too large");
+			free(upload->buffer);
+			delete upload;
+			request->_tempObject = nullptr;
+			return;
+		}
+		memcpy(upload->buffer + upload->buffer_size, data, len);
+		upload->buffer_size += len;
 	}
 
-	if (final)
+	// On final chunk
+	if (final && upload)
 	{
 		logmessage = "Upload Complete: " + String(filename) + ",size: " + String(index + len);
-		// close the file handle as the upload is now done
-		request->_tempFile.close();
+
+		// Now pass the buffer to an async save function from your settings code
+		// Assume you add: settings.save_buffer_async("/user_wallpaper.jpg", upload->buffer, upload->buffer_size, [](bool ok) { /* ... */ });
+
+		settings.save_buffer_async(
+			"/user_wallpaper.jpg",
+			upload->buffer,
+			upload->buffer_size,
+			[request, upload](bool ok) {
+				if (ok)
+				{
+					// squixl.main_screen()->show_user_background_jpg(false);
+					squixl.main_screen()->show_background_jpg(upload->buffer, upload->buffer_size, false);
+					request->redirect("/");
+				}
+				else
+				{
+					request->send(500, "text/plain", "Failed to save image");
+				}
+				// Clean up buffer
+				// The Async save frees and cleans up
+				// free(upload->buffer);
+				// delete upload;
+			}
+		);
+
 		Serial.println(logmessage);
-		squixl.main_screen()->show_user_background_jpg(false);
-		request->redirect("/");
+
+		// Do NOT delete/free upload here, it will be freed in the callback above.
+		// Remove tempObject pointer now to avoid double free later
+		request->_tempObject = nullptr;
 	}
 }
 

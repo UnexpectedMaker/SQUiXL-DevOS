@@ -1,7 +1,7 @@
 #include "ui/ui_screen.h"
 #include "ui/ui_keyboard.h"
 #include "ui/ui_dialogbox.h"
-#include "settings/settings.h"
+#include "settings/settings_async.h"
 #include "JPEGDisplay.inl"
 
 uint16_t background_colors[6] = {0x5AEB, darken565(0x5AEB, 0.5), 0x001f, 0xf800, darken565(0x07e0, 0.5), 0xbbc0};
@@ -115,104 +115,118 @@ void ui_screen::adjust_navigation_range(DRAGABLE axis, int16_t *clamp_delta_low,
 	}
 }
 
-bool ui_screen::show_user_background_jpg(bool fade_in)
+void ui_screen::show_user_background_jpg(bool fade_in)
 {
-	is_busy = true;
 
-	if (squixl.main_screen() != squixl.current_screen())
-	{
-		squixl.set_current_screen(squixl.main_screen());
-		squixl.current_screen()->refresh(true, true);
-	}
-
-	settings.config.user_wallpaper = true;
-
-	_sprite_clean.createVirtual(480, 480, NULL, true);
-
-	bool has_content = false;
-	if (background_size == 0)
-	{
-		_sprite_clean.fillScreen(TFT_BLACK);
-	}
-	else
-	{
-		squixl.lcd.readImage(0, 0, 480, 480, (uint16_t *)_sprite_clean.getBuffer());
-		delay(5);
-		has_content = true;
-	}
-
-	bool is_ok = false;
-
-	if (squixl.jd.loadJPEG_LFS(&_sprite_back, 0, 0, "/user_wallpaper.jpg"))
-	{
-
-		is_ok = true;
-		dont_destroy_back_sprite = true;
-
-		if (fade_in)
+	settings.load_buffer_async("/user_wallpaper.jpg", [this, fade_in](bool ok, uint8_t *buffer, size_t length) {
+		// Serial.printf("\n*** USER WALLAPAPER: %d - %d\n\n", ok, length);
+		if (ok)
 		{
-			if (has_content)
-			{
-				// we only need this sprite temporarly if we are blending content
-				if (!_sprite_mixed.getBuffer())
-					_sprite_mixed.createVirtual(480, 480, NULL, true);
-			}
-
-			for (uint8_t u8Alpha = 0; u8Alpha < 32; u8Alpha += 4)
-			{
-				if (has_content)
-				{
-					squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, u8Alpha);
-					squixl.lcd.blendSprite(&_sprite_content, &_sprite_mixed, &squixl.lcd, 32, TFT_MAGENTA);
-				}
-				else
-				{
-					squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &squixl.lcd, u8Alpha);
-				}
-			}
-
-			if (_sprite_mixed.getBuffer())
-				_sprite_mixed.freeVirtual();
+			// buffer points to PSRAM, length is the file size
+			squixl.main_screen()->show_background_jpg(buffer, length, fade_in);
 		}
 		else
 		{
-			squixl.lcd.drawSprite(0, 0, &_sprite_back, 1.0f, -1, DRAW_TO_LCD);
+			Serial.println("Failed to load image");
+			show_random_background(fade_in);
 		}
+	});
+	// is_busy = true;
 
-		Serial.println("User Wallpaper loaded from LFS and displayed... loading children UI");
+	// if (squixl.main_screen() != squixl.current_screen())
+	// {
+	// 	squixl.set_current_screen(squixl.main_screen());
+	// 	squixl.current_screen()->refresh(true, true);
+	// }
 
-		/*
-		TODO: Need to add tab group support to this?
-		*/
-		for (int w = 0; w < ui_children.size(); w++)
-		{
-			if (ui_children[w] != nullptr)
-			{
-				ui_children[w]->set_dirty_hard(true);
-				ui_children[w]->redraw(32);
-			}
-		}
+	// settings.config.user_wallpaper = true;
 
-		if (!has_content && fade_in)
-		{
-			for (uint8_t u8Alpha = 0; u8Alpha <= 32; u8Alpha += 2)
-			{
-				redraw(u8Alpha);
-				delay(2);
-			}
-		}
-		else
-		{
-			redraw(32);
-		}
+	// _sprite_clean.createVirtual(480, 480, NULL, true);
 
-		is_busy = false;
-		next_refresh = millis();
-	}
+	// bool has_content = false;
+	// if (background_size == 0)
+	// {
+	// 	_sprite_clean.fillScreen(TFT_BLACK);
+	// }
+	// else
+	// {
+	// 	squixl.lcd.readImage(0, 0, 480, 480, (uint16_t *)_sprite_clean.getBuffer());
+	// 	delay(5);
+	// 	has_content = true;
+	// }
 
-	_sprite_clean.freeVirtual();
+	// bool is_ok = false;
 
-	return is_ok;
+	// if (squixl.jd.loadJPEG_LFS(&_sprite_back, 0, 0, "/user_wallpaper.jpg"))
+	// {
+
+	// 	is_ok = true;
+	// 	dont_destroy_back_sprite = true;
+
+	// 	if (fade_in)
+	// 	{
+	// 		if (has_content)
+	// 		{
+	// 			// we only need this sprite temporarly if we are blending content
+	// 			if (!_sprite_mixed.getBuffer())
+	// 				_sprite_mixed.createVirtual(480, 480, NULL, true);
+	// 		}
+
+	// 		for (uint8_t u8Alpha = 0; u8Alpha < 32; u8Alpha += 4)
+	// 		{
+	// 			if (has_content)
+	// 			{
+	// 				squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, u8Alpha);
+	// 				squixl.lcd.blendSprite(&_sprite_content, &_sprite_mixed, &squixl.lcd, 32, TFT_MAGENTA);
+	// 			}
+	// 			else
+	// 			{
+	// 				squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &squixl.lcd, u8Alpha);
+	// 			}
+	// 		}
+
+	// 		if (_sprite_mixed.getBuffer())
+	// 			_sprite_mixed.freeVirtual();
+	// 	}
+	// 	else
+	// 	{
+	// 		squixl.lcd.drawSprite(0, 0, &_sprite_back, 1.0f, -1, DRAW_TO_LCD);
+	// 	}
+
+	// 	Serial.println("User Wallpaper loaded from LFS and displayed... loading children UI");
+
+	// 	/*
+	// 	TODO: Need to add tab group support to this?
+	// 	*/
+	// 	for (int w = 0; w < ui_children.size(); w++)
+	// 	{
+	// 		if (ui_children[w] != nullptr)
+	// 		{
+	// 			ui_children[w]->set_dirty_hard(true);
+	// 			ui_children[w]->redraw(32);
+	// 		}
+	// 	}
+
+	// 	if (!has_content && fade_in)
+	// 	{
+	// 		for (uint8_t u8Alpha = 0; u8Alpha <= 32; u8Alpha += 2)
+	// 		{
+	// 			redraw(u8Alpha);
+	// 			delay(2);
+	// 		}
+	// 	}
+	// 	else
+	// 	{
+	// 		redraw(32);
+	// 	}
+
+	// 	is_busy = false;
+	// 	next_refresh = millis();
+	// }
+
+	// _sprite_clean.freeVirtual();
+
+	// return is_ok;
 }
 
 void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
@@ -281,7 +295,7 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 			squixl.lcd.drawSprite(0, 0, &_sprite_back, 1.0f, -1, DRAW_TO_LCD);
 		}
 
-		Serial.println("Screen Wallpaper loaded and displayed... loading children UI");
+		Serial.printf("Screen Wallpaper %s and displayed... loading children UI\n", (fade_in ? "faded in" : "loaded"));
 	}
 	else
 	{
@@ -338,14 +352,6 @@ void ui_screen::show_next_background()
 
 void ui_screen::show_random_background(bool fade)
 {
-	if (settings.config.user_wallpaper)
-	{
-		// try loading user wallpaper first is the user prioritised that
-		// and they have wallpaper uploaded to teh filesystem
-		if (show_user_background_jpg(fade))
-			return;
-	}
-
 	// Pick a random wallpaper
 	uint8_t index = random(0, 6);
 	// Set the background as the current one for save data and cycling

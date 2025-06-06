@@ -24,6 +24,8 @@
 #include "mqtt/mqtt.h"
 #include "utils/littlefs_cli.h"
 
+extern volatile bool vsync_flag;
+
 unsigned long next_background_swap = 0;
 unsigned long every_second = 0;
 
@@ -53,6 +55,7 @@ ui_control_toggle toggle_wallpaper;
 ui_control_toggle toggle_time_mode;
 ui_control_toggle toggle_date_mode;
 ui_control_slider slider_UTC;
+ui_control_textbox text_ntpserver;
 // WiFi
 ui_control_toggle toggle_OTA_updates;
 ui_control_toggle toggle_Notify_updates;
@@ -106,7 +109,7 @@ void dialogbox_example()
 
 void update_wallpaper()
 {
-	squixl.main_screen()->show_random_background();
+	squixl.main_screen()->show_user_background_jpg();
 }
 
 void create_ui_elements()
@@ -198,6 +201,10 @@ void create_ui_elements()
 	text_ow_country.create_on_grid(2, 1, "COUNTRY CODE");
 	text_ow_country.set_options_data(&settings.setting_country);
 	settings_tab_group.add_child_ui(&text_ow_country, 1);
+
+	text_ntpserver.create_on_grid(4, 1, "NTP SERVER");
+	text_ntpserver.set_options_data(&settings.setting_ntpserver);
+	settings_tab_group.add_child_ui(&text_ntpserver, 1);
 
 	// Sound
 	toggle_audio_ui.create_on_grid(3, 1, "UI BEEPS");
@@ -476,6 +483,18 @@ void setup()
 
 void loop()
 {
+
+	if (squixl.wanted_clock_freq != squixl.current_clock_freq)
+	{
+		if (vsync_flag)
+		{
+			Serial.printf("Setting clk freq to %d\n", squixl.wanted_clock_freq);
+			vsync_flag = false;
+			RGBChangeFreq(squixl.wanted_clock_freq);
+			squixl.current_clock_freq = squixl.wanted_clock_freq;
+		}
+	}
+
 	if (squixl.switching_screens)
 		return;
 
@@ -503,7 +522,7 @@ void loop()
 		if (!settings.config.first_time)
 		{
 			squixl.set_current_screen(&screen_main);
-			screen_main.show_random_background(!was_asleep);
+			screen_main.show_user_background_jpg(!was_asleep);
 		}
 		else
 		{
@@ -528,6 +547,8 @@ void loop()
 	{
 		squixl.take_screenshot();
 	}
+
+	screenie_tick();
 
 	// If we have a current screen selected and it should be refreshed, refresh it!
 	if (squixl.current_screen() != nullptr && squixl.current_screen()->should_refresh())
@@ -592,7 +613,7 @@ void loop()
 		{
 			// We were showing the first boot screen, so no current screen is set yet.
 			squixl.set_current_screen(&screen_main);
-			screen_main.show_random_background(true);
+			screen_main.show_user_background_jpg(true);
 		}
 
 		if (wifiSetup.is_done())

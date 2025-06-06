@@ -2,7 +2,7 @@
 #include "squixl.h"
 #include "peripherals/battery.h"
 #include "Wire.h"
-#include "settings/settings.h"
+#include "settings/settings_async.h"
 
 #define FG_INT 43
 

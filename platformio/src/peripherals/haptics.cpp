@@ -7,7 +7,7 @@
 #include "squixl.h"
 #include "peripherals/haptics.h"
 #include "Wire.h"
-#include "settings/settings.h"
+#include "settings/settings_async.h"
 // #include "squixl.h"
 // #include "utilities/logging.h"
 

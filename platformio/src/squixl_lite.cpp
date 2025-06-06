@@ -74,15 +74,17 @@ void SQUiXL_LITE::init()
 	}
 
 	// Set the SPI frequency for the screen to 6.5Mhz to remove contention between PSRAM (frame buffer) and Flash.
-	RGBChangeFreq(6500000);
+	// RGBChangeFreq(6500000);
+	// RGBChangeFreq(7990000);
+	// RGBChangeFreq(7500000);
 
 	// ioex.write(BL_EN, HIGH);
 }
 
 void SQUiXL_LITE::screen_init_spi_bitbanged(const uint8_t *data)
 {
-
-	const uint8_t MOSI = 2; // P02
+	const uint8_t RST = 1;	// P00
+	const uint8_t MOSI = 2; // P01
 	const uint8_t CLK = 3;	// P02
 	const uint8_t CS = 4;	// P03
 
@@ -90,6 +92,13 @@ void SQUiXL_LITE::screen_init_spi_bitbanged(const uint8_t *data)
 	ioex.pin_mode(MOSI, OUTPUT);
 	ioex.pin_mode(CLK, OUTPUT);
 	ioex.pin_mode(CS, OUTPUT);
+
+	ioex.pin_mode(RST, OUTPUT, HIGH);
+	delay(10);
+	ioex.write(RST, LOW);
+	delay(10);
+	ioex.write(RST, HIGH);
+	delay(10);
 
 	// Set initial pin states
 	ioex.write(CS, HIGH);

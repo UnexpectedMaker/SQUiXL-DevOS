@@ -17,8 +17,9 @@
 
 #include "ui/ui_animations.h"
 
-#include "settings/settings.h"
+#include "settings/settings_async.h"
 #include <LittleFS.h>
+#include "screenie_async.h"
 
 // SD Card Stuff
 #include "FS.h"
@@ -132,11 +133,8 @@ struct touch_event_t
 		touch_event_t(uint16_t _x, uint16_t _y, TouchEventType _type, int16_t _d_x, int16_t _d_y) : x(_x), y(_y), type(_type), d_x(_d_x), d_y(_d_y) {}
 };
 
-bool save_png(BB_SPI_LCD *screen);
-
 class SQUiXL : public SQUiXL_LITE
 {
-
 	public:
 		BB_SPI_LCD sprite;
 		PNGDisplay pd;
@@ -169,7 +167,7 @@ class SQUiXL : public SQUiXL_LITE
 		bool vbus_changed();
 		void change_cpu_frequency(bool increase);
 
-		const String version_firmware = "Alpha v0.31";
+		const String version_firmware = "Alpha v0.4";
 		const String version_year = "2025";
 		const uint16_t version_build = 4;
 		uint16_t version_latest = 0;
@@ -210,6 +208,11 @@ class SQUiXL : public SQUiXL_LITE
 
 		// Helpers
 		void split_text_into_lines(const String &text, int max_chars_per_line, std::vector<String> &lines);
+
+		void set_clock_freq(uint32_t new_frq) { wanted_clock_freq = new_frq; }
+
+		uint32_t wanted_clock_freq = 0;
+		uint32_t current_clock_freq = 0;
 
 	protected:
 		float current_backlight_pwm = 0.0f;

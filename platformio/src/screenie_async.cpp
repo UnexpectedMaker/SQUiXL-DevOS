@@ -1,23 +1,18 @@
-#include <vector>
+#include "screenie_async.h"
 #include <utils/lodepng.h>
 #include <LittleFS.h>
-#include "bb_spi_lcd.h"
+#include <algorithm>
+#include <cmath>
 #include "settings/settings_async.h"
 
-#include <cmath>
-#include <algorithm>
-#include <cstdint>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include <atomic>
-#include "screenie.h"
+ScreenieState screenie = {};
 
-//-------------------- HELPERS --------------------
+// ---- COLOR HELPERS ----
+
 inline uint8_t percent_to_255(float pct)
 {
 	return uint8_t(std::clamp(pct, 0.0f, 100.0f) * 255.0f / 100.0f + 0.5f);
 }
-
 inline uint8_t norm_to_255(float norm)
 {
 	return uint8_t(std::clamp(norm, 0.0f, 1.0f) * 255.0f + 0.5f);
@@ -107,78 +102,119 @@ void apply_affinity_style_white_balance(uint8_t &r, uint8_t &g, uint8_t &b, floa
 	float red = r;
 	float green = g;
 	float blue = b;
-
 	float temp_strength = 60.0f;
 	float tint_strength = 40.0f;
-
 	red += temp * temp_strength;
 	blue -= temp * temp_strength;
-
 	green -= tint * tint_strength;
 	red += tint * (tint_strength / 2.0f);
 	blue += tint * (tint_strength / 2.0f);
-
 	r = std::clamp(int(red), 0, 255);
 	g = std::clamp(int(green), 0, 255);
 	b = std::clamp(int(blue), 0, 255);
 }
 
-//-------------------- TASK MANAGEMENT --------------------
+// ---- MAIN CHUNKED LOGIC ----
 
-struct ScreenshotTaskArgs
+bool screenie_start(BB_SPI_LCD *lcd, ScreenieCallback cb, uint32_t rows_per_step)
 {
-		BB_SPI_LCD *screen;
-		ScreenshotCallback callback;
-};
-
-std::atomic<bool> screenshot_task_running{false};
-
-void save_png_task(void *pvParameters)
-{
-	ScreenshotTaskArgs *args = (ScreenshotTaskArgs *)pvParameters;
-	BB_SPI_LCD *screen = args->screen;
-	ScreenshotCallback callback = std::move(args->callback);
-	delete args;
-
-	bool success = false;
-
+	if (screenie.running)
+		return false;
 	if (!LittleFS.begin())
 	{
 		Serial.println("❌ LittleFS mount failed");
-		if (callback)
-			callback(false);
-		screenshot_task_running = false;
-		vTaskDelete(NULL);
-		return;
+		if (cb)
+			cb(false);
+		return false;
 	}
-
-	const uint8_t *raw = reinterpret_cast<const uint8_t *>(screen->getBuffer());
-	const uint32_t W = 480, H = 480;
-	size_t outIdx = 0;
-	size_t pxCount = (size_t)W * H;
-	auto rgb = (uint8_t *)heap_caps_malloc(
-		pxCount * 3,
-		MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT
-	);
-
-	if (!rgb)
+	screenie.lcd = lcd;
+	screenie.cb = cb;
+	screenie.rows_per_step = rows_per_step;
+	screenie.running = true;
+	screenie.y = 0;
+	screenie.out_idx = 0;
+	screenie.ready_to_encode = false;
+	size_t pxCount = 480 * 480;
+	screenie.rgb = (uint8_t *)heap_caps_malloc(pxCount * 3, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+	if (!screenie.rgb)
 	{
-		Serial.println("❌ Failed to allocate RGB buffer");
-		if (callback)
-			callback(false);
-		screenshot_task_running = false;
-		vTaskDelete(NULL);
+		screenie.running = false;
+		if (cb)
+			cb(false);
+		return false;
+	}
+	return true;
+}
+
+void screenie_tick()
+{
+	if (!screenie.running)
+		return;
+
+	// --- Progress logging ---
+	static int last_percent = -1;
+	int percent = (int)((screenie.y * 100) / 480);
+	if (percent != last_percent)
+	{
+		Serial.printf("Screenshot: %d%%\n", percent);
+		last_percent = percent;
+	}
+
+	if (screenie.ready_to_encode)
+	{
+		// PNG encode and write (will block briefly)
+		std::vector<uint8_t> png;
+		unsigned err = lodepng::encode(
+			png,
+			screenie.rgb,
+			480, 480,
+			LCT_RGB,
+			8
+		);
+		heap_caps_free(screenie.rgb);
+		screenie.rgb = nullptr;
+
+		if (err)
+		{
+			Serial.printf("❌ PNG encode failed (%u): %s\n", err, lodepng_error_text(err));
+			if (screenie.cb)
+				screenie.cb(false);
+		}
+		else
+		{
+			// settings.save_screenshot("/screenshot.png", png.data(), png.size());
+			File f = LittleFS.open("/screenshot.png", FILE_WRITE);
+			if (!f)
+			{
+				Serial.println("❌ Failed to open /screenshot.png for write");
+				if (screenie.cb)
+					screenie.cb(false);
+			}
+			else
+			{
+				f.write(png.data(), png.size());
+				f.close();
+				Serial.printf("✅ Wrote screenshot.png (%u bytes)\n", (unsigned)png.size());
+				if (screenie.cb)
+					screenie.cb(true);
+			}
+		}
+		screenie.running = false;
+		last_percent = -1; // Reset for next run
 		return;
 	}
 
+	// Pixel conversion chunk
+	const uint32_t W = 480, H = 480;
+	const uint8_t *raw = reinterpret_cast<const uint8_t *>(screenie.lcd->getBuffer());
 	uint8_t black = norm_to_255(settings.config.screenshot.black);
 	uint8_t white = norm_to_255(settings.config.screenshot.white);
 
-	for (uint32_t y = 0; y < H; y++)
+	for (uint32_t i = 0; i < screenie.rows_per_step && screenie.y < H; ++i, ++screenie.y)
 	{
-		for (uint32_t x = 0; x < W; x++)
+		for (uint32_t x = 0; x < W; ++x)
 		{
-			size_t inIdx = (y * W + x) * 2;
+			size_t inIdx = (screenie.y * W + x) * 2;
 			uint16_t pix565 = (uint16_t(raw[inIdx]) << 8) | raw[inIdx + 1];
 
 			uint8_t r = ((pix565 >> 11) & 0x1F);
@@ -196,106 +232,27 @@ void save_png_task(void *pvParameters)
 				g = apply_levels(g, black, white, settings.config.screenshot.gamma, 0, 255);
 				b = apply_levels(b, black, white, settings.config.screenshot.gamma, 0, 255);
 			}
-
 			if (settings.config.screenshot.saturation != 1.0)
 			{
 				adjust_saturation(r, g, b, settings.config.screenshot.saturation);
 			}
-
 			if (settings.config.screenshot.contrast != 1.0)
 			{
 				r = adjust_contrast(r, settings.config.screenshot.contrast);
 				g = adjust_contrast(g, settings.config.screenshot.contrast);
 				b = adjust_contrast(b, settings.config.screenshot.contrast);
 			}
-
 			if (settings.config.screenshot.temperature != 1.0 || settings.config.screenshot.tint != 1.0)
 			{
 				apply_affinity_style_white_balance(r, g, b, settings.config.screenshot.temperature, settings.config.screenshot.tint);
 			}
-
-			rgb[outIdx++] = r;
-			rgb[outIdx++] = g;
-			rgb[outIdx++] = b;
+			screenie.rgb[screenie.out_idx++] = r;
+			screenie.rgb[screenie.out_idx++] = g;
+			screenie.rgb[screenie.out_idx++] = b;
 		}
 	}
-
-	std::vector<uint8_t> png;
-	unsigned err = lodepng::encode(
-		png,
-		rgb,
-		W, H,
-		LCT_RGB,
-		8
-	);
-
-	heap_caps_free(rgb);
-	rgb = nullptr;
-
-	if (err)
+	if (screenie.y >= H)
 	{
-		Serial.printf("❌ PNG encode failed (%u): %s\n", err, lodepng_error_text(err));
-		if (callback)
-			callback(false);
-		screenshot_task_running = false;
-		vTaskDelete(NULL);
-		return;
+		screenie.ready_to_encode = true;
 	}
-
-	File f = LittleFS.open("/screenshot.png", FILE_WRITE);
-	if (!f)
-	{
-		Serial.println("❌ Failed to open /screenshot.png for write");
-		if (callback)
-			callback(false);
-		screenshot_task_running = false;
-		vTaskDelete(NULL);
-		return;
-	}
-	f.write(png.data(), png.size());
-	f.close();
-
-	Serial.printf("✅ Wrote screenshot.png (%u bytes)\n", (unsigned)png.size());
-	if (callback)
-		callback(true);
-	screenshot_task_running = false;
-	vTaskDelete(NULL);
-}
-
-// Call this from your main loop or UI task to request a screenshot
-// Returns true if the task started, false if one is already running
-bool request_screenshot(BB_SPI_LCD *screen, ScreenshotCallback cb)
-{
-	if (screenshot_task_running)
-		return false; // already running
-
-	screenshot_task_running = true;
-
-	Serial.printf("\nHeap Log: SCREENIE\nHeap Size: %u of %u\n", ESP.getFreeHeap(), ESP.getHeapSize());
-	Serial.printf("Min Heap Size: %u, Max Alloc Heap Size: %u, ", ESP.getMinFreeHeap(), ESP.getMaxAllocHeap());
-	Serial.printf("PSRAM Free: %u\n", ESP.getFreePsram());
-	Serial.printf("Largest PSRAM Chunk Free %u\n\n", heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-
-	ScreenshotTaskArgs *args = new ScreenshotTaskArgs;
-	args->screen = screen;
-	args->callback = std::move(cb);
-
-	BaseType_t res = xTaskCreatePinnedToCore(
-		save_png_task,
-		"SavePNG",
-		14000, // Stack size
-		args,
-		3, // Priority
-		nullptr,
-		0 // Core 0
-	);
-
-	if (res != pdPASS)
-	{
-		Serial.println("❌ Failed to start screenshot task");
-		screenshot_task_running = false;
-		delete args;
-		return false;
-	}
-	return true;
 }

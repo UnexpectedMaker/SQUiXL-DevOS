@@ -6,6 +6,7 @@
 #include "ui/ui_keyboard.h"
 #include "ui/ui_dialogbox.h"
 #include "PNGDisplay.inl"
+// #include "screenie.h"
 
 TaskHandle_t anim_task_handler;
 
@@ -768,9 +769,36 @@ void SQUiXL::process_version(bool success, const String &response)
 void SQUiXL::take_screenshot()
 {
 	audio.play_dock();
-	hint_take_screenshot = save_png(&lcd);
-	if (webserver.is_running())
-		webserver.web_event.send("hello", "refresh", millis());
+	hint_take_screenshot = false;
+
+	if (screenie_start(&lcd, [](bool ok) {
+        squixl.set_clock_freq(12000000);
+        Serial.printf("Screenshot %s\n", ok ? "ok" : "fail");
+        if (ok)
+        {
+            if (webserver.is_running())
+                webserver.web_event.send("hello", "refresh", millis());
+        } }, 20))
+
+	{ // 10 rows per tick, adjust if needed
+		Serial.println("Screenshot started (async)...");
+		set_clock_freq(6000000);
+	}
+
+	// request_screenshot(&lcd, [](bool success) {
+	// 	if (success)
+	// 	{
+	// 		Serial.println("Screenshot complete!");
+	// 		if (webserver.is_running())
+	// 			webserver.web_event.send("hello", "refresh", millis());
+	// 		// ...your code here
+	// 	}
+	// 	else
+	// 	{
+	// 		Serial.println("Screenshot FAILED!");
+	// 		// ...handle error
+	// 	}
+	// });
 }
 
 void SQUiXL::split_text_into_lines(const String &text, int max_chars_per_line, std::vector<String> &lines)

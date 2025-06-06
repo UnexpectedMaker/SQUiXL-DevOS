@@ -1,5 +1,5 @@
-#ifndef SETTINGS_H
-#define SETTINGS_H
+#ifndef SETTINGS_ASYNC_H
+#define SETTINGS_ASYNC_H
 
 #include <vector>
 #include <map>
@@ -7,8 +7,20 @@
 #include "utils/json.h"
 #include "utils/json_conversions.h"
 #include "settings/settingsOption.h"
+#include <functional>
+
+// ==== ASYNC SUPPORT ====
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/queue.h>
+// =======================
 
 using json = nlohmann::json;
+
+struct Config_screen
+{
+		int inversion_mode = 0;
+};
 
 struct mqtt_topic
 {
@@ -21,7 +33,7 @@ struct Config_screenshot
 {
 		bool enabled = true;
 		float temperature = -0.1;
-		float tint = 1.0;
+		float tint = 0.1;
 		float black = 0.0;
 		float white = 1.0;
 		float gamma = 0.9;
@@ -53,9 +65,6 @@ struct Config_mqtt
 		}
 };
 
-/**
- * @brief Settings struct for Haptics support
- */
 struct Config_haptics
 {
 		bool enabled = true;
@@ -68,12 +77,8 @@ struct Config_haptics
 		bool trigger_on_charge = true;
 };
 
-/**
- * @brief Settings struct for Haptics support
- */
 struct Config_audio
 {
-		// Sound
 		bool ui = true;
 		bool alarm = true;
 		bool on_hour = false;
@@ -90,28 +95,16 @@ struct wifi_station
 
 struct Config_widget_battery
 {
-		// Fuel Gauge/Battery
-		// This can be used to adjust what 100% is on your battery
-		// This can be needed because the PMIC will stop charging the battery before it gets to 4.2V, usually around 4.1V,
-		// So the fuel gauge will never actually get to a 100% state.
-		// I'm not sure how to solve this othe than allow users to set an offset that visually shows full/no charging at 100%
 		float perc_offset = 7.0;
-		// User settable % to trigger fuel gauge wake from sleep trigger.
-		// This can only be between 1% and 32%
 		int low_perc = 25;
-		// User settable V to trigger fuel gauge wake from sleep trigger.
 		float low_volt_warn = 3.5;
-		// User settable V to trigger power cutoff to the watch power switch.
 		float low_volt_cutoff = 3.2;
 };
 
-/**
- * @brief Settings struct for open weather widget
- */
 struct Config_widget_open_weather
 {
-		int poll_frequency = 30; // Open Weather poll interval - 30mins.
-		String api_key = "";	 // API key for Open Weather
+		int poll_frequency = 30;
+		String api_key = "";
 		bool enabled = true;
 		bool units_metric = true;
 
@@ -121,13 +114,10 @@ struct Config_widget_open_weather
 		}
 };
 
-/**
- * @brief Settings struct for open weather widget
- */
 struct Config_widget_rss_feed
 {
-		int poll_frequency = 60;											// RSS poll interval - 60mins.
-		String feed_url = "https://rss.slashdot.org/slashdot/slashdotmain"; // Default RSS Feed URL
+		int poll_frequency = 60;
+		String feed_url = "https://rss.slashdot.org/slashdot/slashdotmain";
 		bool enabled = true;
 
 		bool has_url()
@@ -136,7 +126,6 @@ struct Config_widget_rss_feed
 		}
 };
 
-// Save data struct
 struct Config
 {
 		int ver = 1;
@@ -160,43 +149,30 @@ struct Config
 		std::vector<wifi_station> wifi_options;
 		uint8_t current_wifi_station = 0;
 
+		String ntp_server = "pool.ntp.org";
 		String country = "";
 		String city = "";
 		int utc_offset = 999;
 
-		// Time
 		bool time_24hour = false;
-		bool time_dateformat = false; // False - DMY, True - MDY
+		bool time_dateformat = false;
 
 		float volume = 15.0;
 
 		int current_background = 0;
-		int backlight_time_step_battery = 15; // in seconds
-		int backlight_time_step_vbus = 30;	  // in seconds
+		int backlight_time_step_battery = 15;
+		int backlight_time_step_vbus = 30;
 		bool sleep_vbus = false;
 		bool sleep_battery = true;
 
-		// Battery/FG specific settings - see Struct above
+		Config_screen screen;
 		Config_widget_battery battery;
-
-		// Open Weather specific settings - see Struct above
 		Config_widget_open_weather open_weather;
-
-		// RSS Feed specific settings - see Struct above
 		Config_widget_rss_feed rss_feed;
-
-		// Audio specific settings
 		Config_audio audio;
-
-		// MQTT specific settings - see Struct above
 		Config_mqtt mqtt;
-
-		// Haptics specific settings
 		Config_haptics haptics;
-
-		// Screenshot tool stuff
 		Config_screenshot screenshot;
-
 		json last_saved_data;
 
 		String case_color_in_hex()
@@ -234,17 +210,24 @@ struct setting_group
 		SettingType type = SettingType::MAIN;
 
 		setting_group(String nm, SettingType t, String d = "") : name(nm), type(t), description(d) {};
-
-		// void setup(String nm, SettingType t, String d = "")
-		// {
-		// 	name = nm;
-		// 	type = t;
-		// 	description = d;
-		// };
 };
 
 class Settings
 {
+
+		struct BufferSaveReq
+		{
+				std::string path;
+				const uint8_t *buffer;
+				size_t length;
+				std::function<void(bool ok)> cb;
+		};
+
+		struct LoadBufferReq
+		{
+				std::string path;
+				std::function<void(bool, uint8_t *, size_t)> cb;
+		};
 
 	public:
 		std::vector<setting_group> settings_groups;
@@ -281,12 +264,14 @@ class Settings
 		void update_wifi_credentials(String ssid, String pass);
 		unsigned long reset_screen_dim_time(void);
 		bool update_menu = false;
-		bool ui_forced_save = false; //
+		bool ui_forced_save = false;
 
 		String color565ToWebHex(uint16_t color565);
 		uint16_t webHexToColor565(const char *hex);
 
-		// Add any SettingsOption values here for any settings you want to bind with a tw_Control
+		void save_buffer_async(const char *path, const uint8_t *buffer, size_t length, std::function<void(bool ok)> cb);
+		void load_buffer_async(const char *path, std::function<void(bool ok, uint8_t *buffer, size_t length)> cb);
+
 		SettingsOptionBool setting_time_24hour{&config.time_24hour, 0, "Time Mode", "12H", "24H"};
 		SettingsOptionBool setting_time_dateformat{&config.time_dateformat, 0, "Date FMT", "DMY", "MDY"};
 		SettingsOptionBool setting_wallpaper{&config.user_wallpaper, 0, "Wallpaper", "SYSTEM", "USER"};
@@ -297,7 +282,6 @@ class Settings
 		SettingsOptionBool setting_sleep_vbus{&config.sleep_vbus, 0, "Sleep On 5V", "NO", "YES"};
 		SettingsOptionBool setting_sleep_battery{&config.sleep_battery, 0, "Sleep On Battery", "NO", "YES"};
 
-		// Web and WiFi
 		SettingsOptionBool setting_OTA_start{&config.ota_start, 1, "Enable OTA Updates", "NO", "YES"};
 		SettingsOptionBool setting_wifi_check_updates{&config.wifi_check_for_updates, 1, "Notify Updates", "NO", "YES"};
 		SettingsOptionString setting_web_mdns{&config.mdns_name, 1, "mDNS Name", 0, -1, "SQUiXL", false};
@@ -305,15 +289,14 @@ class Settings
 		SettingsOptionString setting_city{&config.city, 1, "City"};
 		SettingsOptionIntRange settings_utc_offset{&config.utc_offset, -12, 14, 1, false, 1, "UTC Offset"};
 		SettingsOptionWiFiStations wifi_stations{&config.wifi_options, 1, "Wifi Stations"};
+		SettingsOptionString setting_ntpserver{&config.ntp_server, 1, "NTP Server"};
 
-		// Audio
 		SettingsOptionBool setting_audio_ui{&config.audio.ui, 2, "UI Sound", "NO", "YES"};
 		SettingsOptionBool setting_audio_alarm{&config.audio.alarm, 2, "Alarm Sound", "NO", "YES"};
 		SettingsOptionBool setting_audio_on_hour{&config.audio.on_hour, 2, "Beep Hour", "NO", "YES"};
 		SettingsOptionBool setting_audio_charge{&config.audio.charge, 2, "Start Charge", "NO", "YES"};
 		SettingsOptionFloatRange setting_audio_volume{&config.volume, 0, 21, 1, false, 2, "Volume"};
 
-		// haptics
 		SettingsOptionBool setting_haptics_enabled{&config.haptics.enabled, 3, "Enabled", "NO", "YES"};
 		SettingsOptionBool setting_haptics_trig_boot{&config.haptics.trigger_on_boot, 3, "On Boot", "NO", "YES"};
 		SettingsOptionBool setting_haptics_trig_wake{&config.haptics.trigger_on_wake, 3, "On Wake", "NO", "YES"};
@@ -323,13 +306,11 @@ class Settings
 		SettingsOptionBool setting_haptics_trig_longpress{&config.haptics.trigger_on_longpress, 3, "LongPress", "NO", "YES"};
 		SettingsOptionBool setting_haptics_trig_charge{&config.haptics.trigger_on_charge, 3, "Start Charge", "NO", "YES"};
 
-		// Open Weather
 		SettingsOptionBool widget_ow_enabled{&config.open_weather.enabled, 4, "Enabled", "NO", "YES"};
 		SettingsOptionString widget_ow_apikey{&config.open_weather.api_key, 4, "API KEY", 0, -1, "", false};
 		SettingsOptionIntRange widget_ow_poll_interval{&config.open_weather.poll_frequency, 10, 300, 10, false, 4, "Poll Interval (Min)"};
 		SettingsOptionBool widget_ow_units{&config.open_weather.units_metric, 4, "Temperature Units", "Fahrenheit", "Celsius"};
 
-		// MQTT
 		SettingsOptionBool mqtt_enabled{&config.mqtt.enabled, 5, "Enabled", "NO", "YES"};
 		SettingsOptionString mqtt_broker_ip{&config.mqtt.broker_ip, 5, "Broker IP"};
 		SettingsOptionInt mqtt_broker_port{&config.mqtt.broker_port, 5, 2000, false, 5, "Broker Port"};
@@ -338,7 +319,6 @@ class Settings
 		SettingsOptionString mqtt_device_name{&config.mqtt.device_name, 5, "Device Name"};
 		SettingsOptionString mqtt_topic_listen{&config.mqtt.topic_listen, 5, "Listen Topic"};
 
-		// Screenshot
 		SettingsOptionBool screenshot_enabled{&config.screenshot.enabled, 6, "Enabled", "NO", "YES"};
 		SettingsOptionFloatRange screenshot_wb_temp{&config.screenshot.temperature, -1.0f, 1.0f, 0.1f, false, 6, "WB White Balance - Temperature"};
 		SettingsOptionFloatRange screenshot_wb_tint{&config.screenshot.tint, -1.0f, 1.0f, 0.1f, false, 6, "White Balance -  Tint"};
@@ -348,10 +328,42 @@ class Settings
 		SettingsOptionFloatRange screenshot_saturation{&config.screenshot.saturation, 0.0f, 2.0f, 0.1f, false, 6, "Saturation"};
 		SettingsOptionFloatRange screenshot_contrast{&config.screenshot.contrast, 0.0f, 2.0f, 0.1f, false, 6, "Contrast"};
 
-		// RSS Feed
 		SettingsOptionBool widget_rss_enabled{&config.rss_feed.enabled, 7, "Enabled", "NO", "YES"};
 		SettingsOptionString widget_rss_feed_url{&config.rss_feed.feed_url, 7, "Feed URL", 0, -1, "", false};
 		SettingsOptionIntRange widget_rss_poll_interval{&config.rss_feed.poll_frequency, 10, 300, 60, false, 7, "Poll Interval (Min)"};
+
+		// ==== ASYNC SUPPORT ====
+	public:
+		volatile bool busy = false;
+
+	private:
+		enum AsyncOp
+		{
+			NONE = 0,
+			LOAD,
+			SAVE_FORCE,
+			SAVE_NONFORCE,
+			SAVE_BUFFER,
+			LOAD_BUFFER
+		};
+		struct AsyncReq
+		{
+				AsyncOp op;
+				bool force;
+				BufferSaveReq *buffer_save = nullptr;
+				LoadBufferReq *load_buffer_req = nullptr;
+		};
+
+		static void async_task(void *pv);
+		static QueueHandle_t queue;
+		static TaskHandle_t task_handle;
+		void _start_async_task();
+		void _schedule_async(AsyncOp op, bool force);
+		bool _load_sync();
+		bool _save_sync(bool force);
+
+		static void async_buffer_save_task(void *pv); // Helper for large buffer saves if you want a dedicated task (optional)
+													  // =======================
 
 	private:
 		static constexpr const char *filename = "/settings.json";
@@ -361,7 +373,7 @@ class Settings
 		static const int max_backups = 10;
 		static long backupNumber(const String);
 
-		unsigned long max_time_between_saves = 10000; // every 10 seconds
+		unsigned long max_time_between_saves = 10000;
 		unsigned long last_save_time = 0;
 };
 

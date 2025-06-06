@@ -21,7 +21,7 @@ class ui_screen : public ui_element
 
 		// void show_background_png(const void *png, int png_size, bool fade = true);
 		void show_background_jpg(const void *jpg, int jpg_size, bool fade = true);
-		bool show_user_background_jpg(bool fade = true);
+		void show_user_background_jpg(bool fade = true);
 		void show_next_background();
 		void show_random_background(bool fade = true);
 
@@ -46,6 +46,8 @@ class ui_screen : public ui_element
 
 		void show_overlay(bool show, unsigned long duration, std::function<void()> completion_callback);
 		void fade_overlay(uint8_t fade_amount);
+		void take_over(bool state) { taken_over = state; }
+		bool is_taken_over() { return taken_over; }
 
 		// void animate_pos(Directions direction, unsigned long duration, tween_ease_t ease, std::function<void()> completion_callback);
 
@@ -68,6 +70,7 @@ class ui_screen : public ui_element
 		bool blend_transparency = true;
 		uint8_t overlay_alpha = 0;
 		bool switching_screens = false;
+		bool taken_over = false;
 
 		int16_t drag_x = 0;
 		int16_t drag_y = 0;

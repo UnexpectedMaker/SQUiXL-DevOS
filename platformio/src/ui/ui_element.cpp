@@ -1,5 +1,5 @@
 #include "ui/ui_element.h"
-#include "settings/settings.h"
+#include "settings/settings_async.h"
 
 void ui_element::add_child_ui(ui_element *child, int8_t tab_group)
 {

@@ -23,7 +23,7 @@ static void rtcInterrupt()
 	interruptTriggered = true;
 }
 
-const char *ntpServer = "pool.ntp.org";
+// const char *ntpServer = "pool.ntp.org";
 
 // String days[7] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
 // String months[12] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
@@ -100,7 +100,7 @@ bool RTC::set_time_from_NTP(int16_t utc_offset)
 
 	if (utc_offset != 999)
 	{
-		configTime(utc_offset * 3600, 0, ntpServer);
+		configTime(utc_offset * 3600, 0, settings.config.ntp_server.c_str());
 		delay(100);
 
 		struct tm timeinfo;

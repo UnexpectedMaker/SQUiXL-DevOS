@@ -5,7 +5,7 @@
  * Classes are provided for Int, Bool, Float and String
  */
 
-#include "settings/settings.h"
+#include "settings/settings_async.h"
 #include "settings/settingsOption.h"
 
 void SettingsOptionBase::register_option()

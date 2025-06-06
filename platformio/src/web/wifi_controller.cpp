@@ -6,7 +6,7 @@
  *
  */
 #include "web/wifi_controller.h"
-#include "settings/settings.h"
+#include "settings/settings_async.h"
 
 using json = nlohmann::json;
 

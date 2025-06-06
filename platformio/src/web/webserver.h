@@ -7,7 +7,7 @@
 #include <ESPmDNS.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
-#include "settings/settings.h"
+#include "settings/settings_async.h"
 
 class WebServer
 {

@@ -676,68 +676,33 @@ void ui_screen::cancel_drag()
 
 void ui_screen::finish_drag(Directions direction, int16_t dx, int16_t dy)
 {
-	float from_x = (float)dx;
-	float to_x = 0.0;
-	float from_y = (float)dy;
-	float to_y = 0.0;
+	// float from_x = (float)dx;
+	int to_x = 0;
+	// float from_y = (float)dy;
+	int to_y = 0;
 	switch (direction)
 	{
 	case LEFT:
-		to_x = -480.0;
+		to_x = -480;
 		break;
 	case RIGHT:
-		to_x = 480.0;
+		to_x = 480;
 		break;
 	case UP:
-		to_y = -480.0;
+		to_y = -480;
 		break;
 	case DOWN:
-		to_y = 480.0;
+		to_y = 480;
 		break;
 	}
 
 	squixl.switching_screens = true;
 
-	unsigned long start_time = millis();
-	float duration = 250.0;
-	float t = 0.0;
-
-	while (t < 1.0 || drag_x != (int)to_x || drag_y != (int)to_y)
+	while (drag_x != to_x || drag_y != to_y)
 	{
-		unsigned long now = millis();
-		t = (now - start_time) / duration;
-		if (t >= 1.0f)
-		{
-			t = 1.0f;
-		}
-
-		// EASE_OUT
-		float eased_t = t * (2 - t);
-		// switch (tween_ease_t::EASE_OUT)
-		// {
-		// case EASE_LINEAR:
-		// 	eased_t = t;
-		// 	break;
-		// case EASE_IN:
-		// 	eased_t = t * t;
-		// 	break;
-		// case EASE_OUT:
-		// 	eased_t = t * (2 - t);
-		// 	break;
-		// case EASE_IN_OUT:
-		// 	eased_t = (t < 0.5f) ? (2 * t * t) : (-1 + (4 - 2 * t) * t);
-		// 	break;
-		// default:
-		// 	eased_t = t;
-		// 	break;
-		// }
-
-		drag_x = int16_t(from_x + (to_x - from_x) * eased_t);
-		drag_y = int16_t(from_y + (to_y - from_y) * eased_t);
-
+		drag_x = round(drag_x + (to_x - drag_x) / 2.0);
+		drag_y = round(drag_y + (to_y - drag_y) / 2.0);
 		draw_draggable();
-
-		// delay(2);
 	}
 
 	is_dragging = false;

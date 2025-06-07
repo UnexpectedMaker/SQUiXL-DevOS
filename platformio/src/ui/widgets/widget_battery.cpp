@@ -59,7 +59,6 @@ bool widgetBattery::redraw(uint8_t fade_amount, int8_t tab_group)
 
 		next_update = 0;
 		is_busy = false;
-		return false;
 	}
 
 	// if (is_dirty_hard)
@@ -71,7 +70,8 @@ bool widgetBattery::redraw(uint8_t fade_amount, int8_t tab_group)
 	// 	is_dirty_hard = false;
 	// }
 
-	_sprite_content.fillScreen(TFT_MAGENTA);
+	// _sprite_content.fillScreen(TFT_MAGENTA);
+	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 
 	_sprite_content.setFreeFont(UbuntuMono_R[1]);
 	_sprite_content.setTextColor(TFT_WHITE, -1);

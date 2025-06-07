@@ -317,7 +317,7 @@ void create_ui_elements()
 	screen_main.setup(TFT_BLACK, true);
 
 	widget_battery.create(10, 0, TFT_WHITE);
-	widget_battery.set_refresh_interval(1000);
+	widget_battery.set_refresh_interval(5000);
 	screen_main.add_child_ui(&widget_battery);
 
 	widget_time.create(470, 10, TFT_WHITE, TEXT_ALIGN::ALIGN_RIGHT);

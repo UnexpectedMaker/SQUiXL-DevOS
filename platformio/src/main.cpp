@@ -68,21 +68,25 @@ ui_control_toggle toggle_haptics_enable;
 ui_control_toggle toggle_ow_enable;
 ui_control_slider slider_ow_refresh;
 ui_control_textbox text_ow_api_key;
-ui_control_textbox text_ow_country;
-ui_control_textbox text_ow_city;
+// Location
+ui_control_textbox text_loc_country;
+ui_control_textbox text_loc_city;
+ui_control_textbox text_loc_state;
+ui_control_textbox text_loc_lon;
+ui_control_textbox text_loc_lat;
 // RSS Feed
 ui_control_toggle toggle_rss_enable;
 ui_control_slider slider_rss_refresh;
 ui_control_textbox text_rss_feed_url;
-// Screenshot stuff
-ui_control_toggle toggle_screenshot_enable;
-ui_control_slider slider_screenshot_wb_temp;
-ui_control_slider slider_screenshot_wb_tint;
-ui_control_slider slider_screenshot_lvl_black;
-ui_control_slider slider_screenshot_lvl_white;
-ui_control_slider slider_screenshot_lvl_gamma;
-ui_control_slider slider_screenshot_saturation;
-ui_control_slider slider_screenshot_contrast;
+// // Screenshot stuff
+// ui_control_toggle toggle_screenshot_enable;
+// ui_control_slider slider_screenshot_wb_temp;
+// ui_control_slider slider_screenshot_wb_tint;
+// ui_control_slider slider_screenshot_lvl_black;
+// ui_control_slider slider_screenshot_lvl_white;
+// ui_control_slider slider_screenshot_lvl_gamma;
+// ui_control_slider slider_screenshot_saturation;
+// ui_control_slider slider_screenshot_contrast;
 
 ui_control_button button_dialogbox_test;
 
@@ -128,7 +132,7 @@ void create_ui_elements()
 	// and then pass it a list of strings for each group
 	//
 	settings_tab_group.create(0, 0, 480, 40);
-	settings_tab_group.set_tabs(std::vector<std::string>{"General", "WiFi", "Sound", "Haptics", "Widgets", "Screenie"});
+	settings_tab_group.set_tabs(std::vector<std::string>{"General", "Location", "WiFi", "Snd/Hap", "Widgets"});
 	screen_settings.set_page_tabgroup(&settings_tab_group);
 
 	// grid layout is on a 6 column, 6 row array
@@ -171,64 +175,71 @@ void create_ui_elements()
 	toggle_wallpaper.set_callback(update_wallpaper);
 	settings_tab_group.add_child_ui(&toggle_wallpaper, 0);
 
-	// button_dialogbox_test.create_on_grid(2, 1, "TEST");
-	// button_dialogbox_test.set_callback(dialogbox_example);
-	// settings_tab_group.add_child_ui(&button_dialogbox_test, 0);
-
 	slider_UTC.create_on_grid(6, 1);
 	slider_UTC.set_value_type(VALUE_TYPE::INT);
 	slider_UTC.set_options_data(&settings.settings_utc_offset);
 	settings_tab_group.add_child_ui(&slider_UTC, 0);
 
+	// Location
+
+	// Create an Text Box the widget_ow_apikey setting
+	text_loc_city.create_on_grid(6, 1, "CITY");
+	text_loc_city.set_options_data(&settings.setting_loc_city);
+	settings_tab_group.add_child_ui(&text_loc_city, 1);
+
+	text_loc_state.create_on_grid(4, 1, "STATE");
+	text_loc_state.set_options_data(&settings.setting_loc_state);
+	settings_tab_group.add_child_ui(&text_loc_state, 1);
+
+	text_loc_country.create_on_grid(2, 1, "COUNTRY CODE");
+	text_loc_country.set_options_data(&settings.setting_loc_country);
+	settings_tab_group.add_child_ui(&text_loc_country, 1);
+
+	text_loc_lon.create_on_grid(3, 1, "LONGITUDE");
+	text_loc_lon.set_options_data(&settings.setting_loc_lon);
+	settings_tab_group.add_child_ui(&text_loc_lon, 1);
+
+	text_loc_lat.create_on_grid(3, 1, "LATITUDE");
+	text_loc_lat.set_options_data(&settings.setting_loc_lat);
+	settings_tab_group.add_child_ui(&text_loc_lat, 1);
+
 	// WiFi
 	toggle_OTA_updates.create_on_grid(2, 1, "ENABLE OTA");
 	toggle_OTA_updates.set_toggle_text("NO", "YES");
 	toggle_OTA_updates.set_options_data(&settings.setting_OTA_start);
-	settings_tab_group.add_child_ui(&toggle_OTA_updates, 1);
+	settings_tab_group.add_child_ui(&toggle_OTA_updates, 2);
 
 	toggle_Notify_updates.create_on_grid(2, 1, "NOTIFY UPDATES");
 	toggle_Notify_updates.set_toggle_text("NO", "YES");
 	toggle_Notify_updates.set_options_data(&settings.setting_wifi_check_updates);
-	settings_tab_group.add_child_ui(&toggle_Notify_updates, 1);
+	settings_tab_group.add_child_ui(&toggle_Notify_updates, 2);
 
 	toggle_verbose_wifi.create_on_grid(2, 1, "VERBOSE WIFI");
 	toggle_verbose_wifi.set_toggle_text("NO", "YES");
 	toggle_verbose_wifi.set_options_data(&settings.setting_wifi_extra_details);
-	settings_tab_group.add_child_ui(&toggle_verbose_wifi, 1);
-
-	// Create an Text Box the widget_ow_apikey setting
-	text_ow_city.create_on_grid(4, 1, "CITY");
-	text_ow_city.set_options_data(&settings.setting_city);
-	settings_tab_group.add_child_ui(&text_ow_city, 1);
-
-	// Create an Text Box the widget_ow_apikey setting
-	text_ow_country.create_on_grid(2, 1, "COUNTRY CODE");
-	text_ow_country.set_options_data(&settings.setting_country);
-	settings_tab_group.add_child_ui(&text_ow_country, 1);
+	settings_tab_group.add_child_ui(&toggle_verbose_wifi, 2);
 
 	text_ntpserver.create_on_grid(4, 1, "NTP SERVER");
 	text_ntpserver.set_options_data(&settings.setting_ntpserver);
-	settings_tab_group.add_child_ui(&text_ntpserver, 1);
+	settings_tab_group.add_child_ui(&text_ntpserver, 2);
 
-	// Sound
+	// Sound & Haptics
 	toggle_audio_ui.create_on_grid(3, 1, "UI BEEPS");
 	toggle_audio_ui.set_toggle_text("NO", "YES");
 	toggle_audio_ui.set_options_data(&settings.setting_audio_ui);
-	settings_tab_group.add_child_ui(&toggle_audio_ui, 2);
+	settings_tab_group.add_child_ui(&toggle_audio_ui, 3);
 
 	toggle_audio_alarm.create_on_grid(3, 1, "ALARMS");
 	toggle_audio_alarm.set_toggle_text("NO", "YES");
 	toggle_audio_alarm.set_options_data(&settings.setting_audio_alarm);
-	settings_tab_group.add_child_ui(&toggle_audio_alarm, 2);
+	settings_tab_group.add_child_ui(&toggle_audio_alarm, 3);
 
 	slider_volume.create_on_grid(6, 1);
 	slider_volume.set_value_type(VALUE_TYPE::FLOAT);
 	slider_volume.set_options_data(&settings.setting_audio_volume);
-	settings_tab_group.add_child_ui(&slider_volume, 2);
+	settings_tab_group.add_child_ui(&slider_volume, 3);
 
-	// Haptics
-
-	toggle_haptics_enable.create_on_grid(2, 1, "ENABLED");
+	toggle_haptics_enable.create_on_grid(2, 1, "HAPTICS ENABLED");
 	toggle_haptics_enable.set_toggle_text("NO", "YES");
 	toggle_haptics_enable.set_options_data(&settings.setting_haptics_enabled);
 	settings_tab_group.add_child_ui(&toggle_haptics_enable, 3);
@@ -269,41 +280,41 @@ void create_ui_elements()
 	text_rss_feed_url.set_options_data(&settings.widget_rss_feed_url);
 	settings_tab_group.add_child_ui(&text_rss_feed_url, 4);
 
-	// Screenshot stuff
-	slider_screenshot_lvl_black.create_on_grid(3, 1);
-	slider_screenshot_lvl_black.set_value_type(VALUE_TYPE::FLOAT);
-	slider_screenshot_lvl_black.set_options_data(&settings.screenshot_black);
-	settings_tab_group.add_child_ui(&slider_screenshot_lvl_black, 5);
+	// // Screenshot stuff
+	// slider_screenshot_lvl_black.create_on_grid(3, 1);
+	// slider_screenshot_lvl_black.set_value_type(VALUE_TYPE::FLOAT);
+	// slider_screenshot_lvl_black.set_options_data(&settings.screenshot_black);
+	// settings_tab_group.add_child_ui(&slider_screenshot_lvl_black, 5);
 
-	slider_screenshot_lvl_white.create_on_grid(3, 1);
-	slider_screenshot_lvl_white.set_value_type(VALUE_TYPE::FLOAT);
-	slider_screenshot_lvl_white.set_options_data(&settings.screenshot_white);
-	settings_tab_group.add_child_ui(&slider_screenshot_lvl_white, 5);
+	// slider_screenshot_lvl_white.create_on_grid(3, 1);
+	// slider_screenshot_lvl_white.set_value_type(VALUE_TYPE::FLOAT);
+	// slider_screenshot_lvl_white.set_options_data(&settings.screenshot_white);
+	// settings_tab_group.add_child_ui(&slider_screenshot_lvl_white, 5);
 
-	slider_screenshot_lvl_gamma.create_on_grid(6, 1);
-	slider_screenshot_lvl_gamma.set_value_type(VALUE_TYPE::FLOAT);
-	slider_screenshot_lvl_gamma.set_options_data(&settings.screenshot_gamma);
-	settings_tab_group.add_child_ui(&slider_screenshot_lvl_gamma, 5);
+	// slider_screenshot_lvl_gamma.create_on_grid(6, 1);
+	// slider_screenshot_lvl_gamma.set_value_type(VALUE_TYPE::FLOAT);
+	// slider_screenshot_lvl_gamma.set_options_data(&settings.screenshot_gamma);
+	// settings_tab_group.add_child_ui(&slider_screenshot_lvl_gamma, 5);
 
-	slider_screenshot_saturation.create_on_grid(3, 1);
-	slider_screenshot_saturation.set_value_type(VALUE_TYPE::FLOAT);
-	slider_screenshot_saturation.set_options_data(&settings.screenshot_saturation);
-	settings_tab_group.add_child_ui(&slider_screenshot_saturation, 5);
+	// slider_screenshot_saturation.create_on_grid(3, 1);
+	// slider_screenshot_saturation.set_value_type(VALUE_TYPE::FLOAT);
+	// slider_screenshot_saturation.set_options_data(&settings.screenshot_saturation);
+	// settings_tab_group.add_child_ui(&slider_screenshot_saturation, 5);
 
-	slider_screenshot_contrast.create_on_grid(3, 1);
-	slider_screenshot_contrast.set_value_type(VALUE_TYPE::FLOAT);
-	slider_screenshot_contrast.set_options_data(&settings.screenshot_contrast);
-	settings_tab_group.add_child_ui(&slider_screenshot_contrast, 5);
+	// slider_screenshot_contrast.create_on_grid(3, 1);
+	// slider_screenshot_contrast.set_value_type(VALUE_TYPE::FLOAT);
+	// slider_screenshot_contrast.set_options_data(&settings.screenshot_contrast);
+	// settings_tab_group.add_child_ui(&slider_screenshot_contrast, 5);
 
-	slider_screenshot_wb_temp.create_on_grid(3, 1);
-	slider_screenshot_wb_temp.set_value_type(VALUE_TYPE::FLOAT);
-	slider_screenshot_wb_temp.set_options_data(&settings.screenshot_wb_temp);
-	settings_tab_group.add_child_ui(&slider_screenshot_wb_temp, 5);
+	// slider_screenshot_wb_temp.create_on_grid(3, 1);
+	// slider_screenshot_wb_temp.set_value_type(VALUE_TYPE::FLOAT);
+	// slider_screenshot_wb_temp.set_options_data(&settings.screenshot_wb_temp);
+	// settings_tab_group.add_child_ui(&slider_screenshot_wb_temp, 5);
 
-	slider_screenshot_wb_tint.create_on_grid(3, 1);
-	slider_screenshot_wb_tint.set_value_type(VALUE_TYPE::FLOAT);
-	slider_screenshot_wb_tint.set_options_data(&settings.screenshot_wb_tint);
-	settings_tab_group.add_child_ui(&slider_screenshot_wb_tint, 5);
+	// slider_screenshot_wb_tint.create_on_grid(3, 1);
+	// slider_screenshot_wb_tint.set_value_type(VALUE_TYPE::FLOAT);
+	// slider_screenshot_wb_tint.set_options_data(&settings.screenshot_wb_tint);
+	// settings_tab_group.add_child_ui(&slider_screenshot_wb_tint, 5);
 
 	label_version.create(240, 460, squixl.get_version().c_str(), TFT_GREY);
 	screen_settings.add_child_ui(&label_version);
@@ -458,8 +469,8 @@ void setup()
 		{
 			wifi_controller.wifi_blocking_access = true;
 			// The user has wifi credentials, but no country or UTC has been set yet.
-			// Grab our public IP address, and then get out UTC offset and country and suburb.
-			wifi_controller.add_to_queue("http://api.ipify.org", [](bool success, const String &response) { squixl.get_public_ip(success, response); });
+			// Grab the location details, and then use that to get the UTC offset.
+			wifi_controller.add_to_queue("https://ipapi.co/json/", [](bool success, const String &response) { squixl.get_and_update_utc_settings(success, response); });
 		}
 		else if (rtc.requiresNTP)
 		{

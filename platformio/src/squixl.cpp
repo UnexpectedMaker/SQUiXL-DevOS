@@ -235,24 +235,24 @@ bool SQUiXL::vbus_changed()
 	return detected;
 }
 
-// Used to get local public IP address for country/location lookup for UTC and OW
-void SQUiXL::get_public_ip(bool success, const String &response)
-{
-	// Serial.println("Callback executed. Success: " + String(success ? "TRUE" : "FALSE") + ", Response: " + String(response));
-	if (success)
-	{
-		std::string url = std::string("https://ipapi.co/") + response.c_str() + std::string("/json/");
-		wifi_controller.add_to_queue(url, [](bool success, const String &response) { squixl.get_and_update_utc_settings(success, response); });
-	}
-	else
-	{
-		wifi_controller.wifi_blocking_access = false;
-	}
-}
+// // Used to get local public IP address for country/location lookup for UTC and OW
+// void SQUiXL::get_public_ip(bool success, const String &response)
+// {
+// 	// Serial.println("Callback executed. Success: " + String(success ? "TRUE" : "FALSE") + ", Response: " + String(response));
+// 	if (success)
+// 	{
+// 		std::string url = std::string("https://ipapi.co/") + response.c_str() + std::string("/json/");
+// 		wifi_controller.add_to_queue(url, [](bool success, const String &response) { squixl.get_and_update_utc_settings(success, response); });
+// 	}
+// 	else
+// 	{
+// 		wifi_controller.wifi_blocking_access = false;
+// 	}
+// }
 
 void SQUiXL::get_and_update_utc_settings(bool success, const String &response)
 {
-	// Serial.println("Callback executed. Success: " + String(success ? "TRUE" : "FALSE") + ", Response: " + String(response));
+	Serial.println("Callback executed. Success: " + String(success ? "TRUE" : "FALSE") + ", Response: " + String(response));
 
 	if (success && !response.isEmpty())
 	{

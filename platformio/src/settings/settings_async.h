@@ -153,6 +153,9 @@ struct Config
 		String ntp_server = "pool.ntp.org";
 		String country = "";
 		String city = "";
+		String state = "";
+		String lon = "0";
+		String lat = "0";
 		int utc_offset = 999;
 
 		bool time_24hour = false;
@@ -286,8 +289,13 @@ class Settings
 		SettingsOptionBool setting_OTA_start{&config.ota_start, 1, "Enable OTA Updates", "NO", "YES"};
 		SettingsOptionBool setting_wifi_check_updates{&config.wifi_check_for_updates, 1, "Notify Updates", "NO", "YES"};
 		SettingsOptionString setting_web_mdns{&config.mdns_name, 1, "mDNS Name", 0, -1, "SQUiXL", false};
-		SettingsOptionString setting_country{&config.country, 1, "Country Code", 0, 2};
-		SettingsOptionString setting_city{&config.city, 1, "City"};
+
+		SettingsOptionString setting_loc_country{&config.country, 1, "Country Code", 0, 2};
+		SettingsOptionString setting_loc_city{&config.city, 1, "City"};
+		SettingsOptionString setting_loc_state{&config.state, 1, "State"};
+		SettingsOptionString setting_loc_lat{&config.lat, 1, "Latitude"};
+		SettingsOptionString setting_loc_lon{&config.lon, 1, "Longitude"};
+
 		SettingsOptionIntRange settings_utc_offset{&config.utc_offset, -12, 14, 1, false, 1, "UTC Offset"};
 		SettingsOptionWiFiStations wifi_stations{&config.wifi_options, 1, "Wifi Stations"};
 		SettingsOptionString setting_ntpserver{&config.ntp_server, 1, "NTP Server"};
@@ -310,7 +318,7 @@ class Settings
 
 		SettingsOptionBool widget_ow_enabled{&config.open_weather.enabled, 4, "Enabled", "NO", "YES"};
 		SettingsOptionString widget_ow_apikey{&config.open_weather.api_key, 4, "API KEY", 0, -1, "", false};
-		SettingsOptionIntRange widget_ow_poll_interval{&config.open_weather.poll_frequency, 10, 300, 10, false, 4, "Poll Interval (Min)"};
+		SettingsOptionIntRange widget_ow_poll_interval{&config.open_weather.poll_frequency, 10, 300, 10, false, 4, "OW Poll Interval (Min)"};
 		SettingsOptionBool widget_ow_units{&config.open_weather.units_metric, 4, "Temperature Units", "Fahrenheit", "Celsius"};
 
 		SettingsOptionBool mqtt_enabled{&config.mqtt.enabled, 5, "Enabled", "NO", "YES"};
@@ -332,7 +340,7 @@ class Settings
 
 		SettingsOptionBool widget_rss_enabled{&config.rss_feed.enabled, 7, "Enabled", "NO", "YES"};
 		SettingsOptionString widget_rss_feed_url{&config.rss_feed.feed_url, 7, "Feed URL", 0, -1, "", false};
-		SettingsOptionIntRange widget_rss_poll_interval{&config.rss_feed.poll_frequency, 10, 300, 60, false, 7, "Poll Interval (Min)"};
+		SettingsOptionIntRange widget_rss_poll_interval{&config.rss_feed.poll_frequency, 10, 300, 60, false, 7, "RSS Poll Interval (Min)"};
 
 		// ==== ASYNC SUPPORT ====
 	public:

@@ -28,6 +28,7 @@ class widgetOpenWeather : public ui_window
 
 	private:
 		std::string server_path = "http://api.openweathermap.org/data/2.5/weather?q=";
+		std::string geo_path = "http://api.openweathermap.org/geo/1.0/direct?q="; // example: http://api.openweathermap.org/geo/1.0/direct?q=melbourne,au&limit=1&appid=xxxxx
 		std::string full_server_call = "";
 		unsigned long next_update = 0;
 

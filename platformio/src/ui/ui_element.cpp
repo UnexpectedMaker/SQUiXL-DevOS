@@ -65,12 +65,13 @@ void ui_element::reposition(uint8_t *_col, uint8_t *_row)
 	_origional_x = _x;
 	_origional_y = _y;
 
-	uint8_t grid_padding = 10;
+	uint8_t grid_padding_w = 10;
+	uint8_t grid_padding_h = 5;
 	uint8_t col_width = 80;
 	uint8_t row_height = 80;
 
-	uint8_t _span_c = (_w + grid_padding * 2) / (col_width);
-	uint8_t _span_r = _h / (row_height - grid_padding - grid_padding);
+	uint8_t _span_c = (_w + grid_padding_w * 2) / (col_width);
+	uint8_t _span_r = _h / (row_height - grid_padding_h - grid_padding_h);
 
 	// Serial.printf("element _w %d, col_width %d, span_c %d, new col %d, rew row %d\n", _w, (col_width - grid_padding - grid_padding), _span_c, (*_col + _span_c), *_row);
 
@@ -89,8 +90,8 @@ void ui_element::reposition(uint8_t *_col, uint8_t *_row)
 		}
 	}
 
-	_x = (*_col * col_width + grid_padding);
-	_y = (*_row * row_height + grid_padding) + 60; // tab group offset
+	_x = (*_col * col_width + grid_padding_w);
+	_y = (*_row * row_height + grid_padding_h) + 50; // tab group offset
 
 	// Serial.printf("element repositioned to col %d, row %d, span_c %d\n", *_col, *_row, _span_c);
 

@@ -16,7 +16,6 @@ class widgetBattery : public ui_element
 
 	private:
 		bool icons_loaded = false;
-		bool showSSID = false;
 
 		BB_SPI_LCD battery_icons[5];
 		BB_SPI_LCD wifi_icons[5];

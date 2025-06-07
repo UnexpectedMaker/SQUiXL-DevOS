@@ -57,6 +57,7 @@ ui_control_textbox text_ntpserver;
 // WiFi
 ui_control_toggle toggle_OTA_updates;
 ui_control_toggle toggle_Notify_updates;
+ui_control_toggle toggle_verbose_wifi;
 // Audio
 ui_control_toggle toggle_audio_ui;
 ui_control_toggle toggle_audio_alarm;
@@ -189,6 +190,11 @@ void create_ui_elements()
 	toggle_Notify_updates.set_toggle_text("NO", "YES");
 	toggle_Notify_updates.set_options_data(&settings.setting_wifi_check_updates);
 	settings_tab_group.add_child_ui(&toggle_Notify_updates, 1);
+
+	toggle_verbose_wifi.create_on_grid(2, 1, "VERBOSE WIFI");
+	toggle_verbose_wifi.set_toggle_text("NO", "YES");
+	toggle_verbose_wifi.set_options_data(&settings.setting_wifi_extra_details);
+	settings_tab_group.add_child_ui(&toggle_verbose_wifi, 1);
 
 	// Create an Text Box the widget_ow_apikey setting
 	text_ow_city.create_on_grid(4, 1, "CITY");

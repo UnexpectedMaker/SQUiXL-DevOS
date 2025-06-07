@@ -323,6 +323,7 @@ void Settings::init()
 	settings_utc_offset.register_option();
 	wifi_stations.register_option();
 	setting_ntpserver.register_option();
+	setting_wifi_extra_details.register_option();
 
 	// Open Weather
 	widget_ow_enabled.register_option();

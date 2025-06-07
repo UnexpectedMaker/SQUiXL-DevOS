@@ -627,7 +627,7 @@ bool SQUiXL::process_touch_full()
 		clamp_delta_low = -20;
 		clamp_delta_high = 20;
 	}
-	if (last_was_click && millis() - last_touch > 150)
+	else if (last_was_click && millis() - last_touch > 150)
 	{
 		last_was_click = false;
 		if (currently_selected != nullptr)

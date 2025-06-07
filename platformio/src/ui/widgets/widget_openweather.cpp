@@ -14,45 +14,64 @@ std::string widgetOpenWeather::build_server_path()
 	return full_server_call;
 }
 
-void widgetOpenWeather::load_icons()
+void widgetOpenWeather::load_icon(const String &name)
 {
-	// Serial.println("Loading OW icons");
-
 	// Day Icons
-	ow_icons["01d"].createVirtual(64, 64, NULL, true);
-	squixl.loadPNG_into(&ow_icons["01d"], 0, 0, um_ow_01d, sizeof(um_ow_01d));
-
-	ow_icons["01n"].createVirtual(64, 64, NULL, true);
-	squixl.loadPNG_into(&ow_icons["01n"], 0, 0, um_ow_01n, sizeof(um_ow_01n));
-
-	ow_icons["02d"].createVirtual(64, 64, NULL, true);
-	squixl.loadPNG_into(&ow_icons["02d"], 0, 0, um_ow_02d, sizeof(um_ow_02d));
-
-	ow_icons["02n"].createVirtual(64, 64, NULL, true);
-	squixl.loadPNG_into(&ow_icons["02n"], 0, 0, um_ow_02n, sizeof(um_ow_02n));
-
-	ow_icons["03"].createVirtual(64, 64, NULL, true);
-	squixl.loadPNG_into(&ow_icons["03"], 0, 0, um_ow_03d, sizeof(um_ow_03d));
-
-	ow_icons["04"].createVirtual(64, 64, NULL, true);
-	squixl.loadPNG_into(&ow_icons["04"], 0, 0, um_ow_04d, sizeof(um_ow_04d));
-
-	ow_icons["09"].createVirtual(64, 64, NULL, true);
-	squixl.loadPNG_into(&ow_icons["09"], 0, 0, um_ow_09d, sizeof(um_ow_09d));
-
-	ow_icons["10"].createVirtual(64, 64, NULL, true);
-	squixl.loadPNG_into(&ow_icons["10"], 0, 0, um_ow_10d, sizeof(um_ow_10d));
-
-	ow_icons["11"].createVirtual(64, 64, NULL, true);
-	squixl.loadPNG_into(&ow_icons["11"], 0, 0, um_ow_11d, sizeof(um_ow_11d));
-
-	ow_icons["13"].createVirtual(64, 64, NULL, true);
-	squixl.loadPNG_into(&ow_icons["13"], 0, 0, um_ow_13d, sizeof(um_ow_13d));
-
-	ow_icons["50"].createVirtual(64, 64, NULL, true);
-	squixl.loadPNG_into(&ow_icons["50"], 0, 0, um_ow_50d, sizeof(um_ow_50d));
-
-	Serial.println("OW icons loaded");
+	if (name == "01d")
+	{
+		ow_icons["01d"].createVirtual(64, 64, NULL, true);
+		squixl.loadPNG_into(&ow_icons["01d"], 0, 0, um_ow_01d, sizeof(um_ow_01d));
+	}
+	else if (name == "01n")
+	{
+		ow_icons["01n"].createVirtual(64, 64, NULL, true);
+		squixl.loadPNG_into(&ow_icons["01n"], 0, 0, um_ow_01n, sizeof(um_ow_01n));
+	}
+	else if (name == "02d")
+	{
+		ow_icons["02d"].createVirtual(64, 64, NULL, true);
+		squixl.loadPNG_into(&ow_icons["02d"], 0, 0, um_ow_02d, sizeof(um_ow_02d));
+	}
+	else if (name == "02n")
+	{
+		ow_icons["02n"].createVirtual(64, 64, NULL, true);
+		squixl.loadPNG_into(&ow_icons["02n"], 0, 0, um_ow_02n, sizeof(um_ow_02n));
+	}
+	else if (name == "03")
+	{
+		ow_icons["03"].createVirtual(64, 64, NULL, true);
+		squixl.loadPNG_into(&ow_icons["03"], 0, 0, um_ow_03d, sizeof(um_ow_03d));
+	}
+	else if (name == "04")
+	{
+		ow_icons["04"].createVirtual(64, 64, NULL, true);
+		squixl.loadPNG_into(&ow_icons["04"], 0, 0, um_ow_04d, sizeof(um_ow_04d));
+	}
+	else if (name == "09")
+	{
+		ow_icons["09"].createVirtual(64, 64, NULL, true);
+		squixl.loadPNG_into(&ow_icons["09"], 0, 0, um_ow_09d, sizeof(um_ow_09d));
+	}
+	else if (name == "10")
+	{
+		ow_icons["10"].createVirtual(64, 64, NULL, true);
+		squixl.loadPNG_into(&ow_icons["10"], 0, 0, um_ow_10d, sizeof(um_ow_10d));
+	}
+	else if (name == "11")
+	{
+		ow_icons["11"].createVirtual(64, 64, NULL, true);
+		squixl.loadPNG_into(&ow_icons["11"], 0, 0, um_ow_11d, sizeof(um_ow_11d));
+	}
+	else if (name == "13")
+	{
+		ow_icons["13"].createVirtual(64, 64, NULL, true);
+		squixl.loadPNG_into(&ow_icons["13"], 0, 0, um_ow_13d, sizeof(um_ow_13d));
+	}
+	else if (name == "50")
+	{
+		ow_icons["50"].createVirtual(64, 64, NULL, true);
+		squixl.loadPNG_into(&ow_icons["50"], 0, 0, um_ow_50d, sizeof(um_ow_50d));
+	}
 }
 
 void widgetOpenWeather::process_weather_data(bool success, const String &response)
@@ -95,6 +114,12 @@ void widgetOpenWeather::process_weather_data(bool success, const String &respons
 			_weather_desc = weather[0]["main"];
 			_weather_desc.toUpperCase();
 			Serial.println(_icon_name + " - " + _icon_desc + "(" + _weather_desc + ")");
+
+			// If icon has not been loaded yet, load it now
+			if (!ow_icons[_icon_name].getBuffer())
+			{
+				load_icon(_icon_name);
+			}
 		}
 		else
 		{
@@ -120,27 +145,16 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 	// we want the poll_frequency to be (mins in millis, so mins * 60 * 1000)
 	if (millis() - next_update > (settings.config.open_weather.poll_frequency * 60000) || next_update == 0)
 	{
-		if (!icons_loaded)
+		// Let's see if we can get the data from openweather.org
+		std::string url = build_server_path();
+		// Serial.println("url " + url);
+		if (!url.empty())
 		{
-			icons_loaded = true;
-			load_icons();
-
-			next_update = 0;
+			wifi_controller.add_to_queue(url, [this](bool success, const String &response) { this->process_weather_data(success, response); });
 		}
-		else
-		{
 
-			// Let's see if we can get the data from openweather.org
-			std::string url = build_server_path();
-			// Serial.println("url " + url);
-			if (!url.empty())
-			{
-				wifi_controller.add_to_queue(url, [this](bool success, const String &response) { this->process_weather_data(success, response); });
-			}
-
-			// deepsleep_data_stored = false;
-			next_update = millis();
-		}
+		// deepsleep_data_stored = false;
+		next_update = millis();
 	}
 
 	bool was_dirty = false;

@@ -386,327 +386,253 @@ SettingsOptionBase *WebServer::get_obj_from_id(String id)
 	return (settings.settings_groups[group].groups[index]);
 }
 
-void WebServer::start()
+bool WebServer::start()
 {
-	// setCpuFrequencyMhz(80);
+	if (!wifi_controller.is_connected())
+		return false;
 
 	_running = true;
 	wifi_controller.wifi_prevent_disconnect = true;
 
 	Serial.println("Starting webserver");
 
-	// Start the webserver by connecting to the wifi network first, done via a non-blocking callback
-	wifi_controller.add_to_queue("", [this](bool success, const String &response) { this->start_callback(success, response); });
-}
+	Serial.print("IP Address: ");
+	Serial.println(WiFi.localIP());
 
-void WebServer::start_callback(bool success, const String &response)
-{
-	if (response == "OK")
+	// Set the local mDSN name so you can navigate to tinywatchs3.local instead of IP address
+	settings.config.mdns_name.trim();
+	if (settings.config.mdns_name.isEmpty())
+		settings.config.mdns_name = "SQUiXL";
+
+	if (!MDNS.begin(settings.config.mdns_name.c_str()))
 	{
-		Serial.print("IP Address: ");
-		Serial.println(WiFi.localIP());
+		Serial.println("\nWEBSERVER: ERROR starting mDNS!!!");
+		// wifi_controller.disconnect(false);
+		// WiFi.mode(WIFI_OFF);
+		_running = false;
+		return false;
+	}
 
-		// Set the local mDSN name so you can navigate to tinywatchs3.local instead of IP address
-		settings.config.mdns_name.trim();
-		if (settings.config.mdns_name.isEmpty())
-			settings.config.mdns_name = "SQUiXL";
+	web_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_html, processor); });
 
-		if (!MDNS.begin(settings.config.mdns_name.c_str()))
+	web_server.on("/wifi", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_wifi_html, processor); });
+
+	web_server.on("/widgets", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_widgets_html, processor); });
+
+	web_server.on("/screenie", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", screenie_html, processor); });
+
+	web_server.on("/wallpaper", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", wallpaper_html, processor); });
+
+	web_server.on("/take_screenshot", HTTP_GET, [](AsyncWebServerRequest *request) {
+		squixl.delayed_take_screenshot();
+		request->send(200, "text/text", "Working....");
+	});
+
+	web_server.on("/screenshot", HTTP_GET, [](AsyncWebServerRequest *request) {
+		// save_png(&squixl.lcd);
+		request->send(LittleFS, "/screenshot.png", "image/png");
+	});
+
+	web_server.on("/get_wallpaper", HTTP_GET, [](AsyncWebServerRequest *request) {
+		request->send(LittleFS, "/user_wallpaper.jpg", "image/jpg");
+	});
+
+	web_server.on("/upload_wallpaper", HTTP_POST, [](AsyncWebServerRequest *request) { request->send(200); }, do_upload);
+
+	web_event.onConnect([](AsyncEventSourceClient *client) {
+		Serial.printf("SSE Client connected! ID: %" PRIu32 "\n", client->lastId());
+		client->send("hello!", NULL, millis(), 1000);
+	});
+
+	web_event.onDisconnect([](AsyncEventSourceClient *client) {
+		Serial.printf("SSE Client disconnected! ID: %" PRIu32 "\n", client->lastId());
+	});
+
+	web_server.onNotFound([](AsyncWebServerRequest *request) { request->send(404, "text/plain", "Not found"); });
+
+	web_server.on("/update_settings_group", HTTP_POST, [](AsyncWebServerRequest *request) {
+		if (request->hasParam("group_id", true))
 		{
-			Serial.println("Error starting mDNS");
-			wifi_controller.disconnect(false);
-			WiFi.mode(WIFI_OFF);
-			_running = false;
-			return;
-		}
+			const AsyncWebParameter *_group = request->getParam("group_id", true);
+			int group_id = String(_group->value().c_str()).toInt();
 
-		web_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_html, processor); });
+			Serial.printf("** Save Settings for Group ID: %d\n", group_id);
 
-		web_server.on("/wifi", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_wifi_html, processor); });
+			auto &group = settings.settings_groups[group_id]; // Cache the current group
 
-		web_server.on("/widgets", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_widgets_html, processor); });
-
-		web_server.on("/screenie", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", screenie_html, processor); });
-
-		web_server.on("/wallpaper", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", wallpaper_html, processor); });
-
-		web_server.on("/take_screenshot", HTTP_GET, [](AsyncWebServerRequest *request) {
-			squixl.delayed_take_screenshot();
-			request->send(200, "text/text", "Working....");
-		});
-
-		web_server.on("/screenshot", HTTP_GET, [](AsyncWebServerRequest *request) {
-			// save_png(&squixl.lcd);
-			request->send(LittleFS, "/screenshot.png", "image/png");
-		});
-
-		web_server.on("/get_wallpaper", HTTP_GET, [](AsyncWebServerRequest *request) {
-			request->send(LittleFS, "/user_wallpaper.jpg", "image/jpg");
-		});
-
-		web_server.on("/upload_wallpaper", HTTP_POST, [](AsyncWebServerRequest *request) { request->send(200); }, do_upload);
-
-		web_event.onConnect([](AsyncEventSourceClient *client) {
-			Serial.printf("SSE Client connected! ID: %" PRIu32 "\n", client->lastId());
-			client->send("hello!", NULL, millis(), 1000);
-		});
-
-		web_event.onDisconnect([](AsyncEventSourceClient *client) {
-			Serial.printf("SSE Client disconnected! ID: %" PRIu32 "\n", client->lastId());
-		});
-
-		web_server.onNotFound([](AsyncWebServerRequest *request) { request->send(404, "text/plain", "Not found"); });
-
-		web_server.on("/update_settings_group", HTTP_POST, [](AsyncWebServerRequest *request) {
-			if (request->hasParam("group_id", true))
+			for (size_t i = 0; i < group.groups.size(); ++i)
 			{
-				const AsyncWebParameter *_group = request->getParam("group_id", true);
-				int group_id = String(_group->value().c_str()).toInt();
+				auto *setting = group.groups[i]; // Cache the current setting
 
-				Serial.printf("** Save Settings for Group ID: %d\n", group_id);
+				String fn = setting->fieldname;
+				fn.replace(" ", "_");
+				fn.toLowerCase();
+				fn.replace("_(sec)", "");
+				fn.replace("_(min)", "");
+				fn.replace("_(%%)", "");
 
-				auto &group = settings.settings_groups[group_id]; // Cache the current group
-
-				for (size_t i = 0; i < group.groups.size(); ++i)
+				if (setting->getType() == SettingsOptionBase::INT_VECTOR)
 				{
-					auto *setting = group.groups[i]; // Cache the current setting
-
-					String fn = setting->fieldname;
-					fn.replace(" ", "_");
-					fn.toLowerCase();
-					fn.replace("_(sec)", "");
-					fn.replace("_(min)", "");
-					fn.replace("_(%%)", "");
-
-					if (setting->getType() == SettingsOptionBase::INT_VECTOR)
+					SettingsOptionIntVector *intPtr = static_cast<SettingsOptionIntVector *>(setting);
+					for (size_t v = 0; v < intPtr->vector_size(); v++)
 					{
-						SettingsOptionIntVector *intPtr = static_cast<SettingsOptionIntVector *>(setting);
-						for (size_t v = 0; v < intPtr->vector_size(); v++)
-						{
-							String fn_indexed = String(group_id) + "," + String(i) + "__" + fn + "_" + String(v);
-
-							// Serial.printf("Looking for id: %s - ", fn_indexed.c_str());
-
-							if (request->hasParam(fn_indexed, true))
-							{
-								// Serial.print("Found - ");
-								const AsyncWebParameter *_param = request->getParam(fn_indexed, true);
-								int data = String(_param->value().c_str()).toInt();
-
-								// Serial.printf("Web data: %d, class data %d, change? %s\n", data, intPtr->get(v), (intPtr->update(v, data) ? "YES" : "no"));
-								intPtr->update(v, data);
-							}
-						}
-					}
-					else if (setting->getType() == SettingsOptionBase::WIFI_STATION)
-					{
-						SettingsOptionWiFiStations *intPtr = static_cast<SettingsOptionWiFiStations *>(setting);
-						for (size_t v = 0; v <= intPtr->vector_size(); v++)
-						{
-							String fn_ssid = String(group_id) + "," + String(i) + "__" + fn + "_ssid_" + String(v);
-							String fn_pass = String(group_id) + "," + String(i) + "__" + fn + "_pass_" + String(v);
-
-							// 1,6__wifi_stations_ssid_0
-							if (request->hasParam(fn_ssid, true) && request->hasParam(fn_pass, true))
-							{
-								// Serial.print("Found - ");
-								const AsyncWebParameter *_param1 = request->getParam(fn_ssid, true);
-								String data1 = String(_param1->value().c_str());
-
-								const AsyncWebParameter *_param2 = request->getParam(fn_pass, true);
-								String data2 = String(_param2->value().c_str());
-
-								data1.trim();
-								data2.trim();
-
-								if (v == intPtr->vector_size())
-								{
-									// this is a new one, so we add it, assuming there is data to add
-									if (!data1.isEmpty() && !data2.isEmpty())
-										intPtr->add_station(data1, data2);
-								}
-								else
-								{
-									// We update all stations, even with empty data, to ensure we keep the vector intact
-									// after the updates, we'll prune any that are empty.
-									intPtr->update(v, data1, data2);
-								}
-							}
-						}
-
-						// remove empty entries
-						intPtr->remove_if_empty();
-					}
-					else
-					{
-						String fn_indexed = String(group_id) + "," + String(i) + "__" + fn;
+						String fn_indexed = String(group_id) + "," + String(i) + "__" + fn + "_" + String(v);
 
 						// Serial.printf("Looking for id: %s - ", fn_indexed.c_str());
 
 						if (request->hasParam(fn_indexed, true))
 						{
+							// Serial.print("Found - ");
 							const AsyncWebParameter *_param = request->getParam(fn_indexed, true);
+							int data = String(_param->value().c_str()).toInt();
 
-							if (setting->getType() == SettingsOptionBase::BOOL)
-							{
-								bool data = (String(_param->value().c_str()) == "1");
-								SettingsOptionBool *intPtr = static_cast<SettingsOptionBool *>(setting);
-
-								// Serial.printf("Web data (new): %s, class data (current): %s - ", (data ? "T" : "F"), (intPtr->get() ? "T" : "F"));
-								bool updated = intPtr->update(data);
-								// Serial.printf("Now: %s - changed? %s\n", (intPtr->get() ? "T" : "F"), (updated ? "YES" : "no"));
-							}
-							else if (setting->getType() == SettingsOptionBase::FLOAT)
-							{
-								float data = String(_param->value().c_str()).toFloat();
-								SettingsOptionFloat *intPtr = static_cast<SettingsOptionFloat *>(setting);
-								// Serial.printf("Web data: %f, class data %f - ", data, intPtr->get());
-								bool updated = intPtr->update(data);
-								// Serial.printf("changed? %s\n", (updated ? "YES" : "no"));
-							}
-							else if (setting->getType() == SettingsOptionBase::STRING)
-							{
-								String data = String(_param->value().c_str());
-								SettingsOptionString *intPtr = static_cast<SettingsOptionString *>(setting);
-								// Serial.printf("Web data: %s, class data %s - ", data, intPtr->get());
-								bool updated = intPtr->update(&data);
-								// Serial.printf("changed? %s\n", (updated ? "YES" : "no"));
-							}
-							else if (setting->getType() == SettingsOptionBase::HEXCOLOR)
-							{
-								const char *data = _param->value().c_str();
-								SettingsOptionColor565 *intPtr = static_cast<SettingsOptionColor565 *>(setting);
-								Serial.printf("Web data: %s, class data %d, converted data %d - ", data, intPtr->get(), settings.webHexToColor565(data));
-								bool updated = intPtr->update(settings.webHexToColor565(data));
-								Serial.printf("changed? %s\n", (updated ? "YES" : "no"));
-							}
-							else if (setting->getType() == SettingsOptionBase::INT)
-							{
-								int data = String(_param->value().c_str()).toInt();
-								SettingsOptionInt *intPtr = static_cast<SettingsOptionInt *>(setting);
-								// Serial.printf("Web data: %d, class data %d - ", data, intPtr->get());
-								bool updated = intPtr->update(data);
-								// Serial.printf("changed? %s\n", (updated ? "YES" : "no"));
-							}
-							else if (setting->getType() == SettingsOptionBase::INT_RANGE)
-							{
-								int data = String(_param->value().c_str()).toInt();
-								SettingsOptionIntRange *intPtr = static_cast<SettingsOptionIntRange *>(setting);
-								// Serial.printf("Web data: %d, class data %d - ", data, intPtr->get());
-								bool updated = intPtr->update(data);
-								// Serial.printf("changed? %s\n", (updated ? "YES" : "no"));
-							}
-							else if (setting->getType() == SettingsOptionBase::FLOAT_RANGE)
-							{
-								float data = String(_param->value().c_str()).toFloat();
-								SettingsOptionFloatRange *intPtr = static_cast<SettingsOptionFloatRange *>(setting);
-								Serial.printf("Web data: %f, class data %f - ", data, intPtr->get());
-								bool updated = intPtr->update(data);
-								Serial.printf("changed? %s\n", (updated ? "YES" : "no"));
-							}
+							// Serial.printf("Web data: %d, class data %d, change? %s\n", data, intPtr->get(v), (intPtr->update(v, data) ? "YES" : "no"));
+							intPtr->update(v, data);
 						}
 					}
 				}
-
-				// // Buzzer({{2000, 20}});
-				// audio.play_dock();
-				settings.save(true);
-
-				const char *return_data = generate_settings_html(group_id).c_str();
-				const size_t return_data_length = strlen_P(return_data);
-
-				AsyncResponseStream *response = request->beginResponseStream("text/html", return_data_length);
-				for (int i = 0; i < return_data_length; i++)
+				else if (setting->getType() == SettingsOptionBase::WIFI_STATION)
 				{
-					response->write(return_data[i]);
+					SettingsOptionWiFiStations *intPtr = static_cast<SettingsOptionWiFiStations *>(setting);
+					for (size_t v = 0; v <= intPtr->vector_size(); v++)
+					{
+						String fn_ssid = String(group_id) + "," + String(i) + "__" + fn + "_ssid_" + String(v);
+						String fn_pass = String(group_id) + "," + String(i) + "__" + fn + "_pass_" + String(v);
+
+						// 1,6__wifi_stations_ssid_0
+						if (request->hasParam(fn_ssid, true) && request->hasParam(fn_pass, true))
+						{
+							// Serial.print("Found - ");
+							const AsyncWebParameter *_param1 = request->getParam(fn_ssid, true);
+							String data1 = String(_param1->value().c_str());
+
+							const AsyncWebParameter *_param2 = request->getParam(fn_pass, true);
+							String data2 = String(_param2->value().c_str());
+
+							data1.trim();
+							data2.trim();
+
+							if (v == intPtr->vector_size())
+							{
+								// this is a new one, so we add it, assuming there is data to add
+								if (!data1.isEmpty() && !data2.isEmpty())
+									intPtr->add_station(data1, data2);
+							}
+							else
+							{
+								// We update all stations, even with empty data, to ensure we keep the vector intact
+								// after the updates, we'll prune any that are empty.
+								intPtr->update(v, data1, data2);
+							}
+						}
+					}
+
+					// remove empty entries
+					intPtr->remove_if_empty();
 				}
-				request->send(response);
-
-				if (group_id == 6)
+				else
 				{
-					// we updated from Screenie, so let's re-take the screenshot
-					// and update the ebsite via server events
-					squixl.delayed_take_screenshot();
+					String fn_indexed = String(group_id) + "," + String(i) + "__" + fn;
+
+					// Serial.printf("Looking for id: %s - ", fn_indexed.c_str());
+
+					if (request->hasParam(fn_indexed, true))
+					{
+						const AsyncWebParameter *_param = request->getParam(fn_indexed, true);
+
+						if (setting->getType() == SettingsOptionBase::BOOL)
+						{
+							bool data = (String(_param->value().c_str()) == "1");
+							SettingsOptionBool *intPtr = static_cast<SettingsOptionBool *>(setting);
+
+							// Serial.printf("Web data (new): %s, class data (current): %s - ", (data ? "T" : "F"), (intPtr->get() ? "T" : "F"));
+							bool updated = intPtr->update(data);
+							// Serial.printf("Now: %s - changed? %s\n", (intPtr->get() ? "T" : "F"), (updated ? "YES" : "no"));
+						}
+						else if (setting->getType() == SettingsOptionBase::FLOAT)
+						{
+							float data = String(_param->value().c_str()).toFloat();
+							SettingsOptionFloat *intPtr = static_cast<SettingsOptionFloat *>(setting);
+							// Serial.printf("Web data: %f, class data %f - ", data, intPtr->get());
+							bool updated = intPtr->update(data);
+							// Serial.printf("changed? %s\n", (updated ? "YES" : "no"));
+						}
+						else if (setting->getType() == SettingsOptionBase::STRING)
+						{
+							String data = String(_param->value().c_str());
+							SettingsOptionString *intPtr = static_cast<SettingsOptionString *>(setting);
+							// Serial.printf("Web data: %s, class data %s - ", data, intPtr->get());
+							bool updated = intPtr->update(&data);
+							// Serial.printf("changed? %s\n", (updated ? "YES" : "no"));
+						}
+						else if (setting->getType() == SettingsOptionBase::HEXCOLOR)
+						{
+							const char *data = _param->value().c_str();
+							SettingsOptionColor565 *intPtr = static_cast<SettingsOptionColor565 *>(setting);
+							Serial.printf("Web data: %s, class data %d, converted data %d - ", data, intPtr->get(), settings.webHexToColor565(data));
+							bool updated = intPtr->update(settings.webHexToColor565(data));
+							Serial.printf("changed? %s\n", (updated ? "YES" : "no"));
+						}
+						else if (setting->getType() == SettingsOptionBase::INT)
+						{
+							int data = String(_param->value().c_str()).toInt();
+							SettingsOptionInt *intPtr = static_cast<SettingsOptionInt *>(setting);
+							// Serial.printf("Web data: %d, class data %d - ", data, intPtr->get());
+							bool updated = intPtr->update(data);
+							// Serial.printf("changed? %s\n", (updated ? "YES" : "no"));
+						}
+						else if (setting->getType() == SettingsOptionBase::INT_RANGE)
+						{
+							int data = String(_param->value().c_str()).toInt();
+							SettingsOptionIntRange *intPtr = static_cast<SettingsOptionIntRange *>(setting);
+							// Serial.printf("Web data: %d, class data %d - ", data, intPtr->get());
+							bool updated = intPtr->update(data);
+							// Serial.printf("changed? %s\n", (updated ? "YES" : "no"));
+						}
+						else if (setting->getType() == SettingsOptionBase::FLOAT_RANGE)
+						{
+							float data = String(_param->value().c_str()).toFloat();
+							SettingsOptionFloatRange *intPtr = static_cast<SettingsOptionFloatRange *>(setting);
+							Serial.printf("Web data: %f, class data %f - ", data, intPtr->get());
+							bool updated = intPtr->update(data);
+							Serial.printf("changed? %s\n", (updated ? "YES" : "no"));
+						}
+					}
 				}
 			}
-			else
+
+			// // Buzzer({{2000, 20}});
+			// audio.play_dock();
+			settings.save(true);
+
+			const char *return_data = generate_settings_html(group_id).c_str();
+			const size_t return_data_length = strlen_P(return_data);
+
+			AsyncResponseStream *response = request->beginResponseStream("text/html", return_data_length);
+			for (int i = 0; i < return_data_length; i++)
 			{
-				request->send(200, "text/html", "<div class='container'><h2>ERROR POSTING DATA</h2><div>", processor);
+				response->write(return_data[i]);
 			}
-		});
+			request->send(response);
 
-		// web_server.on("/update_settings_watch", HTTP_POST, [](AsyncWebServerRequest *request) {
-		// 	for (size_t g = 0; g < settings.setting_groups.size(); g++)
-		// 	{
-		// 		auto &group = settings.setting_groups[g]; // Cache the current group
-		// 		for (size_t i = 0; i < group.size(); ++i)
-		// 		{
-		// 			auto *setting = group[i]; // Cache the current setting
+			if (group_id == 6)
+			{
+				// we updated from Screenie, so let's re-take the screenshot
+				// and update the ebsite via server events
+				squixl.delayed_take_screenshot();
+			}
+		}
+		else
+		{
+			request->send(200, "text/html", "<div class='container'><h2>ERROR POSTING DATA</h2><div>", processor);
+		}
+	});
 
-		// 			String fn = setting->fieldname;
-		// 			fn.replace(" ", "_");
-		// 			fn.toLowerCase();
-		// 			fn.replace("_(sec)", "");
-		// 			fn.replace("_(%%)", "");
+	web_server.addHandler(&web_event);
+	web_server.begin();
+	_running = true;
 
-		// 			if (setting->getType() != SettingsOptionBase::INT_VECTOR)
-		// 			{
-		// 				fn = String(g) + "," + String(i) + "__" + fn;
-
-		// 				Serial.printf("Looking for id: %s - ", fn.c_str());
-
-		// 				if (request->hasParam(fn, true))
-		// 				{
-		// 					Serial.print("Found - ");
-		// 					AsyncWebParameter *_param = request->getParam(fn, true);
-		// 					Serial.printf("Data: %s\n", String(_param->value().c_str()));
-		// 					// 	settings.config.look_ahead = String(_set_reflow_lookahead->value().c_str()).toInt();
-		// 				}
-		// 				else
-		// 				{
-		// 					Serial.println("...");
-		// 				}
-		// 			}
-		// 			else
-		// 			{
-		// 				SettingsOptionIntVector *intPtr = static_cast<SettingsOptionIntVector *>(setting);
-		// 				for (size_t v = 0; v < intPtr->vector_size(); v++)
-		// 				{
-		// 					String fn_indexed = String(g) + "," + String(i) + "__" + fn + "_" + String(v);
-
-		// 					Serial.printf("Looking for id: %s - ", fn_indexed.c_str());
-
-		// 					if (request->hasParam(fn_indexed, true))
-		// 					{
-		// 						Serial.print("Found - ");
-		// 						AsyncWebParameter *_param = request->getParam(fn_indexed, true);
-		// 						Serial.printf("Data: %s\n", String(_param->value().c_str()));
-		// 						// 	settings.config.look_ahead = String(_set_reflow_lookahead->value().c_str()).toInt();
-		// 					}
-		// 					else
-		// 					{
-		// 						Serial.println("...");
-		// 					}
-		// 				}
-		// 			}
-		// 		}
-		// 	}
-
-		// 	Buzzer({{2000, 20}});
-		// 	request->send(200, "text/plain", "Settings Saved!");
-		// });
-
-		Serial.println("web_server.begin();");
-		web_server.addHandler(&web_event);
-		web_server.begin();
-		_running = true;
-	}
-	else
-	{
-		_running = false;
-		Serial.println("Failed to connect to wifi to start webserver!");
-		setCpuFrequencyMhz(40);
-	}
+	return true;
 }
 
 void WebServer::stop(bool restart)
@@ -781,6 +707,25 @@ void WebServer::do_upload(AsyncWebServerRequest *request, String filename, size_
 			[request, upload](bool ok) {
 				if (ok)
 				{
+					if (squixl.user_wallpaper_buffer)
+						free(squixl.user_wallpaper_buffer);
+
+					// Store a copy in PSRAM, so we dont have to access the async FS every time we want to load it
+					squixl.user_wallpaper_buffer = (uint8_t *)ps_malloc(upload->buffer_size);
+
+					if (squixl.user_wallpaper_buffer)
+					{
+						memcpy(squixl.user_wallpaper_buffer, upload->buffer, upload->buffer_size);
+						squixl.user_wallpaper_length = upload->buffer_size;
+					}
+					else
+					{
+						// Failed to allocate PSRAM so fall back to random background and turn of user wallpaper option
+						squixl.user_wallpaper_length = 0;
+						settings.config.user_wallpaper = false;
+						Serial.println("Failed to allocate memory for wallpaper copy");
+					}
+					// This is what tells SQUiXL to switch wallpapers - delayed call
 					squixl.hint_reload_wallpaper = true;
 				}
 				else
@@ -792,8 +737,6 @@ void WebServer::do_upload(AsyncWebServerRequest *request, String filename, size_
 
 		Serial.println(logmessage);
 
-		// Do NOT delete/free upload here, it will be freed in the callback above.
-		// Remove tempObject pointer now to avoid double free later
 		request->_tempObject = nullptr;
 	}
 }

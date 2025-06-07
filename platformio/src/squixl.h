@@ -210,10 +210,8 @@ class SQUiXL : public SQUiXL_LITE
 		// Helpers
 		void split_text_into_lines(const String &text, int max_chars_per_line, std::vector<String> &lines);
 
-		void set_clock_freq(uint32_t new_frq) { wanted_clock_freq = new_frq; }
-
-		uint32_t wanted_clock_freq = 0;
-		uint32_t current_clock_freq = 0;
+		uint8_t *user_wallpaper_buffer = nullptr;
+		int user_wallpaper_length = 0;
 
 	protected:
 		float current_backlight_pwm = 0.0f;

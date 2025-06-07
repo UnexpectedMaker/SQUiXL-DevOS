@@ -12,7 +12,7 @@ void widgetJokes::reset_refresh_timer()
 
 void widgetJokes::show_next_joke()
 {
-	if (stored_jokes.size() == 1)
+	if (stored_jokes.size() == 1 || !has_had_any_jokes)
 	{
 		if (!is_getting_more_jokes)
 		{
@@ -45,6 +45,7 @@ void widgetJokes::process_joke_data(bool success, const String &response)
 		if (response == "ERROR")
 		{
 			next_update = 0;
+			ok = false;
 			return;
 		}
 
@@ -74,6 +75,7 @@ void widgetJokes::process_joke_data(bool success, const String &response)
 
 	if (ok)
 	{
+		has_had_any_jokes = true;
 		if (!is_getting_more_jokes)
 		{
 			// If we have local jokes stored now, we process the first one into word wrapped lines
@@ -104,6 +106,7 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (!is_setup)
 	{
 		is_setup = true;
+		has_had_any_jokes = false;
 		squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 1, &char_width, &char_height);
 
 		max_chars_per_line = int((_w - 20) / char_width); // includes padding for margins
@@ -140,7 +143,14 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 		was_dirty = true;
 	}
 
-	if (!is_aniamted_cached)
+	if (!has_had_any_jokes)
+	{
+		_sprite_joke.setFreeFont(UbuntuMono_R[2]);
+		_sprite_joke.setTextColor(TFT_GREY, -1);
+		_sprite_joke.setCursor(10, 38);
+		_sprite_joke.print("WAITING...");
+	}
+	else if (!is_aniamted_cached)
 	{
 
 		if (lines.size() > 0)

@@ -10,18 +10,16 @@ void widgetBattery::create(int16_t x, int16_t y, uint16_t color)
 	_x = x;
 	_y = y;
 	_c = color;
-	_w = 0;
-	_h = 0;
+	_w = 280;
+	_h = 64;
 }
 
 void widgetBattery::load_icons()
 {
 	// Create the required sprites
-	_w = 280;
-	_h = 64;
 	_sprite_content.createVirtual(_w, _h, NULL, true);
-	_sprite_clean.createVirtual(_w, _h, NULL, true);
-	_sprite_mixed.createVirtual(_w, _h, NULL, true);
+	// _sprite_clean.createVirtual(_w, _h, NULL, true);
+	// _sprite_mixed.createVirtual(_w, _h, NULL, true);
 
 	// Load icons
 	for (int i = 0; i < battery_images_count; i++)
@@ -41,7 +39,7 @@ void widgetBattery::load_icons()
 
 void widgetBattery::capture_clean_sprite()
 {
-	squixl.lcd.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_clean.getBuffer());
+	// squixl.lcd.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_clean.getBuffer());
 	is_dirty_hard = false;
 }
 
@@ -66,14 +64,14 @@ bool widgetBattery::redraw(uint8_t fade_amount, int8_t tab_group)
 		return false;
 	}
 
-	if (is_dirty_hard)
-	{
-		_sprite_content.fillScreen(TFT_MAGENTA);
-		_sprite_clean.fillScreen(TFT_MAGENTA);
+	// if (is_dirty_hard)
+	// {
+	// 	_sprite_content.fillScreen(TFT_MAGENTA);
+	// 	// _sprite_clean.fillScreen(TFT_MAGENTA);
 
-		delay(10);
-		is_dirty_hard = false;
-	}
+	// 	delay(10);
+	// 	is_dirty_hard = false;
+	// }
 
 	_sprite_content.fillScreen(TFT_MAGENTA);
 
@@ -131,17 +129,17 @@ bool widgetBattery::redraw(uint8_t fade_amount, int8_t tab_group)
 		_sprite_content.print("MHz");
 	}
 
-	if (fade_amount < 32)
-	{
-		squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
-		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-	}
-	else
-	{
-		squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, 32);
-		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-		next_refresh = millis();
-	}
+	// if (fade_amount < 32)
+	// {
+	// 	squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
+	// 	ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+	// }
+	// else
+	// {
+	// squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, 32);
+	ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+	next_refresh = millis();
+	// }
 
 	is_dirty = false;
 	is_busy = false;

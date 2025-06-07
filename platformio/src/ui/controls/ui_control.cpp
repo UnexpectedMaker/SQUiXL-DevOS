@@ -22,30 +22,30 @@ void ui_control::create(uint16_t _pos_x, uint16_t _pos_y, uint16_t _width, uint1
 		set_label_sizes();
 }
 
-void ui_control::create_on_grid(uint8_t _col, uint8_t _row, uint8_t _span_c, uint8_t _span_r, const char *title)
-{
+// void ui_control::create_on_grid(uint8_t _col, uint8_t _row, uint8_t _span_c, uint8_t _span_r, const char *title)
+// {
 
-	/*
-			uint8_t grid_padding = 10;
-		uint8_t col_width = 160;
-		uint8_t row_height = 80;
-		*/
+// 	/*
+// 			uint8_t grid_padding = 10;
+// 		uint8_t col_width = 160;
+// 		uint8_t row_height = 80;
+// 		*/
 
-	uint16_t _pos_x = (_col * col_width + grid_padding);
-	uint16_t _pos_y = (_row * row_height + grid_padding);
+// 	uint16_t _pos_x = (_col * col_width + grid_padding);
+// 	uint16_t _pos_y = (_row * row_height + grid_padding);
 
-	// Need to ensure the col span is not wider than the screen based on the selected col
-	if (_col + _span_c > 3)
-		_span_c = 3 - _col;
+// 	// Need to ensure the col span is not wider than the screen based on the selected col
+// 	if (_col + _span_c > 3)
+// 		_span_c = 3 - _col;
 
-	if (_row + _span_r > 6)
-		_span_r = 6 - _row;
+// 	if (_row + _span_r > 6)
+// 		_span_r = 6 - _row;
 
-	uint16_t _width = (col_width * _span_c - grid_padding - grid_padding);
-	uint16_t _height = (row_height * _span_r - grid_padding - grid_padding);
+// 	uint16_t _width = (col_width * _span_c - grid_padding - grid_padding);
+// 	uint16_t _height = (row_height * _span_r - grid_padding - grid_padding);
 
-	create(_pos_x, _pos_y, _width, _height, title);
-}
+// 	create(_pos_x, _pos_y, _width, _height, title);
+// }
 
 void ui_control::create_on_grid(uint8_t _span_c, uint8_t _span_r, const char *title)
 {

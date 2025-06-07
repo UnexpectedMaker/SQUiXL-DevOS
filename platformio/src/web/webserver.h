@@ -22,7 +22,7 @@ class WebServer
 	public:
 		WebServer() : web_server(80), web_event("/event") {}
 
-		void start();
+		bool start();
 		void start_callback(bool success, const String &response);
 		void stop(bool restart);
 		void process();

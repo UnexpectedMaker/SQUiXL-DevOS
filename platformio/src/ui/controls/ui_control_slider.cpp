@@ -75,15 +75,7 @@ bool ui_control_slider::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (!_sprite_content.getBuffer())
 	{
 		_sprite_content.createVirtual(_w, _h, NULL, true);
-		// _sprite_clean.createVirtual(_w, _h, NULL, true);
-		// _sprite_mixed.createVirtual(_w, _h, NULL, true);
 	}
-
-	// if (is_dirty_hard)
-	// {
-	// 	_sprite_clean.fillScreen(TFT_MAGENTA);
-	// 	is_dirty_hard = false;
-	// }
 
 	// Clear the content sprite
 	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
@@ -150,22 +142,14 @@ bool ui_control_slider::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	_sprite_content.setTextColor(static_cast<ui_screen *>(get_ui_parent())->light_tint[3], -1);
 	_sprite_content.setCursor(10, char_height + 5);
-
 	_sprite_content.print(value_min_text.c_str());
-
 	_sprite_content.setCursor(_w - 10 - value_max_len_pixels, char_height + 5);
-
 	_sprite_content.print(value_max_text.c_str());
-
 	_sprite_content.fillCircle(x_pos_center, (_h / 2) + 5, 8, TFT_WHITE, DRAW_TO_RAM);
-
-	// Blend and draw the sprite to the current ui_screen content sprite
-	// squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
 
 	get_ui_parent()->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
 
-	if (fade_amount == 32)
-		next_refresh = millis();
+	next_refresh = millis();
 
 	is_dirty = false;
 	is_busy = false;

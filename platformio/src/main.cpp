@@ -24,8 +24,6 @@
 #include "mqtt/mqtt.h"
 #include "utils/littlefs_cli.h"
 
-extern volatile bool vsync_flag;
-
 unsigned long next_background_swap = 0;
 unsigned long every_second = 0;
 
@@ -463,21 +461,11 @@ void setup()
 			rtc.set_time_from_NTP(settings.config.utc_offset);
 		}
 	}
-	else
-	{
-		if (settings.config.wifi_check_for_updates)
-		{
-			// If the user has opted in to check for firmware update notifications, kick off the check.
-			// This only happens once per boot up right now.
-			// TODO: Look at triggering this any time the user switches it on, if it was off?
-			wifi_controller.add_to_queue("https://squixl.io/latestver", [](bool success, const String &response) { squixl.process_version(success, response); });
-		}
-	}
 
 	// Serial.printf("\n>>> Setup done in %0.2f ms\n\n", (millis() - timer));
 
 	// Setup delayed timer for webserver starting, to alloqw other web traffic to complete first
-	delay_webserver_start = millis();
+	delay_webserver_start = millis() + 5000;
 
 } /* setup() */
 
@@ -530,14 +518,6 @@ void loop()
 		return;
 	}
 
-	// Screenie
-	if (squixl.hint_take_screenshot)
-	{
-		squixl.take_screenshot();
-	}
-
-	screenie_tick();
-
 	if (squixl.hint_reload_wallpaper)
 	{
 		squixl.hint_reload_wallpaper = false; // squixl.main_screen()->show_user_background_jpg(false);
@@ -545,6 +525,7 @@ void loop()
 		squixl.main_screen()->show_user_background_jpg(false);
 
 		webserver.web_event.send("hello", "refresh", millis());
+		return;
 	}
 
 	// If we have a current screen selected and it should be refreshed, refresh it!
@@ -572,12 +553,12 @@ void loop()
 		}
 	}
 
-	// Process the backlight - if it gets too dark, sleepy time
-	squixl.process_backlight_dimmer();
-
 	// Process the wifi controller task queue
 	// Only processes every 1 second inside it's loop
 	wifi_controller.loop();
+
+	// Process the backlight - if it gets too dark, sleepy time
+	squixl.process_backlight_dimmer();
 
 	// This is used if you sattempt to setup your wifi credentials from the first boot screen or if you setup credentials while you are doing other things in SQUiXL.
 	if (wifiSetup.running())
@@ -625,10 +606,28 @@ void loop()
 	}
 	else if (wifi_controller.is_connected())
 	{
-		if (start_webserver && millis() - delay_webserver_start > 5000)
+		if (start_webserver && millis() - delay_webserver_start > 2000)
 		{
-			start_webserver = false;
-			webserver.start();
+			// We want to block the web server from starting if we have starng requests in the queue that are waiting to be processed
+			if (wifi_controller.items_in_queue() > 0)
+			{
+				delay_webserver_start = millis();
+			}
+			else
+			{
+				// ok, it's been 2 seconds since we last check and nothing is in the queue, so start the webserver.
+				if (webserver.start())
+				{
+					start_webserver = false;
+					if (settings.config.wifi_check_for_updates)
+					{
+						// If the user has opted in to check for firmware update notifications, kick off the check.
+						// This only happens once per boot up right now.
+						// TODO: Look at triggering this any time the user switches it on, if it was off?
+						wifi_controller.add_to_queue("https://squixl.io/latestver", [](bool success, const String &response) { squixl.process_version(success, response); });
+					}
+				}
+			}
 		}
 
 		// We only proess MQTT stuff if it's ben enabled by the user
@@ -642,5 +641,13 @@ void loop()
 	// This will only try to save every so often, and will only commit to saving if any save data has changed.
 	// This is to prevent spamming the FS or causing SPI contention with the PSRAM for the frame buffer
 	settings.save(false);
+
+	// Screenie
+	if (squixl.hint_take_screenshot)
+	{
+		squixl.take_screenshot();
+	}
+
+	screenie_tick();
 
 } /* loop() */

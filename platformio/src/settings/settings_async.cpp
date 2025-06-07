@@ -18,14 +18,14 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_scre
 static uint32_t min_clk_freq = 6000000;
 static uint32_t max_clk_freq = 7000000;
 
-// === VSYNC SUPPORT ===
-extern volatile bool vsync_flag; // You must set this true in your panel VSYNC callback
-inline void wait_for_vsync()
-{
-	while (!vsync_flag)
-		vTaskDelay(1);
-	vsync_flag = false;
-}
+// // === VSYNC SUPPORT ===
+// extern volatile bool vsync_flag; // You must set this true in your panel VSYNC callback
+// inline void wait_for_vsync()
+// {
+// 	while (!vsync_flag)
+// 		vTaskDelay(1);
+// 	vsync_flag = false;
+// }
 // =======================
 
 // === ASYNC TASK INFRASTRUCTURE ===
@@ -38,7 +38,7 @@ void Settings::_start_async_task()
 		queue = xQueueCreate(2, sizeof(AsyncReq));
 	if (!task_handle)
 	{
-		xTaskCreatePinnedToCore(async_task, "settings_async", 4096, this, 1, &task_handle, 1);
+		xTaskCreatePinnedToCore(async_task, "settings_async", 4096 * 2, this, 2, &task_handle, 0);
 	}
 }
 
@@ -69,9 +69,9 @@ void Settings::async_task(void *pv)
 				// Call a helper that writes the buffer to FS, then calls the callback
 				bool ok = false;
 
-				wait_for_vsync(); // <---- Added VSYNC WAIT
-				RGBChangeFreq(min_clk_freq);
-				wait_for_vsync(); // <---- Added VSYNC WAIT
+				// wait_for_vsync(); // <---- Added VSYNC WAIT
+				// RGBChangeFreq(min_clk_freq);
+				// wait_for_vsync(); // <---- Added VSYNC WAIT
 
 				File file = LittleFS.open(req.buffer_save->path.c_str(), FILE_WRITE);
 				if (file)
@@ -95,15 +95,15 @@ void Settings::async_task(void *pv)
 				free((void *)req.buffer_save->buffer);
 				delete req.buffer_save;
 
-				wait_for_vsync(); // <---- Added VSYNC WAIT
-				RGBChangeFreq(max_clk_freq);
-				wait_for_vsync(); // <---- Added VSYNC WAIT
+				// wait_for_vsync(); // <---- Added VSYNC WAIT
+				// RGBChangeFreq(max_clk_freq);
+				// wait_for_vsync(); // <---- Added VSYNC WAIT
 			}
 			else if (req.load_buffer_req)
 			{
-				wait_for_vsync();
-				RGBChangeFreq(min_clk_freq);
-				wait_for_vsync();
+				// wait_for_vsync();
+				// RGBChangeFreq(min_clk_freq);
+				// wait_for_vsync();
 
 				File file = LittleFS.open(req.load_buffer_req->path.c_str(), FILE_READ);
 				bool ok = false;
@@ -129,9 +129,9 @@ void Settings::async_task(void *pv)
 					free(buf); // Caller must NOT free; we do it here after the callback!
 				delete req.load_buffer_req;
 
-				wait_for_vsync();
-				RGBChangeFreq(max_clk_freq);
-				wait_for_vsync();
+				// wait_for_vsync();
+				// RGBChangeFreq(max_clk_freq);
+				// wait_for_vsync();
 			}
 			self->busy = false;
 		}
@@ -158,9 +158,9 @@ bool Settings::save(bool force)
 // -------------- Original sync code, made private, called by async task ---------------
 bool Settings::_load_sync()
 {
-	wait_for_vsync(); // <---- Added VSYNC WAIT
-	RGBChangeFreq(min_clk_freq);
-	wait_for_vsync(); // <---- Added VSYNC WAIT
+	// wait_for_vsync(); // <---- Added VSYNC WAIT
+	// RGBChangeFreq(min_clk_freq);
+	// wait_for_vsync(); // <---- Added VSYNC WAIT
 
 	Serial.println("Loading settings");
 
@@ -218,9 +218,9 @@ bool Settings::_load_sync()
 
 	Serial.println("Settings: Load complete!");
 
-	wait_for_vsync(); // <---- Added VSYNC WAIT
-	RGBChangeFreq(max_clk_freq);
-	wait_for_vsync(); // <---- Added VSYNC WAIT
+	// wait_for_vsync(); // <---- Added VSYNC WAIT
+	// RGBChangeFreq(max_clk_freq);
+	// wait_for_vsync(); // <---- Added VSYNC WAIT
 
 	return true;
 }
@@ -235,9 +235,9 @@ bool Settings::_save_sync(bool force)
 		return false;
 	}
 
-	wait_for_vsync(); // <---- Added VSYNC WAIT
-	RGBChangeFreq(min_clk_freq);
-	wait_for_vsync(); // <---- Added VSYNC WAIT
+	// wait_for_vsync(); // <---- Added VSYNC WAIT
+	// RGBChangeFreq(min_clk_freq);
+	// wait_for_vsync(); // <---- Added VSYNC WAIT
 
 	ui_forced_save = false;
 
@@ -261,9 +261,9 @@ bool Settings::_save_sync(bool force)
 
 	last_save_time = millis();
 
-	wait_for_vsync(); // <---- Added VSYNC WAIT
-	RGBChangeFreq(max_clk_freq);
-	wait_for_vsync(); // <---- Added VSYNC WAIT
+	// wait_for_vsync(); // <---- Added VSYNC WAIT
+	// RGBChangeFreq(max_clk_freq);
+	// wait_for_vsync(); // <---- Added VSYNC WAIT
 
 	return true;
 }

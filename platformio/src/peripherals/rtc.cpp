@@ -55,7 +55,7 @@ bool RTC::init()
 	hasTime = !requiresNTP;
 
 	// Load in any alarms that were previously set
-	load();
+	// load();
 	// Not sure what I have to do to re-process these yet after a load, as the RTC should have retained all alarms
 	// so long as the power was not removed (battery flat, or USB removed with no battery).
 	// Future Seon issue!
@@ -69,6 +69,10 @@ bool RTC::init()
 
 bool RTC::did_time_change()
 {
+	if (millis() - last_time_change < 500)
+		return false;
+
+	last_time_change = millis();
 	// if (requiresNTP)
 	// 	return false;
 

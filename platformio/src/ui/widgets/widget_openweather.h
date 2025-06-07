@@ -22,7 +22,7 @@ class widgetOpenWeather : public ui_window
 		bool process_touch(touch_event_t touch_event);
 
 		std::string build_server_path();
-		void load_icons();
+		void load_icon(const String &name);
 
 		void process_weather_data(bool success, const String &response);
 
@@ -31,7 +31,6 @@ class widgetOpenWeather : public ui_window
 		std::string full_server_call = "";
 		unsigned long next_update = 0;
 
-		bool icons_loaded = false;
 		bool has_data = false;
 		bool should_redraw = false;
 

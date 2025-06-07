@@ -24,7 +24,8 @@ WifiController::WifiController()
 	}
 
 	// Start the WiFi task
-	xTaskCreate(WifiController::wifi_task, "wifi_task", 8192, this, 5, &wifi_task_handler);
+	// xTaskCreate(WifiController::wifi_task, "wifi_task", 8192, this, 2, &wifi_task_handler);
+	xTaskCreatePinnedToCore(WifiController::wifi_task, "wifi_task", 8192 * 2, this, 3, &wifi_task_handler, 0);
 
 	wifi_prevent_disconnect = true;
 }
@@ -165,13 +166,18 @@ String WifiController::http_request(std::string url)
 
 	bool is_https = (url_lower.substring(0, 5) == "https");
 
-	WiFiClient client;
 	HTTPClient http;
+	http.setTimeout(5000);
 
 	if (is_https)
+	{
 		http.begin(url.c_str());
+	}
 	else
+	{
+		WiFiClient client;
 		http.begin(client, url.c_str());
+	}
 
 	http_code = http.GET(); // send GET request
 
@@ -179,6 +185,7 @@ String WifiController::http_request(std::string url)
 	{
 		Serial.println("URL: " + url_lower);
 		Serial.println("** Response Code: " + String(http_code));
+		vTaskDelay(1);
 		http.end();
 	}
 	else
@@ -225,12 +232,12 @@ void WifiController::wifi_task(void *pvParameters)
 				controller->perform_wifi_request(item->url, item->callback);
 				delete item;
 
-				if (uxQueueMessagesWaiting(controller->wifi_task_queue) == 0 && WiFi.status() == WL_CONNECTED)
-				{
-					// If we are connected and the queue is empty, disconnect WiFi - maybe?
-					// if (!controller->wifi_blocks_display && controller->wifi_prevent_disconnect)
-					// 	controller->disconnect(false);
-				}
+				// Optional: delay if queue is long
+				controller->queue_size = uxQueueMessagesWaiting(controller->wifi_task_queue);
+				// if (controller->queue_size > 0)
+				// {
+				// 	vTaskDelay(pdMS_TO_TICKS(100)); // adjust delay as needed
+				// }
 				controller->wifi_busy = false;
 
 				// Clean up once done:

@@ -654,11 +654,8 @@ void SQUiXL::set_current_screen(ui_screen *screen)
 	{
 		// first screen being added, so make it the main screen
 		_main_screen = screen;
-
-		Serial.printf("Set main screen - is same as current? %d\n", (_main_screen == _current_screen));
+		// Serial.printf("Set main screen - is same as current? %d\n", (_main_screen == _current_screen));
 	}
-
-	// log_heap("Screen Switch");
 }
 
 ui_screen *SQUiXL::current_screen()
@@ -761,8 +758,10 @@ void SQUiXL::process_version(bool success, const String &response)
 	}
 	catch (json::exception &e)
 	{
+
 		Serial.println("Version Check parse error:");
 		Serial.println(e.what());
+		Serial.printf("Response was: %s\n", response.c_str());
 	}
 }
 
@@ -772,7 +771,6 @@ void SQUiXL::take_screenshot()
 	hint_take_screenshot = false;
 
 	if (screenie_start(&lcd, [](bool ok) {
-        squixl.set_clock_freq(7000000);
         Serial.printf("Screenshot %s\n", ok ? "ok" : "fail");
         if (ok)
         {
@@ -782,7 +780,6 @@ void SQUiXL::take_screenshot()
 
 	{ // 10 rows per tick, adjust if needed
 		Serial.println("Screenshot started (async)...");
-		set_clock_freq(6000000);
 	}
 
 	// request_screenshot(&lcd, [](bool success) {

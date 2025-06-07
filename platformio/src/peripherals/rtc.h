@@ -150,6 +150,8 @@ class RTC
 
 		String cached_date = "";
 
+        unsigned long last_time_change = 0;
+
 		static constexpr const char *filename = "/alarms.json";
 		static constexpr const char *tmp_filename = "/tmp_alarms.json";
 };

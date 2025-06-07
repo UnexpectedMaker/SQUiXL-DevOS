@@ -31,8 +31,6 @@ bool ui_control_toggle::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (!_sprite_content.getBuffer())
 	{
 		_sprite_content.createVirtual(_w, _h, NULL, true);
-		// _sprite_clean.createVirtual(_w, _h, NULL, true);
-		// _sprite_mixed.createVirtual(_w, _h, NULL, true);
 	}
 
 	if (is_dirty_hard)
@@ -56,7 +54,6 @@ bool ui_control_toggle::redraw(uint8_t fade_amount, int8_t tab_group)
 	toggle_state = opt->get();
 
 	// Clear the content sprite
-	// _sprite_content.fillScreen(TFT_MAGENTA);
 	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 
 	_sprite_content.setFreeFont(UbuntuMono_R[2]);
@@ -76,7 +73,6 @@ bool ui_control_toggle::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	// Show the toggle state label
 	_sprite_content.setCursor((_w / 2) + 5, 40 + char_height / 2);
-
 	_sprite_content.setFreeFont(UbuntuMono_R[2]);
 	_sprite_content.setTextColor(TFT_WHITE, -1);
 
@@ -107,12 +103,9 @@ bool ui_control_toggle::redraw(uint8_t fade_amount, int8_t tab_group)
 	}
 	*/
 
-	// Blend and draw the sprite to the current ui_screen content sprite
-	// squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
 	get_ui_parent()->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
 
-	if (fade_amount == 32)
-		next_refresh = millis();
+	next_refresh = millis();
 
 	is_dirty = false;
 	is_busy = false;

@@ -37,15 +37,17 @@ bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	if (is_dirty_hard)
 	{
-		if (!_sprite_content.getBuffer())
-		{
-			_sprite_content.createVirtual(_w, _h, NULL, true);
-			_sprite_mixed.createVirtual(_w, _h, NULL, true);
-			_sprite_clean.createVirtual(_w, _h, NULL, true);
-			delay(10);
-		}
-		_sprite_content.fillScreen(TFT_MAGENTA);
-		_sprite_clean.fillScreen(TFT_MAGENTA);
+		// if (!_sprite_content.getBuffer())
+		// {
+		// 	_sprite_content.createVirtual(_w, _h, NULL, true);
+		// 	_sprite_mixed.createVirtual(_w, _h, NULL, true);
+		// 	_sprite_clean.createVirtual(_w, _h, NULL, true);
+		// 	// delay(10);
+		// }
+		// // _sprite_content.fillScreen(TFT_MAGENTA);
+		// _sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
+		// // _sprite_clean.fillScreen(TFT_MAGENTA);
+		// _sprite_clean.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 		is_dirty_hard = false;
 	}
 
@@ -97,19 +99,12 @@ bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 				_adj_y = _y;
 			}
 
-			if (_sprite_clean.getBuffer())
+			if (_sprite_content.getBuffer())
 			{
 				_sprite_content.freeVirtual();
-				_sprite_mixed.freeVirtual();
-				_sprite_clean.freeVirtual();
 			}
 
 			_sprite_content.createVirtual(_w, _h, NULL, true);
-			_sprite_mixed.createVirtual(_w, _h, NULL, true);
-			_sprite_clean.createVirtual(_w, _h, NULL, true);
-			delay(10);
-
-			_sprite_content.fillScreen(TFT_MAGENTA);
 
 			is_setup = true;
 		}
@@ -118,7 +113,7 @@ bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 		uint8_t offset_x_time = max_width - _time_w_pixels;
 		uint8_t offset_x_date = max_width - _date_w_pixels;
 
-		_sprite_content.fillScreen(TFT_MAGENTA);
+		_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 
 		_sprite_content.setFreeFont(UbuntuMono_R[5]);
 		_sprite_content.setTextColor(_c, TFT_MAGENTA);
@@ -130,16 +125,18 @@ bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 		_sprite_content.print(_date_string.c_str());
 	}
 
-	if (fade_amount < 32)
-	{
-		squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
-		ui_parent->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-	}
-	else
-	{
-		ui_parent->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
-		next_refresh = millis();
-	}
+	// if (fade_amount < 32)
+	// {
+	// 	squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
+	// 	ui_parent->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+	// }
+	// else
+	// {
+	ui_parent->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+	next_refresh = millis();
+	// }
+
+	// Serial.println("clock tick");
 
 	is_dirty = false;
 	is_busy = false;

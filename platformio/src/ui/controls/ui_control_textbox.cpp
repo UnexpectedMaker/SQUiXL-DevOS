@@ -34,7 +34,6 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 	_text = opt->get().c_str();
 
 	// Clear the content sprite
-	// _sprite_content.fillScreen(TFT_MAGENTA);
 	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 
 	// Calculate the string pixel sizes to allow for text centering
@@ -69,13 +68,9 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 		_sprite_content.print(_title.c_str());
 	}
 
-	// Blend and draw the sprite to the current ui_screen content sprite
-	// squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
-
 	get_ui_parent()->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
 
-	if (fade_amount == 32)
-		next_refresh = millis();
+	next_refresh = millis();
 
 	is_dirty = false;
 	is_busy = false;

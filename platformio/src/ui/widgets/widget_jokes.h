@@ -30,6 +30,7 @@ class widgetJokes : public ui_window
 		bool is_setup = false;
 		bool process_next_joke = false;
 		bool is_getting_more_jokes = false;
+		bool has_had_any_jokes = false;
 
 		uint8_t char_width = 0;
 		uint8_t char_height = 0;

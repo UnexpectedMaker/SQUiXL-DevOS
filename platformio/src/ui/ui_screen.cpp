@@ -117,53 +117,84 @@ void ui_screen::adjust_navigation_range(DRAGABLE axis, int16_t *clamp_delta_low,
 
 void ui_screen::show_user_background_jpg(bool fade_in)
 {
-	if (settings.config.user_wallpaper)
+	if (!settings.config.user_wallpaper)
 	{
-		settings.load_buffer_async("/user_wallpaper.jpg", [this, fade_in](bool ok, uint8_t *buffer, size_t length) {
-			// Serial.printf("\n*** USER WALLAPAPER: %d - %d\n\n", ok, length);
-			if (ok)
+		// User wallpapeer it turned off, so load sys wallpaper and exit
+		show_random_background(fade_in);
+		return;
+	}
+
+	if (squixl.user_wallpaper_buffer && squixl.user_wallpaper_length > 0)
+	{
+		// We have the wallpaper in memory, so use that instead of loading it and return
+		show_background_jpg(squixl.user_wallpaper_buffer, squixl.user_wallpaper_length, fade_in);
+		return;
+	}
+
+	// Load the user wallpaper, and store it
+	settings.load_buffer_async("/user_wallpaper.jpg", [this, fade_in](bool ok, uint8_t *buffer, size_t length) {
+		// Serial.printf("\n*** USER WALLAPAPER: %d - %d\n\n", ok, length);
+		if (ok)
+		{
+			// Just in case, free previous buffer
+			if (squixl.user_wallpaper_buffer)
+				free(squixl.user_wallpaper_buffer);
+
+			// Store a copy in PSRAM, so we dont have to access the async FS every time we want to load it
+			squixl.user_wallpaper_buffer = (uint8_t *)ps_malloc(length);
+
+			if (squixl.user_wallpaper_buffer)
 			{
-				// buffer points to PSRAM, length is the file size
-				squixl.main_screen()->show_background_jpg(buffer, length, fade_in);
+				memcpy(squixl.user_wallpaper_buffer, buffer, length);
+				squixl.user_wallpaper_length = length;
+				show_background_jpg(squixl.user_wallpaper_buffer, squixl.user_wallpaper_length, fade_in);
+				squixl.log_heap("user jpg load");
 			}
 			else
 			{
-				Serial.println("Failed to load image");
+				// Failed to load the wallpaper, so fall back to random background and turn of user wallpaper option
+				squixl.user_wallpaper_length = 0;
+				settings.config.user_wallpaper = false;
 				show_random_background(fade_in);
+				Serial.println("Failed to allocate memory for wallpaper copy");
 			}
-		});
-	}
-	else
-	{
-		show_random_background(fade_in);
-	}
+		}
+		else
+		{
+			Serial.println("Failed to load image");
+			show_random_background(fade_in);
+		}
+	});
 }
 
 void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 {
-	is_busy = true;
+	squixl.switching_screens = true;
 
 	if (squixl.main_screen() != squixl.current_screen())
 	{
 		squixl.set_current_screen(squixl.main_screen());
-		squixl.current_screen()->refresh(true, true);
+		// squixl.current_screen()->refresh(true, true);
 	}
+
+	is_busy = true;
 
 	int w, h, bpp;
 
-	_sprite_clean.createVirtual(480, 480, NULL, true);
+	// _sprite_clean.createVirtual(480, 480, NULL, true);
 
-	bool has_content = false;
-	if (background_size == 0)
-	{
-		_sprite_clean.fillScreen(TFT_BLACK);
-	}
-	else
-	{
-		squixl.lcd.readImage(0, 0, 480, 480, (uint16_t *)_sprite_clean.getBuffer());
-		delay(5);
-		has_content = true;
-	}
+	// bool has_content = false;
+	// if (background_size == 0)
+	// {
+	// 	// _sprite_clean.fillScreen(TFT_BLACK);
+	// 	_sprite_clean.fillRect(0, 0, 480, 480, TFT_BLACK);
+	// }
+	// else
+	// {
+	// 	squixl.lcd.readImage(0, 0, 480, 480, (uint16_t *)_sprite_clean.getBuffer());
+	// 	delay(5);
+	// 	has_content = true;
+	// }
 
 	background_size = jpg_size;
 
@@ -177,32 +208,33 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 
 		if (fade_in)
 		{
-			if (has_content)
-			{
-				// we only need this sprite temporarly if we are blending content
-				if (!_sprite_mixed.getBuffer())
-					_sprite_mixed.createVirtual(480, 480, NULL, true);
-			}
+			// if (has_content)
+			// {
+			// 	// we only need this sprite temporarly if we are blending content
+			// 	if (!_sprite_mixed.getBuffer())
+			// 		_sprite_mixed.createVirtual(480, 480, NULL, true);
+			// }
 
 			for (uint8_t u8Alpha = 0; u8Alpha < 32; u8Alpha += 4)
 			{
-				if (has_content)
-				{
-					squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, u8Alpha);
-					squixl.lcd.blendSprite(&_sprite_content, &_sprite_mixed, &squixl.lcd, 32, TFT_MAGENTA);
-				}
-				else
-				{
-					squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &squixl.lcd, u8Alpha);
-				}
+				// if (has_content)
+				// {
+				// 	squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &squixl.lcd, u8Alpha);
+				// 	// squixl.lcd.blendSprite(&_sprite_content, &_sprite_mixed, &squixl.lcd, 32, TFT_MAGENTA);
+				// }
+				// else
+				// {
+				squixl.lcd.blendSprite(&_sprite_back, &squixl.lcd, &squixl.lcd, u8Alpha);
+				// }
 			}
 
-			if (_sprite_mixed.getBuffer())
-				_sprite_mixed.freeVirtual();
+			// if (_sprite_mixed.getBuffer())
+			// 	_sprite_mixed.freeVirtual();
 		}
 		else
 		{
-			squixl.lcd.drawSprite(0, 0, &_sprite_back, 1.0f, -1, DRAW_TO_LCD);
+			// squixl.lcd.drawSprite(0, 0, &_sprite_back, 1.0f, -1, DRAW_TO_LCD);
+			squixl.lcd.blendSprite(&_sprite_back, &squixl.lcd, &squixl.lcd, 32);
 		}
 
 		Serial.printf("Screen Wallpaper %s and displayed... loading children UI\n", (fade_in ? "faded in" : "loaded"));
@@ -212,7 +244,7 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 		Serial.printf("JPG not loaded - size was %d :(\n", jpg_size);
 	}
 
-	_sprite_clean.freeVirtual();
+	// _sprite_clean.freeVirtual();
 	clear_content();
 
 	/*
@@ -227,12 +259,12 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 		}
 	}
 
-	if (!has_content && fade_in)
+	if (fade_in)
 	{
 		for (uint8_t u8Alpha = 0; u8Alpha <= 32; u8Alpha += 2)
 		{
 			redraw(u8Alpha);
-			delay(2);
+			// delay(2);
 		}
 	}
 	else
@@ -242,6 +274,8 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 
 	is_busy = false;
 	next_refresh = millis();
+
+	squixl.switching_screens = false;
 }
 
 void ui_screen::show_next_background()

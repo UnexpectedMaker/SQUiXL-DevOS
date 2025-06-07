@@ -31,11 +31,14 @@ class WifiController
 		bool wifi_blocking_access = false;
 		bool wifi_prevent_disconnect = false;
 
+		uint8_t items_in_queue() { return queue_size; }
+
 	private:
 		String user_config_json;
 		wifi_states current_state = BOOT;
 		bool wifi_busy = false;
 		unsigned long next_wifi_loop = 0;
+		uint8_t queue_size = 0;
 
 		// Structure for task items
 		struct wifi_task_item

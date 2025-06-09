@@ -125,6 +125,25 @@ void widgetOpenWeather::process_weather_data(bool success, const String &respons
 		{
 			ok = false;
 		}
+
+		json coord = data["coord"];
+		if (coord.is_object())
+		{
+			String _lon = String(data[0].value("lon", 0.0));
+			String _lat = String(data[0].value("lat", 0.0));
+			Serial.printf("Found OWcoord: lon %s, lat %s\n", _lon, _lat);
+
+			if (_lon != "0.0" && settings.config.lon == "0")
+			{
+				settings.config.lon = String(_lon);
+				Serial.printf("Updated LON to %s\n", settings.config.lon.c_str());
+			}
+			if (_lat != "0.0" && settings.config.lat == "0")
+			{
+				settings.config.lat = String(_lat);
+				Serial.printf("Updated LAT to %s\n", settings.config.lat.c_str());
+			}
+		}
 	}
 	catch (json::exception &e)
 	{
@@ -142,6 +161,9 @@ void widgetOpenWeather::process_weather_data(bool success, const String &respons
 
 bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 {
+	if (millis() < delay_first_draw)
+		return false;
+
 	// we want the poll_frequency to be (mins in millis, so mins * 60 * 1000)
 	if (millis() - next_update > (settings.config.open_weather.poll_frequency * 60000) || next_update == 0)
 	{

@@ -93,6 +93,9 @@ void widgetJokes::process_joke_data(bool success, const String &response)
 
 bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 {
+	if (millis() < delay_first_draw)
+		return false;
+
 	bool was_dirty = false;
 
 	if (process_next_joke)

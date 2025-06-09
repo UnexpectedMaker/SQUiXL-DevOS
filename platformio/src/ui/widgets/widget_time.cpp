@@ -24,6 +24,9 @@ void widgetTime::capture_clean_sprite()
 
 bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 {
+	if (millis() < delay_first_draw)
+		return false;
+
 	unsigned long start_time = millis();
 
 	// This is busy if something else is drawing this

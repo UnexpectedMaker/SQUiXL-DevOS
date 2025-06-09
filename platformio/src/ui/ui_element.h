@@ -67,6 +67,7 @@ class ui_element
 		void set_draggable(DRAGABLE state) { drag_able = state; }
 
 		void set_touchable(bool state) { is_touchable = state; }
+		void set_delayed_frst_draw(int val) { delay_first_draw = millis() + val; }
 		bool touchable() { return is_touchable; }
 
 		int8_t get_tab_group() { return element_tab_group; }
@@ -115,6 +116,7 @@ class ui_element
 
 		unsigned long next_update = 0;
 		unsigned long next_click_update = 0;
+		unsigned long delay_first_draw = 0;
 
 		bool is_touchable = true;
 		DRAGABLE drag_able = DRAGABLE::DRAG_NONE;

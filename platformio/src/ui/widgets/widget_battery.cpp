@@ -43,6 +43,9 @@ void widgetBattery::capture_clean_sprite()
 
 bool widgetBattery::redraw(uint8_t fade_amount, int8_t tab_group)
 {
+	if (millis() < delay_first_draw)
+		return false;
+
 	// This is busy if something else is drawing this
 	if (is_busy)
 	{

@@ -7,7 +7,7 @@
 #include "ui/widgets/widget_jokes.h"
 #include "ui/widgets/widget_rss_feeds.h"
 #include "ui/widgets/widget_time.h"
-// #include "ui/widgets/widget_mqtt_sensors.h"
+#include "ui/widgets/widget_bme280.h"
 #include "ui/widgets/widget_battery.h"
 #include "ui/widgets/widget_wifimanager.h"
 
@@ -74,6 +74,7 @@ ui_control_textbox text_loc_city;
 ui_control_textbox text_loc_state;
 ui_control_textbox text_loc_lon;
 ui_control_textbox text_loc_lat;
+ui_control_button button_get_lon_lat;
 // RSS Feed
 ui_control_toggle toggle_rss_enable;
 ui_control_slider slider_rss_refresh;
@@ -115,14 +116,60 @@ void update_wallpaper()
 	squixl.main_screen()->show_user_background_jpg();
 }
 
+void process_longitude_latitude(bool success, const String &response)
+{
+	try
+	{
+		Serial.printf("Response was: %s\n", response.c_str());
+
+		json data = json::parse(response);
+
+		// Serial.printf("\ncoord is array? %d, object? %d \n", data.is_array(), data.is_object());
+
+		if (data.is_array())
+		{
+			bool changed = false;
+			String _lon = String(data[0].value("lon", 0.0));
+			String _lat = String(data[0].value("lat", 0.0));
+			Serial.printf("Found coord: lon %s, lat %s\n", _lon, _lat);
+
+			if (_lon != "0.0")
+			{
+				settings.config.lon = String(_lon);
+				Serial.printf("Updated LON to %s\n", settings.config.lon.c_str());
+				changed = true;
+			}
+			if (_lat != "0.0")
+			{
+				settings.config.lat = String(_lat);
+				Serial.printf("Updated LAT to %s\n", settings.config.lat.c_str());
+				changed = true;
+			}
+
+			if (changed)
+			{
+				squixl.current_screen()->refresh(true, true);
+				audio.play_tone(1000, 10);
+			}
+		}
+	}
+	catch (json::exception &e)
+	{
+
+		Serial.println("longitude_latitude parse error:");
+		Serial.println(e.what());
+		Serial.printf("Response was: %s\n", response.c_str());
+	}
+}
+
+void update_longitude_latitude()
+{
+	String url = "http://api.openweathermap.org/geo/1.0/direct?q=" + settings.config.city + "," + settings.config.state + "," + settings.config.country + "&limit=1&appid=" + settings.config.open_weather.api_key;
+	wifi_controller.add_to_queue(url.c_str(), [](bool success, const String &response) { process_longitude_latitude(success, response); });
+}
+
 void create_ui_elements()
 {
-	// screen_wifi_manager.setup(0x5AEB, false);
-	// widget_wifimanager.create();
-	// // widget_wifimanager.set_back_screen(&screen_main);
-	// screen_wifi_manager.add_child_ui(&widget_wifimanager);
-	// wifiSetup.set_screen(&screen_wifi_manager);
-
 	/*
 	Setup Settings Screen
 	*/
@@ -202,6 +249,10 @@ void create_ui_elements()
 	text_loc_lat.create_on_grid(3, 1, "LATITUDE");
 	text_loc_lat.set_options_data(&settings.setting_loc_lat);
 	settings_tab_group.add_child_ui(&text_loc_lat, 1);
+
+	button_get_lon_lat.create_on_grid(6, 1, "LOOKUP LONGITUDE & LATITUDE");
+	button_get_lon_lat.set_callback(update_longitude_latitude);
+	settings_tab_group.add_child_ui(&button_get_lon_lat, 1);
 
 	// WiFi
 	toggle_OTA_updates.create_on_grid(2, 1, "ENABLE OTA");
@@ -344,9 +395,13 @@ void create_ui_elements()
 	screen_main.add_child_ui(&widget_rss_feeds);
 
 	widget_ow.create(245, 80, 225, 72, TFT_BLACK, 16, 0, "CURRENT WEATHER");
-	widget_ow.set_title_alignment(TEXT_ALIGN::ALIGN_LEFT);
 	widget_ow.set_refresh_interval(1000);
 	screen_main.add_child_ui(&widget_ow);
+
+	widget_bme280.create(245, 160, 225, 40, TFT_BLACK, 16, 0, "BME280");
+	widget_bme280.set_refresh_interval(5000); // we only want this to update every 5 seconds
+	// widget_bme280.set_delayed_frst_draw(6000);
+	screen_main.add_child_ui(&widget_bme280);
 
 	/*
 	Setup MQTT Screen

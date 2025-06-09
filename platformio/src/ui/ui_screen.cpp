@@ -217,16 +217,9 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 
 			for (uint8_t u8Alpha = 0; u8Alpha < 32; u8Alpha += 4)
 			{
-				// if (has_content)
-				// {
-				// 	squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &squixl.lcd, u8Alpha);
-				// 	// squixl.lcd.blendSprite(&_sprite_content, &_sprite_mixed, &squixl.lcd, 32, TFT_MAGENTA);
-				// }
-				// else
-				// {
 				squixl.lcd.blendSprite(&_sprite_back, &squixl.lcd, &squixl.lcd, u8Alpha);
-				// }
 			}
+			squixl.lcd.blendSprite(&_sprite_back, &squixl.lcd, &squixl.lcd, 32);
 
 			// if (_sprite_mixed.getBuffer())
 			// 	_sprite_mixed.freeVirtual();
@@ -236,6 +229,8 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 			// squixl.lcd.drawSprite(0, 0, &_sprite_back, 1.0f, -1, DRAW_TO_LCD);
 			squixl.lcd.blendSprite(&_sprite_back, &squixl.lcd, &squixl.lcd, 32);
 		}
+
+		delay(5);
 
 		Serial.printf("Screen Wallpaper %s and displayed... loading children UI\n", (fade_in ? "faded in" : "loaded"));
 	}

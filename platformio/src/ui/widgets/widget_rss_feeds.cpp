@@ -424,6 +424,7 @@ bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)
 		}
 		else if (!settings.config.rss_feed.enabled)
 		{
+			_sprite_article.setFreeFont(UbuntuMono_R[2]);
 			_sprite_article.setTextColor(TFT_RED - 1);
 			_sprite_article.setCursor(10, 38);
 			_sprite_article.print("NOT ENABLED!");
@@ -431,6 +432,7 @@ bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)
 		}
 		else if (!settings.config.rss_feed.has_url())
 		{
+			_sprite_article.setFreeFont(UbuntuMono_R[2]);
 			_sprite_article.setTextColor(TFT_RED - 1);
 			_sprite_article.setCursor(10, 38);
 			_sprite_article.print("NO RSS FEED URL");
@@ -438,6 +440,7 @@ bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)
 		}
 		else
 		{
+			_sprite_article.setFreeFont(UbuntuMono_R[2]);
 			_sprite_article.setTextColor(TFT_GREY, -1);
 			_sprite_article.setCursor(10, 38);
 			_sprite_article.print("WAITING...");

@@ -10,19 +10,26 @@ void Expansion::init_bme280()
 		{
 			Serial.println("EXPANSION: Found BME280");
 			bme.set_weather_monitoring_configuration();
+			skip_check = false;
 		}
 	}
 }
 
 bool Expansion::bme280_available()
 {
+	if (skip_check)
+		return false;
+
 	if (bme_status == BME280_OK)
 		return true;
 
 	if (bme_status == BME280_E_NULL_PTR)
 		Serial.println("EXPANSION: error: Null pointer");
 	else if (bme_status == BME280_E_DEV_NOT_FOUND)
+	{
+		skip_check = true;
 		Serial.println("EXPANSION: error: device not found");
+	}
 	else if (bme_status == BME280_E_INVALID_LEN)
 		Serial.println("EXPANSION: error: invalid length");
 	else if (bme_status == BME280_E_COMM_FAIL)

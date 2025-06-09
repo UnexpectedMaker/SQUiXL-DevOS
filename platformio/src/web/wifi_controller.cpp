@@ -28,6 +28,8 @@ WifiController::WifiController()
 	xTaskCreatePinnedToCore(WifiController::wifi_task, "wifi_task", 8192 * 2, this, 3, &wifi_task_handler, 0);
 
 	wifi_prevent_disconnect = true;
+
+	WiFi.mode(WIFI_OFF);
 }
 
 // Kill the pinned threaded task
@@ -57,7 +59,6 @@ bool WifiController::connect()
 
 	uint8_t start_index = settings.config.current_wifi_station;
 
-	WiFi.disconnect(true);
 	if (!settings.has_wifi_creds())
 	{
 		// Serial.println("No credentials?");
@@ -66,20 +67,32 @@ bool WifiController::connect()
 	}
 	else
 	{
-		delay(500);
+		Serial.println("WIFI: Attempting to connect....");
 		wifi_busy = true;
-		WiFi.mode(WIFI_STA);
+		if (WiFi.disconnect(true))
+		{
+			Serial.println("WIFI: Disconnected before re-connect attempt..");
+			delay(100);
+		}
+		if (WiFi.mode(WIFI_STA))
+		{
+			Serial.println("WIFI: Mode set to STA");
+			delay(100);
+		}
+		// delay(500);
 		uint8_t stations_to_try = settings.config.wifi_options.size();
 		// Serial.printf("Trying wifi index %d - %s %s\n", settings.config.current_wifi_station, settings.config.wifi_options[settings.config.current_wifi_station].ssid, settings.config.wifi_options[settings.config.current_wifi_station].pass);
 		// WiFi.begin(settings.config.wifi_options[settings.config.current_wifi_station].ssid, settings.config.wifi_options[settings.config.current_wifi_station].pass);
 
 		while (stations_to_try > 0)
 		{
-			// Serial.printf("Trying wifi index %d - %s %s\n", settings.config.current_wifi_station, settings.config.wifi_options[settings.config.current_wifi_station].ssid, settings.config.wifi_options[settings.config.current_wifi_station].pass);
+			// Serial.printf("Trying wifi index %d - %s %s\n", settings.config.current_wifi_station, settings.config.wifi_options[settings.config.current_wifi_station].ssid.c_str(), settings.config.wifi_options[settings.config.current_wifi_station].pass.c_str());
+
 			WiFi.begin(settings.config.wifi_options[settings.config.current_wifi_station].ssid.c_str(), settings.config.wifi_options[settings.config.current_wifi_station].pass.c_str());
 
+			// delay(100);
 			unsigned long start_time = millis();
-			// Time out the connection if it takes longer than 5 seconds
+			// Time out the connection if it takes longer than 4 seconds
 			while ((millis() - start_time < 5000) && WiFi.status() != WL_CONNECTED)
 			{
 				delay(100);
@@ -97,6 +110,7 @@ bool WifiController::connect()
 			}
 			else
 			{
+
 				break;
 			}
 		}
@@ -108,17 +122,20 @@ bool WifiController::connect()
 	{
 		// Serial.printf("SQUiXL WiFI: Connected to WiFi Router using index %d - %s %s\n", settings.config.current_wifi_station, settings.config.wifi_options[settings.config.current_wifi_station].ssid.c_str(), settings.config.wifi_options[settings.config.current_wifi_station].pass.c_str());
 
+		Serial.println("WIFI: Connected");
+
 		// If we are connected and it's on a different network than last time, we save the settings with the new connection index
 		if (settings.config.current_wifi_station != start_index)
 			settings.save(true);
 
 		// Serial.print("IP Address: ");
 		// Serial.println(WiFi.localIP());
-		WiFi.setHostname(settings.config.mdns_name.c_str());
+		// WiFi.setHostname(settings.config.mdns_name.c_str());
 	}
 	else
 	{
-		Serial.println("SQUiXL WiFI: Was unable to connect SQUiXL to the WiFi Router. Too bad, so sad :(");
+		// WiFi.disconnect(true);
+		Serial.println("WiFI: Was unable to connect SQUiXL to the WiFi Router. Too bad, so sad :(");
 	}
 
 	wifi_busy = false;
@@ -133,7 +150,7 @@ void WifiController::disconnect(bool force)
 	if (!wifi_prevent_disconnect || force)
 	{
 		WiFi.disconnect(true);
-		WiFi.mode(WIFI_OFF);
+		// WiFi.mode(WIFI_OFF);
 	}
 	wifi_busy = false;
 }
@@ -163,12 +180,12 @@ String WifiController::http_request(std::string url)
 	String url_lower = String(url.c_str());
 	url_lower.toLowerCase();
 
-	// Serial.printf("http_request: %s\n", url_lower.c_str());
+	Serial.printf("http_request: %s\n", url_lower.c_str());
 
 	bool is_https = (url_lower.substring(0, 5) == "https");
 
 	HTTPClient http;
-	http.setTimeout(5000);
+	// http.setTimeout(5000);
 
 	if (is_https)
 	{
@@ -186,7 +203,6 @@ String WifiController::http_request(std::string url)
 	{
 		Serial.println("URL: " + url_lower);
 		Serial.println("** Response Code: " + String(http_code));
-		vTaskDelay(1);
 		http.end();
 	}
 	else
@@ -209,6 +225,18 @@ void WifiController::perform_wifi_request(std::string url, _CALLBACK callback)
 	{
 		response = http_request(url);
 		success = (response != "ERROR"); // or false, based on the HTTP request result
+	}
+
+	if (!success)
+	{
+		download_error_count++;
+		Serial.printf("WIFI Download Error Count: %d\n", download_error_count);
+
+		if (is_connected() && download_error_count == 5)
+		{
+			download_error_count = 0;
+			disconnect(true);
+		}
 	}
 
 	// Create a wifi_callback_item and enqueue it

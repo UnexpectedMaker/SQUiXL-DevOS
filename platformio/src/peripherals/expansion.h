@@ -27,6 +27,7 @@ class Expansion
 		float cached_pressure = 0.0;
 		unsigned long next_read = 0;
 		uint8_t retry_counter = 0;
+		bool skip_check = false;
 };
 
 extern Expansion expansion;

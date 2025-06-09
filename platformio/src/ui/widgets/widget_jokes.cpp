@@ -65,10 +65,10 @@ void widgetJokes::process_joke_data(bool success, const String &response)
 	}
 	catch (json::exception &e)
 	{
-		Serial.printf("response: %s\n", response);
-		Serial.println("OW Json parse error:");
+		Serial.printf("response: %s\n", response.c_str());
+		Serial.println("JOKES Json parse error:");
 		Serial.println(e.what());
-		next_update = millis();
+		next_update = 0;
 
 		ok = false;
 	}
@@ -98,14 +98,6 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	bool was_dirty = false;
 
-	if (process_next_joke)
-	{
-		process_next_joke = false;
-
-		show_next_joke();
-		return false;
-	}
-
 	if (!is_setup)
 	{
 		is_setup = true;
@@ -121,7 +113,20 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 		{
 			wifi_controller.add_to_queue(server_path, [this](bool success, const String &response) { this->process_joke_data(success, response); });
 		}
+		return false;
 	}
+
+	if (process_next_joke)
+	{
+		process_next_joke = false;
+
+		show_next_joke();
+		return false;
+	}
+
+	// if (!has_had_any_jokes)
+	// {
+	// }
 
 	if (is_busy)
 	{

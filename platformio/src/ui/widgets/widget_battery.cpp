@@ -111,7 +111,7 @@ bool widgetBattery::redraw(uint8_t fade_amount, int8_t tab_group)
 	else if (settings.has_wifi_creds())
 	{
 		_sprite_content.drawSprite(0, 0, &wifi_icons[0], 1.0f, 0x0, DRAW_TO_RAM);
-		_sprite_content.print("Disconnected");
+		_sprite_content.print(message.c_str());
 	}
 
 	else
@@ -173,8 +173,17 @@ bool widgetBattery::process_touch(touch_event_t touch_event)
 			{
 				next_click_update = millis();
 
-				// Show/Hide SSID (and beep)
-				settings.config.show_extra_wifi_details = !settings.config.show_extra_wifi_details;
+				if (!wifi_controller.is_connected() && settings.has_wifi_creds())
+				{
+					message = "Re-connecting...";
+					WiFi.reconnect();
+				}
+				else
+				{
+					message = "Disconnected";
+					// Show/Hide SSID (and beep)
+					settings.config.show_extra_wifi_details = !settings.config.show_extra_wifi_details;
+				}
 				redraw(32);
 				audio.play_tone(505, 12);
 				return false;

@@ -26,6 +26,7 @@
 
 unsigned long next_background_swap = 0;
 unsigned long every_second = 0;
+unsigned long ntp_time_set = 0;
 
 bool start_webserver = true;
 unsigned long delay_webserver_start = 0;
@@ -398,9 +399,12 @@ void create_ui_elements()
 	widget_ow.set_refresh_interval(1000);
 	screen_main.add_child_ui(&widget_ow);
 
+	/*
+	This widget will only show if a BME280 sensor is found
+	*/
 	widget_bme280.create(245, 160, 225, 40, TFT_BLACK, 16, 0, "BME280");
 	widget_bme280.set_refresh_interval(5000); // we only want this to update every 5 seconds
-	// widget_bme280.set_delayed_frst_draw(6000);
+	widget_bme280.set_delayed_frst_draw(2000);
 	screen_main.add_child_ui(&widget_bme280);
 
 	/*
@@ -418,6 +422,36 @@ void create_ui_elements()
 
 	screen_main.set_navigation(Directions::LEFT, &screen_mqtt, true);
 	screen_main.set_navigation(Directions::DOWN, &screen_settings, true);
+}
+
+bool wifi_requirements_checked = false;
+void check_wifi_requirements()
+{
+	wifi_requirements_checked = true;
+	// This is a bit awkward - we need to see if the user has no wifi credentials,
+	// or if they havn't set their country code, or f the RTC is state.
+	if (!settings.has_wifi_creds() || !settings.has_country_set())
+	{
+		// No wifi credentials yet, so start the wifi manager
+		if (!settings.has_wifi_creds())
+		{
+			// Don't attempt to start the webserver
+			start_webserver = false;
+
+			Serial.println("Starting WiFi AP");
+
+			WiFi.disconnect(true);
+			delay(1000);
+			wifiSetup.start();
+		}
+		else if (!settings.has_country_set())
+		{
+			// wifi_controller.wifi_blocking_access = true;
+			// The user has wifi credentials, but no country or UTC has been set yet.
+			// Grab the location details, and then use that to get the UTC offset.
+			wifi_controller.add_to_queue("https://ipapi.co/json/", [](bool success, const String &response) { squixl.get_and_update_utc_settings(success, response); });
+		}
+	}
 }
 
 void setup()
@@ -504,38 +538,8 @@ void setup()
 	next_background_swap = millis();
 	every_second = millis();
 
-	// This is a bit awkward - we need to see if the user has no wifi credentials,
-	// or if they havn't set their country code, or f the RTC is state.
-	if (rtc.requiresNTP || !settings.has_wifi_creds() || !settings.has_country_set())
-	{
-		// No wifi credentials yet, so start the wifi manager
-		if (!settings.has_wifi_creds())
-		{
-			// Don't attempt to start the webserver
-			start_webserver = false;
-
-			Serial.println("Starting WiFi AP");
-
-			WiFi.disconnect(true);
-			delay(1000);
-			wifiSetup.start();
-		}
-		else if (!settings.has_country_set())
-		{
-			wifi_controller.wifi_blocking_access = true;
-			// The user has wifi credentials, but no country or UTC has been set yet.
-			// Grab the location details, and then use that to get the UTC offset.
-			wifi_controller.add_to_queue("https://ipapi.co/json/", [](bool success, const String &response) { squixl.get_and_update_utc_settings(success, response); });
-		}
-		else if (rtc.requiresNTP)
-		{
-			// We have wifi credentials and country/UTC details, so set the time because it's stale.
-			rtc.set_time_from_NTP(settings.config.utc_offset);
-		}
-	}
-
 	// Serial.printf("\n>>> Setup done in %0.2f ms\n\n", (millis() - timer));
-
+	check_wifi_requirements();
 	// Setup delayed timer for webserver starting, to alloqw other web traffic to complete first
 	delay_webserver_start = millis() + 5000;
 
@@ -543,6 +547,15 @@ void setup()
 
 void loop()
 {
+	if (rtc.requiresNTP && millis() - ntp_time_set > 10000)
+	{
+		ntp_time_set = millis();
+		// We have wifi credentials and country/UTC details, so set the time because it's stale.
+		Serial.println("WIFI: Updating time from NTP");
+		rtc.set_time_from_NTP(settings.config.utc_offset);
+		// return;
+	}
+
 	if (squixl.switching_screens)
 		return;
 

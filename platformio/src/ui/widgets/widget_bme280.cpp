@@ -7,6 +7,9 @@ bool widgetBME280::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (millis() < delay_first_draw)
 		return false;
 
+	if (!expansion.bme280_available())
+		return false;
+
 	if (!is_setup)
 	{
 		// We have not initialised the BME280 or checked if it is even there....

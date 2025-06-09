@@ -39,6 +39,7 @@ class WifiController
 		bool wifi_busy = false;
 		unsigned long next_wifi_loop = 0;
 		uint8_t queue_size = 0;
+		uint8_t download_error_count = 0;
 
 		// Structure for task items
 		struct wifi_task_item

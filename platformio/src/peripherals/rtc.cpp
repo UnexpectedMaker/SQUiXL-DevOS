@@ -98,46 +98,49 @@ bool RTC::set_time_from_NTP(int16_t utc_offset)
 	if (!enabled)
 		return false;
 
-	wifi_controller.connect();
-
-	bool time_error = false;
-
-	if (utc_offset != 999)
+	if (wifi_controller.connect())
 	{
-		configTime(utc_offset * 3600, 0, settings.config.ntp_server.c_str());
-		delay(100);
 
-		struct tm timeinfo;
-		if (!getLocalTime(&timeinfo))
+		bool time_error = false;
+
+		if (utc_offset != 999)
 		{
-			Serial.println("Failed to obtain time");
-			time_error = true;
+			configTime(utc_offset * 3600, 0, settings.config.ntp_server.c_str());
+			delay(100);
+
+			struct tm timeinfo;
+			if (!getLocalTime(&timeinfo))
+			{
+				Serial.println("Failed to obtain time");
+				time_error = true;
+			}
+			else
+			{
+				Serial.println("SET DA TIME!");
+				rtc.setDateTimeFromTM(timeinfo);
+			}
 		}
 		else
+			time_error = true;
+
+		if (time_error)
 		{
-			Serial.println("SET DA TIME!");
-			rtc.setDateTimeFromTM(timeinfo);
+			// Hard-coded for time error
+			rtc.setDateTimeFromISO8601("1900-01-01T00:00:00");
 		}
+
+		// Writes the new date time to RTC, good or bad
+		rtc.synchronize();
+
+		if (!time_error)
+		{
+			hasTime = true;
+			requiresNTP = false;
+		}
+
+		return !time_error;
 	}
-	else
-		time_error = true;
-
-	if (time_error)
-	{
-		// Hard-coded for time error
-		rtc.setDateTimeFromISO8601("1900-01-01T00:00:00");
-	}
-
-	// Writes the new date time to RTC, good or bad
-	rtc.synchronize();
-
-	if (!time_error)
-	{
-		hasTime = true;
-		requiresNTP = false;
-	}
-
-	return !time_error;
+	return false;
 }
 
 void RTC::set_hourly_alarm(uint minutes)

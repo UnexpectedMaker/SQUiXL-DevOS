@@ -16,6 +16,7 @@ class widgetBattery : public ui_element
 
 	private:
 		bool icons_loaded = false;
+		std::string message = "Disconnected";
 
 		BB_SPI_LCD battery_icons[5];
 		BB_SPI_LCD wifi_icons[5];

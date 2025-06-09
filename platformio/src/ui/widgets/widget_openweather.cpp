@@ -91,66 +91,76 @@ void widgetOpenWeather::process_weather_data(bool success, const String &respons
 
 		json data = json::parse(response);
 
-		json main = data["main"];
-		if (main.is_object())
+		if (data.contains("main"))
 		{
-			_temp = (uint16_t)(main.value("temp", 0));
-			_humidity = (uint16_t)(main.value("humidity", 0));
-			Serial.printf("Temp: %d, Humidity: %d\n", _temp, _humidity);
-		}
-		else
-		{
-			ok = false;
-		}
-
-		json weather = data["weather"];
-		if (weather.is_array())
-		{
-			_icon_name = weather[0]["icon"];
-			// we want to keep d/n names for 01 and 02, but for the rest we strip the n/d as we share day and night icons.
-			if (_icon_name.substring(0, 2) != "01" && _icon_name.substring(0, 2) != "02")
-				_icon_name = _icon_name.substring(0, 2);
-			_icon_desc = weather[0]["description"];
-			_weather_desc = weather[0]["main"];
-			_weather_desc.toUpperCase();
-			Serial.println(_icon_name + " - " + _icon_desc + "(" + _weather_desc + ")");
-
-			// If icon has not been loaded yet, load it now
-			if (!ow_icons[_icon_name].getBuffer())
+			json main = data["main"];
+			if (main.is_object())
 			{
-				load_icon(_icon_name);
+				_temp = (uint16_t)(main.value("temp", 0));
+				_humidity = (uint16_t)(main.value("humidity", 0));
+				Serial.printf("Temp: %d, Humidity: %d\n", _temp, _humidity);
+			}
+			else
+			{
+				ok = false;
 			}
 		}
-		else
+
+		if (data.contains("weather"))
 		{
-			ok = false;
+			json weather = data["weather"];
+			if (weather.is_array())
+			{
+				_icon_name = weather[0]["icon"];
+				// we want to keep d/n names for 01 and 02, but for the rest we strip the n/d as we share day and night icons.
+				if (_icon_name.substring(0, 2) != "01" && _icon_name.substring(0, 2) != "02")
+					_icon_name = _icon_name.substring(0, 2);
+				_icon_desc = weather[0]["description"];
+				_weather_desc = weather[0]["main"];
+				_weather_desc.toUpperCase();
+				Serial.println(_icon_name + " - " + _icon_desc + "(" + _weather_desc + ")");
+
+				// If icon has not been loaded yet, load it now
+				if (!ow_icons[_icon_name].getBuffer())
+				{
+					Serial.printf("Loading icon: %s\n", _icon_name.c_str());
+					load_icon(_icon_name);
+				}
+			}
+			else
+			{
+				ok = false;
+			}
 		}
 
-		json coord = data["coord"];
-		if (coord.is_object())
+		if (data.contains("coord"))
 		{
-			String _lon = String(data[0].value("lon", 0.0));
-			String _lat = String(data[0].value("lat", 0.0));
-			Serial.printf("Found OWcoord: lon %s, lat %s\n", _lon, _lat);
+			json coord = data["coord"];
+			if (coord.is_object())
+			{
+				String _lon = String(coord.value("lon", 0.0));
+				String _lat = String(coord.value("lat", 0.0));
+				Serial.printf("Found OWcoord: lon %s, lat %s\n", _lon, _lat);
 
-			if (_lon != "0.0" && settings.config.lon == "0")
-			{
-				settings.config.lon = String(_lon);
-				Serial.printf("Updated LON to %s\n", settings.config.lon.c_str());
-			}
-			if (_lat != "0.0" && settings.config.lat == "0")
-			{
-				settings.config.lat = String(_lat);
-				Serial.printf("Updated LAT to %s\n", settings.config.lat.c_str());
+				if (_lon != "0.0" && settings.config.lon == "0")
+				{
+					settings.config.lon = String(_lon);
+					Serial.printf("Updated LON to %s\n", settings.config.lon.c_str());
+				}
+				if (_lat != "0.0" && settings.config.lat == "0")
+				{
+					settings.config.lat = String(_lat);
+					Serial.printf("Updated LAT to %s\n", settings.config.lat.c_str());
+				}
 			}
 		}
 	}
 	catch (json::exception &e)
 	{
-		Serial.printf("response: %s\n", response);
+		Serial.printf("response: %s\n", response.c_str());
 		Serial.println("OW Json parse error:");
 		Serial.println(e.what());
-		next_update += 10000;
+		next_update += 5000;
 
 		ok = false;
 	}

@@ -1938,7 +1938,7 @@ static const GFXfont *UbuntuMono_B[] = {
 };
 static const int UbuntuMono_B_count = sizeof(UbuntuMono_B) / sizeof(UbuntuMono_B[0]);
 
-static uint8_t UbuntuMono_B_Char_Sizes[][2] = {
+uint8_t UbuntuMono_B_Char_Sizes[][2] = {
 	{0, 0},
 	{0, 0},
 	{0, 0},

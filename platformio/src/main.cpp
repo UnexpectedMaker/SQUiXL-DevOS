@@ -569,7 +569,7 @@ void setup()
 
 void loop()
 {
-	if (rtc.requiresNTP && millis() - ntp_time_set > 10000)
+	if (wifi_controller.is_connected() && rtc.requiresNTP && millis() - ntp_time_set > 10000)
 	{
 		ntp_time_set = millis();
 		// We have wifi credentials and country/UTC details, so set the time because it's stale.

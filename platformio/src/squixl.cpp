@@ -129,6 +129,12 @@ void SQUiXL::display_first_boot(bool show)
 		wifi_manager_content.println("  You can skip this now by tapping the screen.\n");
 
 		wifi_manager_content.drawSprite(20, 420, &wifi_icon, 1.0f, 0x0, DRAW_TO_RAM);
+		wifi_manager_content.setFreeFont(UbuntuMono_R[1]);
+		wifi_manager_content.setTextColor(darken565(TFT_WHITE, 0.3), -1);
+		wifi_manager_content.setCursor(470 - get_version().length() * UbuntuMono_R_Char_Sizes[1][0], 470);
+		wifi_manager_content.print(get_version().c_str());
+
+		// Serial.printf("char stuff %d, %d\n", UbuntuMono_R_Char_Sizes[1][0], UbuntuMono_R_Char_Sizes[1][1]);
 
 		for (uint8_t alpha = 0; alpha < 32; alpha++)
 		{

@@ -450,7 +450,7 @@ bool Settings::has_wifi_creds(void)
 	return config.wifi_options.size() > 0 && config.wifi_options[0].ssid != "" && config.wifi_options[0].pass != "";
 }
 
-bool Settings::has_country_set(void) { return !config.country.isEmpty(); }
+bool Settings::has_country_set(void) { return !config.location.country.isEmpty(); }
 
 void Settings::update_wifi_credentials(String ssid, String pass)
 {

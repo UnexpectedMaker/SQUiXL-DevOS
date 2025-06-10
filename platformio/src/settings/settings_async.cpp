@@ -13,7 +13,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_screenshot, temperature, 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_haptics, enabled, trigger_on_boot, trigger_on_alarm, trigger_on_hour, trigger_on_event, trigger_on_wake, trigger_on_longpress, trigger_on_charge);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_open_weather, enabled, api_key, poll_frequency, units_metric);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_rss_feed, enabled, feed_url, poll_frequency);
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, mdns_name, case_color, ntp_server, city, state, country, lon, lat, utc_offset, time_24hour, time_dateformat, volume, current_background, backlight_time_step_battery, backlight_time_step_vbus, sleep_vbus, sleep_battery, open_weather, rss_feed, audio, mqtt, haptics, screenshot, user_wallpaper, screen);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, use_local_dns, mdns_name, case_color, ntp_server, city, state, country, lon, lat, utc_offset, time_24hour, time_dateformat, volume, current_background, backlight_time_step_battery, backlight_time_step_vbus, sleep_vbus, sleep_battery, open_weather, rss_feed, audio, mqtt, haptics, screenshot, user_wallpaper, screen);
 
 static uint32_t min_clk_freq = 6000000;
 static uint32_t max_clk_freq = 7000000;
@@ -322,6 +322,7 @@ void Settings::init()
 	wifi_stations.register_option();
 	setting_ntpserver.register_option();
 	setting_wifi_extra_details.register_option();
+	setting_wifi_local_dns.register_option();
 
 	// Location
 	setting_loc_country.register_option();

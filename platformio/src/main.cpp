@@ -59,6 +59,7 @@ ui_control_textbox text_ntpserver;
 ui_control_toggle toggle_OTA_updates;
 ui_control_toggle toggle_Notify_updates;
 ui_control_toggle toggle_verbose_wifi;
+ui_control_toggle toggle_local_dns;
 // Audio
 ui_control_toggle toggle_audio_ui;
 ui_control_toggle toggle_audio_alarm;
@@ -115,6 +116,14 @@ void dialogbox_example()
 void update_wallpaper()
 {
 	squixl.main_screen()->show_user_background_jpg();
+}
+
+void reconnect_wifi()
+{
+	// Callback used to switch DNS settings between local assigned and DCHP assigned
+	WiFi.disconnect();
+	delay(100);
+	wifi_controller.connect();
 }
 
 void process_longitude_latitude(bool success, const String &response)
@@ -274,6 +283,12 @@ void create_ui_elements()
 	text_ntpserver.create_on_grid(4, 1, "NTP SERVER");
 	text_ntpserver.set_options_data(&settings.setting_ntpserver);
 	settings_tab_group.add_child_ui(&text_ntpserver, 2);
+
+	toggle_local_dns.create_on_grid(2, 1, "USE LOCAL DNS");
+	toggle_local_dns.set_toggle_text("NO", "YES");
+	toggle_local_dns.set_callback(reconnect_wifi);
+	toggle_local_dns.set_options_data(&settings.setting_wifi_local_dns);
+	settings_tab_group.add_child_ui(&toggle_local_dns, 2);
 
 	// Sound & Haptics
 	toggle_audio_ui.create_on_grid(3, 1, "UI BEEPS");

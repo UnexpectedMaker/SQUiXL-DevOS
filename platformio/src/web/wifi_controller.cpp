@@ -94,6 +94,10 @@ bool WifiController::connect()
 		// Serial.printf("Trying wifi index %d - %s %s\n", settings.config.current_wifi_station, settings.config.wifi_options[settings.config.current_wifi_station].ssid, settings.config.wifi_options[settings.config.current_wifi_station].pass);
 		// WiFi.begin(settings.config.wifi_options[settings.config.current_wifi_station].ssid, settings.config.wifi_options[settings.config.current_wifi_station].pass);
 
+		// Ensure we are using DHCP settings if no local DNS is selected.
+		if (!settings.config.use_local_dns)
+			WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+
 		while (stations_to_try > 0)
 		{
 			// Serial.printf("Trying wifi index %d - %s %s\n", settings.config.current_wifi_station, settings.config.wifi_options[settings.config.current_wifi_station].ssid.c_str(), settings.config.wifi_options[settings.config.current_wifi_station].pass.c_str());
@@ -134,7 +138,18 @@ bool WifiController::connect()
 
 		Serial.println("WIFI: Connected");
 
-		WiFi.setDNS(IPAddress(1, 1, 1, 1), IPAddress(8, 8, 8, 8));
+		if (settings.config.use_local_dns)
+		{
+			WiFi.setDNS(IPAddress(1, 1, 1, 1), IPAddress(8, 8, 8, 8));
+			Serial.print("Using Local DNS - Primary: ");
+		}
+		else
+		{
+			Serial.print("Using DHCP DNS - Primary: ");
+		}
+		Serial.print(WiFi.dnsIP(0));
+		Serial.print(", Secondary: ");
+		Serial.println(WiFi.dnsIP(1));
 
 		// If we are connected and it's on a different network than last time, we save the settings with the new connection index
 		if (settings.config.current_wifi_station != start_index)
@@ -168,10 +183,10 @@ void WifiController::disconnect(bool force)
 }
 
 // Process the task queue - called from the main thread in loop() in squixl.cpp
-// only process every 5 seconds
+// only process every 2 seconds
 void WifiController::loop()
 {
-	if (millis() - next_wifi_loop > 5000)
+	if (millis() - next_wifi_loop > 2000)
 	{
 		next_wifi_loop = millis();
 		wifi_callback_item result;

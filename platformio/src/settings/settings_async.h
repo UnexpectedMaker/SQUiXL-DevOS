@@ -138,14 +138,12 @@ struct Config
 
 		bool autostart_webserver = false;
 
-		bool enable_expansion_port = false;
-
 		uint16_t case_color = 6371;
 
 		bool ota_start = false;
 		int wifi_tx_power = 44;
+		bool use_local_dns = true;
 		bool show_extra_wifi_details = false;
-
 		bool wifi_check_for_updates = true;
 		String mdns_name = "SQUiXL";
 
@@ -302,6 +300,7 @@ class Settings
 		SettingsOptionWiFiStations wifi_stations{&config.wifi_options, 1, "Wifi Stations"};
 		SettingsOptionString setting_ntpserver{&config.ntp_server, 1, "NTP Server"};
 		SettingsOptionBool setting_wifi_extra_details{&config.show_extra_wifi_details, 1, "Verbose WiFi Details", "NO", "YES"};
+		SettingsOptionBool setting_wifi_local_dns{&config.use_local_dns, 1, "Use Local DNS Servers", "NO", "YES"};
 
 		SettingsOptionBool setting_audio_ui{&config.audio.ui, 2, "UI Sound", "NO", "YES"};
 		SettingsOptionBool setting_audio_alarm{&config.audio.alarm, 2, "Alarm Sound", "NO", "YES"};

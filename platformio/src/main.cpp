@@ -470,6 +470,11 @@ void setup()
 	// delay(3000);
 	// squixl.log_heap("BOOT");
 
+	if (WiFi.disconnect(true, true, 1000))
+	{
+		Serial.println("WIFI: Hard Disconnected at bootup");
+	}
+
 	if (!LittleFS.begin(true))
 	{
 		Serial.println("LittleFS failed to initialise");
@@ -537,6 +542,8 @@ void setup()
 
 	next_background_swap = millis();
 	every_second = millis();
+
+	wifi_controller.connect();
 
 	// Serial.printf("\n>>> Setup done in %0.2f ms\n\n", (millis() - timer));
 	check_wifi_requirements();

@@ -4,7 +4,7 @@ const char footer[] PROGMEM = R"rawliteral(
 		<div class="footer" %FOOTER_STYLE%>
             %UPDATE_NOTICE%
 			<span>SQUiXL - 2025 Unexpected Maker - %FW_VER%</span><br>
-			<span>Firmware Source available on <a href="https://github.com/squixl" target="_blank">on GitHUB</a></span>
+			<span>Firmware Source available on <a href="https://github.com/UnexpectedMaker/SQUiXL-DevOS" target="_blank">on GitHUB</a></span>
 			<!--<span>&nbsp;&nbsp;<a href="/debug_logs.html">debug logs</a></span>-->
 		</div>
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
@@ -17,7 +17,7 @@ const char footer_wallpaper[] PROGMEM = R"rawliteral(
 		<div class="footer" %FOOTER_STYLE%>
             %UPDATE_NOTICE%
 			<span>SQUiXL - 2025 Unexpected Maker - %FW_VER%</span><br>
-			<span>Firmware Source available on <a href="https://github.com/squixl" target="_blank">on GitHUB</a></span>
+			<span>Firmware Source available on <a href="https://github.com/UnexpectedMaker/SQUiXL-DevOS" target="_blank">on GitHUB</a></span>
 			<!--<span>&nbsp;&nbsp;<a href="/debug_logs.html">debug logs</a></span>-->
 		</div>
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

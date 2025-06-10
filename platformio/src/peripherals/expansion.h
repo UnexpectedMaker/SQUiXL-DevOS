@@ -10,7 +10,7 @@ Class to handle any libs and functionality added via the I2C Expansion port
 class Expansion
 {
 	public:
-		void init_bme280();
+		bool init_bme280();
 		void stop_bme280();
 		void update_data_bme280();
 		float get_temp_bme280();

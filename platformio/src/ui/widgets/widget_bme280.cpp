@@ -7,15 +7,29 @@ bool widgetBME280::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (millis() < delay_first_draw)
 		return false;
 
-	if (!expansion.bme280_available())
-		return false;
-
 	if (!is_setup)
 	{
 		// We have not initialised the BME280 or checked if it is even there....
-		expansion.init_bme280();
-		is_setup = true;
+		// If this fails, it wont check again, so BME280 needs to be connected on bootup
+		is_setup = expansion.init_bme280();
+		return false;
 	}
+
+	if (!expansion.bme280_available())
+	{
+		if (is_setup)
+		{
+			Serial.println("EXPANSION: BME280 Lost....");
+			_sprite_back.fillScreen(TFT_MAGENTA);
+			ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_back, 1.0f, -1, DRAW_TO_RAM);
+			is_setup = false;
+		}
+
+		return false;
+	}
+
+	// if (!expansion.bme280_available())
+	// 	return false;
 
 	bool was_dirty = false;
 
@@ -60,6 +74,8 @@ bool widgetBME280::redraw(uint8_t fade_amount, int8_t tab_group)
 		_sprite_back.setTextColor(TFT_RED, -1);
 		_sprite_back.setCursor(10, _h - 7);
 		_sprite_back.print("NO BME280 FOUND!");
+
+		is_setup = false;
 	}
 
 	if (fade_amount < 32)

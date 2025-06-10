@@ -8,6 +8,9 @@
 #include <functional>
 #include <string>
 
+#include <queue>
+#include <freertos/semphr.h>
+
 typedef std::function<void(bool, const String &)> _CALLBACK;
 
 class WifiController
@@ -59,6 +62,9 @@ class WifiController
 		TaskHandle_t wifi_task_handler;
 		QueueHandle_t wifi_task_queue;
 		QueueHandle_t wifi_callback_queue;
+
+		std::queue<wifi_task_item *> pending_requests;
+		SemaphoreHandle_t pending_mutex = nullptr;
 
 		static void wifi_task(void *pvParameters);
 };

@@ -23,8 +23,15 @@ WifiController::WifiController()
 		return;
 	}
 
+	pending_mutex = xSemaphoreCreateMutex();
+	if (pending_mutex == nullptr)
+	{
+		Serial.println("Error creating pending_requests mutex");
+		// handle error if you want
+	}
+
 	// Start the WiFi task
-	// xTaskCreate(WifiController::wifi_task, "wifi_task", 8192, this, 2, &wifi_task_handler);
+	// xTaskCreate(WifiController::wifi_task, "wifi_task", 8192 * 2, this, 2, &wifi_task_handler);
 	xTaskCreatePinnedToCore(WifiController::wifi_task, "wifi_task", 8192 * 2, this, 3, &wifi_task_handler, 0);
 
 	wifi_prevent_disconnect = true;
@@ -39,6 +46,9 @@ void WifiController::kill_controller_task()
 	vTaskDelete(wifi_task_handler);
 	vQueueDelete(wifi_task_queue);
 	vQueueDelete(wifi_callback_queue);
+
+	if (pending_mutex)
+		vSemaphoreDelete(pending_mutex);
 }
 
 // Return the busy state of the WiFi queue
@@ -69,11 +79,11 @@ bool WifiController::connect()
 	{
 		Serial.println("WIFI: Attempting to connect....");
 		wifi_busy = true;
-		if (WiFi.disconnect(true))
-		{
-			Serial.println("WIFI: Disconnected before re-connect attempt..");
-			delay(100);
-		}
+		// if (WiFi.disconnect(true))
+		// {
+		// 	Serial.println("WIFI: Disconnected before re-connect attempt..");
+		// 	delay(100);
+		// }
 		if (WiFi.mode(WIFI_STA))
 		{
 			Serial.println("WIFI: Mode set to STA");
@@ -92,10 +102,10 @@ bool WifiController::connect()
 
 			// delay(100);
 			unsigned long start_time = millis();
-			// Time out the connection if it takes longer than 4 seconds
+			// Time out the connection if it takes longer than 45 seconds
 			while ((millis() - start_time < 5000) && WiFi.status() != WL_CONNECTED)
 			{
-				delay(100);
+				delay(10);
 			}
 
 			if (WiFi.status() != WL_CONNECTED)
@@ -123,6 +133,8 @@ bool WifiController::connect()
 		// Serial.printf("SQUiXL WiFI: Connected to WiFi Router using index %d - %s %s\n", settings.config.current_wifi_station, settings.config.wifi_options[settings.config.current_wifi_station].ssid.c_str(), settings.config.wifi_options[settings.config.current_wifi_station].pass.c_str());
 
 		Serial.println("WIFI: Connected");
+
+		WiFi.setDNS(IPAddress(1, 1, 1, 1), IPAddress(8, 8, 8, 8));
 
 		// If we are connected and it's on a different network than last time, we save the settings with the new connection index
 		if (settings.config.current_wifi_station != start_index)
@@ -156,18 +168,35 @@ void WifiController::disconnect(bool force)
 }
 
 // Process the task queue - called from the main thread in loop() in squixl.cpp
-// only process every 1 seconds
+// only process every 5 seconds
 void WifiController::loop()
 {
-	if (millis() - next_wifi_loop > 1000)
+	if (millis() - next_wifi_loop > 5000)
 	{
 		next_wifi_loop = millis();
 		wifi_callback_item result;
-		while (xQueueReceive(wifi_callback_queue, &result, 0) == pdTRUE)
+		if (xQueueReceive(wifi_callback_queue, &result, 0) == pdTRUE)
 		{
 			result.callback(result.success, *result.response);
 			delete result.response;
 		}
+
+		xSemaphoreTake(pending_mutex, portMAX_DELAY);
+		if (!pending_requests.empty())
+		{
+			// Serial.print("Primary DNS: ");
+			// Serial.println(WiFi.dnsIP(0)); // 0 = primary
+
+			// Serial.print("Secondary DNS: ");
+			// Serial.println(WiFi.dnsIP(1)); // 1 = secondary
+
+			wifi_task_item *item = pending_requests.front();
+			pending_requests.pop();
+
+			perform_wifi_request(item->url, item->callback);
+			delete item;
+		}
+		xSemaphoreGive(pending_mutex);
 	}
 }
 
@@ -258,8 +287,13 @@ void WifiController::wifi_task(void *pvParameters)
 			{
 				controller->wifi_busy = true;
 				// Perform the request
-				controller->perform_wifi_request(item->url, item->callback);
-				delete item;
+
+				xSemaphoreTake(controller->pending_mutex, portMAX_DELAY);
+				controller->pending_requests.push(item);
+				xSemaphoreGive(controller->pending_mutex);
+
+				// controller->perform_wifi_request(item->url, item->callback);
+				// delete item;
 
 				// Optional: delay if queue is long
 				controller->queue_size = uxQueueMessagesWaiting(controller->wifi_task_queue);

@@ -1,52 +1,57 @@
 #include "expansion.h"
 
-void Expansion::init_bme280()
+bool Expansion::init_bme280()
 {
+	// if (skip_check)
+	// 	return false;
+
 	if (bme_status != BME280_OK)
 	{
 		bme_status = bme.init_device();
 
 		if (bme280_available())
 		{
-			Serial.println("EXPANSION: Found BME280");
+			Serial.println("EXPANSION: Found BME280, Please wait....");
 			bme.set_weather_monitoring_configuration();
-			skip_check = false;
+			return true;
 		}
 	}
+
+	// skip_check = true;
+	return false;
 }
 
 bool Expansion::bme280_available()
 {
-	if (skip_check)
-		return false;
+	// if (skip_check)
+	// 	return false;
 
 	if (bme_status == BME280_OK)
 		return true;
 
-	if (bme_status == BME280_E_NULL_PTR)
-		Serial.println("EXPANSION: error: Null pointer");
-	else if (bme_status == BME280_E_DEV_NOT_FOUND)
-	{
-		skip_check = true;
-		Serial.println("EXPANSION: error: device not found");
-	}
-	else if (bme_status == BME280_E_INVALID_LEN)
-		Serial.println("EXPANSION: error: invalid length");
-	else if (bme_status == BME280_E_COMM_FAIL)
-		Serial.println("EXPANSION: error: communication interface fail");
-	else if (bme_status == BME280_E_SLEEP_MODE_FAIL)
-		Serial.println("EXPANSION: error: sleep mode fail");
-	else if (bme_status == BME280_E_NVM_COPY_FAILED)
-		Serial.println("EXPANSION: error: NVM copy failed");
-	else
-		Serial.println("EXPANSION: Unknown error");
+	// if (bme_status == BME280_E_NULL_PTR)
+	// 	Serial.println("EXPANSION: error: Null pointer");
+	// else if (bme_status == BME280_E_DEV_NOT_FOUND)
+	// {
+	// 	Serial.println("EXPANSION: error: device not found");
+	// }
+	// else if (bme_status == BME280_E_INVALID_LEN)
+	// 	Serial.println("EXPANSION: error: invalid length");
+	// else if (bme_status == BME280_E_COMM_FAIL)
+	// 	Serial.println("EXPANSION: error: communication interface fail");
+	// else if (bme_status == BME280_E_SLEEP_MODE_FAIL)
+	// 	Serial.println("EXPANSION: error: sleep mode fail");
+	// else if (bme_status == BME280_E_NVM_COPY_FAILED)
+	// 	Serial.println("EXPANSION: error: NVM copy failed");
+	// else
+	// 	Serial.println("EXPANSION: Unknown error");
 
-	retry_counter++;
-	if (retry_counter == 3)
-	{
-		retry_counter = 0;
-		init_bme280();
-	}
+	// retry_counter++;
+	// if (retry_counter == 3)
+	// {
+	// 	retry_counter = 0;
+	// 	init_bme280();
+	// }
 
 	return false;
 }

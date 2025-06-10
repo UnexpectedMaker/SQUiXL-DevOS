@@ -138,6 +138,8 @@ struct Config
 
 		bool autostart_webserver = false;
 
+		bool enable_expansion_port = false;
+
 		uint16_t case_color = 6371;
 
 		bool ota_start = false;

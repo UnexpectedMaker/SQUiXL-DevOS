@@ -258,12 +258,12 @@ void SQUiXL::get_and_update_utc_settings(bool success, const String &response)
 	{
 		json data = json::parse(response);
 
-		settings.config.city = data["city"].get<String>();
-		settings.config.country = data["country_code"].get<String>();
+		settings.config.location.city = data["city"].get<String>();
+		settings.config.location.country = data["country_code"].get<String>();
 		String utc_offset = data["utc_offset"].get<String>();
 
-		Serial.printf("city: %s\n", settings.config.city);
-		Serial.printf("country: %s\n", settings.config.country);
+		Serial.printf("city: %s\n", settings.config.location.city);
+		Serial.printf("country: %s\n", settings.config.location.country);
 		Serial.printf("utc: %d\n", utc_offset);
 
 		const char *utc_offset_data = utc_offset.c_str();
@@ -273,9 +273,9 @@ void SQUiXL::get_and_update_utc_settings(bool success, const String &response)
 		calc_offset += ((utc_offset_data[3] - '0') * 10) + (utc_offset_data[4] - '0'); // minute
 		calc_offset = (calc_offset * 60 * ((utc_offset_data[0] == '-' ? -1 : 1)));
 
-		settings.config.utc_offset = calc_offset / 3600;
+		settings.config.location.utc_offset = calc_offset / 3600;
 
-		Serial.printf("utc fixed: %d\n", settings.config.utc_offset);
+		Serial.printf("utc fixed: %d\n", settings.config.location.utc_offset);
 
 		settings.save(true);
 
@@ -283,7 +283,7 @@ void SQUiXL::get_and_update_utc_settings(bool success, const String &response)
 		uint8_t retries = 3;
 		while (!obtained && retries > 0)
 		{
-			obtained = rtc.set_time_from_NTP(settings.config.utc_offset);
+			obtained = rtc.set_time_from_NTP(settings.config.location.utc_offset);
 			retries--;
 		}
 		if (!obtained)

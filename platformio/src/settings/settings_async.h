@@ -17,9 +17,14 @@
 
 using json = nlohmann::json;
 
-struct Config_screen
+struct Config_locaton
 {
-		int inversion_mode = 0;
+		String country = "";
+		String city = "";
+		String state = "";
+		String lon = "0";
+		String lat = "0";
+		int utc_offset = 999;
 };
 
 struct mqtt_topic
@@ -151,11 +156,16 @@ struct Config
 		uint8_t current_wifi_station = 0;
 
 		String ntp_server = "pool.ntp.org";
+
+		// DEPRECIATED
+		// Uses Confing_location
 		String country = "";
 		String city = "";
 		String state = "";
 		String lon = "0";
 		String lat = "0";
+		// DEPRECIATED
+
 		int utc_offset = 999;
 
 		bool time_24hour = false;
@@ -169,7 +179,7 @@ struct Config
 		bool sleep_vbus = false;
 		bool sleep_battery = true;
 
-		Config_screen screen;
+		Config_locaton location;
 		Config_widget_battery battery;
 		Config_widget_open_weather open_weather;
 		Config_widget_rss_feed rss_feed;
@@ -255,6 +265,8 @@ class Settings
 			settings_groups.push_back({"Screenie", SettingType::SCREENIE});
 
 			settings_groups.push_back({"RSS Feed Settings", SettingType::WIDGET, "Add your RSS Feed URL here to be able to see your favourte RSS feed on your SQUiXL."});
+
+			settings_groups.push_back({"Location Settings", SettingType::WEB});
 		}
 
 		void init();
@@ -290,13 +302,14 @@ class Settings
 		SettingsOptionBool setting_wifi_check_updates{&config.wifi_check_for_updates, 1, "Notify Updates", "NO", "YES"};
 		SettingsOptionString setting_web_mdns{&config.mdns_name, 1, "mDNS Name", 0, -1, "SQUiXL", false};
 
-		SettingsOptionString setting_loc_country{&config.country, 1, "Country Code", 0, 2};
-		SettingsOptionString setting_loc_city{&config.city, 1, "City"};
-		SettingsOptionString setting_loc_state{&config.state, 1, "State"};
-		SettingsOptionString setting_loc_lat{&config.lat, 1, "Latitude"};
-		SettingsOptionString setting_loc_lon{&config.lon, 1, "Longitude"};
+		// Location
+		SettingsOptionString setting_loc_country{&config.location.country, 8, "Country Code", 0, 2};
+		SettingsOptionString setting_loc_city{&config.location.city, 8, "City"};
+		SettingsOptionString setting_loc_state{&config.location.state, 8, "State"};
+		SettingsOptionString setting_loc_lat{&config.location.lat, 8, "Latitude"};
+		SettingsOptionString setting_loc_lon{&config.location.lon, 8, "Longitude"};
+		SettingsOptionIntRange settings_utc_offset{&config.location.utc_offset, -12, 14, 1, false, 8, "UTC Offset"};
 
-		SettingsOptionIntRange settings_utc_offset{&config.utc_offset, -12, 14, 1, false, 1, "UTC Offset"};
 		SettingsOptionWiFiStations wifi_stations{&config.wifi_options, 1, "Wifi Stations"};
 		SettingsOptionString setting_ntpserver{&config.ntp_server, 1, "NTP Server"};
 		SettingsOptionBool setting_wifi_extra_details{&config.show_extra_wifi_details, 1, "Verbose WiFi Details", "NO", "YES"};

@@ -145,14 +145,14 @@ void process_longitude_latitude(bool success, const String &response)
 
 			if (_lon != "0.0")
 			{
-				settings.config.lon = String(_lon);
-				Serial.printf("Updated LON to %s\n", settings.config.lon.c_str());
+				settings.config.location.lon = String(_lon);
+				Serial.printf("Updated LON to %s\n", settings.config.location.lon.c_str());
 				changed = true;
 			}
 			if (_lat != "0.0")
 			{
-				settings.config.lat = String(_lat);
-				Serial.printf("Updated LAT to %s\n", settings.config.lat.c_str());
+				settings.config.location.lat = String(_lat);
+				Serial.printf("Updated LAT to %s\n", settings.config.location.lat.c_str());
 				changed = true;
 			}
 
@@ -174,7 +174,7 @@ void process_longitude_latitude(bool success, const String &response)
 
 void update_longitude_latitude()
 {
-	String url = "http://api.openweathermap.org/geo/1.0/direct?q=" + settings.config.city + "," + settings.config.state + "," + settings.config.country + "&limit=1&appid=" + settings.config.open_weather.api_key;
+	String url = "http://api.openweathermap.org/geo/1.0/direct?q=" + settings.config.location.city + "," + settings.config.location.state + "," + settings.config.location.country + "&limit=1&appid=" + settings.config.open_weather.api_key;
 	wifi_controller.add_to_queue(url.c_str(), [](bool success, const String &response) { process_longitude_latitude(success, response); });
 }
 
@@ -232,11 +232,6 @@ void create_ui_elements()
 	toggle_wallpaper.set_callback(update_wallpaper);
 	settings_tab_group.add_child_ui(&toggle_wallpaper, 0);
 
-	slider_UTC.create_on_grid(6, 1);
-	slider_UTC.set_value_type(VALUE_TYPE::INT);
-	slider_UTC.set_options_data(&settings.settings_utc_offset);
-	settings_tab_group.add_child_ui(&slider_UTC, 0);
-
 	// Location
 
 	// Create an Text Box the widget_ow_apikey setting
@@ -263,6 +258,11 @@ void create_ui_elements()
 	button_get_lon_lat.create_on_grid(6, 1, "LOOKUP LONGITUDE & LATITUDE");
 	button_get_lon_lat.set_callback(update_longitude_latitude);
 	settings_tab_group.add_child_ui(&button_get_lon_lat, 1);
+
+	slider_UTC.create_on_grid(6, 1);
+	slider_UTC.set_value_type(VALUE_TYPE::INT);
+	slider_UTC.set_options_data(&settings.settings_utc_offset);
+	settings_tab_group.add_child_ui(&slider_UTC, 1);
 
 	// WiFi
 	toggle_OTA_updates.create_on_grid(2, 1, "ENABLE OTA");
@@ -574,7 +574,7 @@ void loop()
 		ntp_time_set = millis();
 		// We have wifi credentials and country/UTC details, so set the time because it's stale.
 		Serial.println("WIFI: Updating time from NTP");
-		rtc.set_time_from_NTP(settings.config.utc_offset);
+		rtc.set_time_from_NTP(settings.config.location.utc_offset);
 		// return;
 	}
 

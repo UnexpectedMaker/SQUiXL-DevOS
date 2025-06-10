@@ -5,11 +5,11 @@ using json = nlohmann::json;
 
 std::string widgetOpenWeather::build_server_path()
 {
-	if (settings.config.city == "" || settings.config.country == "" || settings.config.open_weather.enabled == false || settings.config.open_weather.api_key == "")
+	if (settings.config.location.city == "" || settings.config.location.country == "" || settings.config.open_weather.enabled == false || settings.config.open_weather.api_key == "")
 		return "";
 
 	if (full_server_call == "")
-		full_server_call = server_path + settings.config.city.c_str() + "," + settings.config.country.c_str() + "&APPID=" + settings.config.open_weather.api_key.c_str() + "&units=" + (settings.config.open_weather.units_metric ? "metric" : "imperial");
+		full_server_call = server_path + settings.config.location.city.c_str() + "," + settings.config.location.country.c_str() + "&APPID=" + settings.config.open_weather.api_key.c_str() + "&units=" + (settings.config.open_weather.units_metric ? "metric" : "imperial");
 
 	return full_server_call;
 }
@@ -142,15 +142,15 @@ void widgetOpenWeather::process_weather_data(bool success, const String &respons
 				String _lat = String(coord.value("lat", 0.0));
 				Serial.printf("Found OWcoord: lon %s, lat %s\n", _lon, _lat);
 
-				if (_lon != "0.0" && settings.config.lon == "0")
+				if (_lon != "0.0" && settings.config.location.lon == "0")
 				{
-					settings.config.lon = String(_lon);
-					Serial.printf("Updated LON to %s\n", settings.config.lon.c_str());
+					settings.config.location.lon = String(_lon);
+					Serial.printf("Updated LON to %s\n", settings.config.location.lon.c_str());
 				}
-				if (_lat != "0.0" && settings.config.lat == "0")
+				if (_lat != "0.0" && settings.config.location.lat == "0")
 				{
-					settings.config.lat = String(_lat);
-					Serial.printf("Updated LAT to %s\n", settings.config.lat.c_str());
+					settings.config.location.lat = String(_lat);
+					Serial.printf("Updated LAT to %s\n", settings.config.location.lat.c_str());
 				}
 			}
 		}
@@ -218,14 +218,14 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 		// Serial.printf("redraw() title: %s ||\n", _title.c_str());
 		_sprite_back.print(_title.c_str());
 
-		if (settings.config.country.length() > 0)
+		if (settings.config.location.country.length() > 0)
 		{
 			_sprite_back.setFreeFont(UbuntuMono_R[0]);
 			_sprite_back.setTextColor(TFT_WHITE, -1);
 			_sprite_back.setCursor(10, _h - 8);
-			_sprite_back.print(settings.config.city);
+			_sprite_back.print(settings.config.location.city);
 			_sprite_back.print(", ");
-			_sprite_back.print(settings.config.country);
+			_sprite_back.print(settings.config.location.country);
 		}
 
 		// Serial.printf("is_dirty_hard? %d, is_dirty %d\n", is_dirty_hard, is_dirty);

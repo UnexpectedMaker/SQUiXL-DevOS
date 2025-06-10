@@ -608,6 +608,8 @@ bool WebServer::start()
 			const char *return_data = generate_settings_html(group_id).c_str();
 			const size_t return_data_length = strlen_P(return_data);
 
+			delay(10);
+
 			AsyncResponseStream *response = request->beginResponseStream("text/html", return_data_length);
 			for (int i = 0; i < return_data_length; i++)
 			{

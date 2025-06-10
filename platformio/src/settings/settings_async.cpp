@@ -6,14 +6,14 @@
 using json = nlohmann::json;
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(wifi_station, ssid, pass, channel);
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_screen, inversion_mode);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_locaton, country, city, state, lon, lat, utc_offset);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_mqtt, enabled, broker_ip, broker_port, username, password, device_name, topic_listen, publish_topic);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_audio, ui, on_hour, charge, current_radio_station);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_screenshot, temperature, tint, gamma, saturation, contrast, black, white, enabled);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_haptics, enabled, trigger_on_boot, trigger_on_alarm, trigger_on_hour, trigger_on_event, trigger_on_wake, trigger_on_longpress, trigger_on_charge);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_open_weather, enabled, api_key, poll_frequency, units_metric);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_rss_feed, enabled, feed_url, poll_frequency);
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, use_local_dns, mdns_name, case_color, ntp_server, city, state, country, lon, lat, utc_offset, time_24hour, time_dateformat, volume, current_background, backlight_time_step_battery, backlight_time_step_vbus, sleep_vbus, sleep_battery, open_weather, rss_feed, audio, mqtt, haptics, screenshot, user_wallpaper, screen);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, use_local_dns, mdns_name, case_color, ntp_server, city, state, country, lon, lat, utc_offset, time_24hour, time_dateformat, volume, current_background, backlight_time_step_battery, backlight_time_step_vbus, sleep_vbus, sleep_battery, open_weather, rss_feed, audio, mqtt, haptics, screenshot, user_wallpaper, location);
 
 static uint32_t min_clk_freq = 6000000;
 static uint32_t max_clk_freq = 7000000;
@@ -204,23 +204,48 @@ bool Settings::_load_sync()
 	if (config.user_wallpaper && !user_wallpaper_exists)
 		config.user_wallpaper = false;
 
-	config.current_wifi_station = 0;
-	config.open_weather.poll_frequency = 5;
-	if (config.city == "Sydney")
-		config.city = "Melbourne";
-
-	Serial.printf("Country: %s, utc offset is %u\n", config.country, config.utc_offset);
-
-	if (config.mqtt.broker_ip == "" || config.mqtt.broker_ip == "mqtt://192.168.1.70")
+	// move depreciated location settings to new location struct
+	// doing this now so existing alpha users don't have to re-add settings
+	// this wil be removed soon
+	if (config.country != "")
 	{
-		config.mqtt.broker_ip = "192.168.1.70";
+		config.location.country = config.country;
+		config.country = "";
+	}
+	if (config.city != "")
+	{
+		config.location.city = config.city;
+		config.city = "";
+	}
+	if (config.state != "")
+	{
+		config.location.state = config.state;
+		config.state = "";
+	}
+	if (config.lon != "")
+	{
+		config.location.lon = config.lon;
+		config.lon = "";
+	}
+	if (config.lat != "")
+	{
+		config.location.lat = config.lat;
+		config.lat = "";
+	}
+	if (config.utc_offset != 999)
+	{
+		config.location.utc_offset = config.utc_offset;
+		config.utc_offset = 999;
 	}
 
-	Serial.println("Settings: Load complete!");
+	Serial.printf("Country: %s, utc offset is %u\n", config.location.country, config.utc_offset);
 
-	// wait_for_vsync(); // <---- Added VSYNC WAIT
-	// RGBChangeFreq(max_clk_freq);
-	// wait_for_vsync(); // <---- Added VSYNC WAIT
+	// if (config.mqtt.broker_ip == "" || config.mqtt.broker_ip == "mqtt://192.168.1.70")
+	// {
+	// 	config.mqtt.broker_ip = "192.168.1.70";
+	// }
+
+	Serial.println("Settings: Load complete!");
 
 	return true;
 }

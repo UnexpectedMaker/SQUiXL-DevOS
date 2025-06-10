@@ -157,7 +157,7 @@ bool WifiController::connect()
 
 		// Serial.print("IP Address: ");
 		// Serial.println(WiFi.localIP());
-		// WiFi.setHostname(settings.config.mdns_name.c_str());
+		WiFi.setHostname(settings.config.mdns_name.c_str());
 	}
 	else
 	{

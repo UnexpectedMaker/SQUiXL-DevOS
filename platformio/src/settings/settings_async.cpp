@@ -7,12 +7,16 @@ using json = nlohmann::json;
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(wifi_station, ssid, pass, channel);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_locaton, country, city, state, lon, lat, utc_offset);
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_mqtt, enabled, broker_ip, broker_port, username, password, device_name, topic_listen, publish_topic);
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(mqtt_topic, name, topic_listen, topic_publish);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_mqtt, enabled, broker_ip, broker_port, username, password, device_name, topic_listen, publish_topic, topics);
+
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_audio, ui, on_hour, charge, current_radio_station);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_screenshot, temperature, tint, gamma, saturation, contrast, black, white, enabled);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_haptics, enabled, trigger_on_boot, trigger_on_alarm, trigger_on_hour, trigger_on_event, trigger_on_wake, trigger_on_longpress, trigger_on_charge);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_open_weather, enabled, api_key, poll_frequency, units_metric);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_widget_rss_feed, enabled, feed_url, poll_frequency);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config_expansion, bme280_address);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Config, first_time, current_screen, ota_start, wifi_tx_power, wifi_options, current_wifi_station, wifi_check_for_updates, use_local_dns, mdns_name, case_color, ntp_server, city, state, country, lon, lat, utc_offset, time_24hour, time_dateformat, volume, current_background, backlight_time_step_battery, backlight_time_step_vbus, sleep_vbus, sleep_battery, open_weather, rss_feed, audio, mqtt, haptics, screenshot, user_wallpaper, location);
 
 static uint32_t min_clk_freq = 6000000;
@@ -240,10 +244,42 @@ bool Settings::_load_sync()
 
 	Serial.printf("Country: %s, utc offset is %u\n", config.location.country, config.utc_offset);
 
-	// if (config.mqtt.broker_ip == "" || config.mqtt.broker_ip == "mqtt://192.168.1.70")
-	// {
-	// 	config.mqtt.broker_ip = "192.168.1.70";
-	// }
+	if (config.mqtt.topic_listen != "" || config.mqtt.publish_topic != "")
+	{
+		bool add = false;
+		if (config.mqtt.topics.size() == 0)
+		{
+			add = true;
+		}
+		else
+		{
+			bool found = false;
+			for (int i = 0; i < config.mqtt.topics.size(); i++)
+			{
+				if (config.mqtt.topics[i].match_or_partial(config.mqtt.topic_listen, config.mqtt.publish_topic))
+				{
+					found = true;
+					i = 999;
+				}
+			}
+
+			if (found)
+				add = false;
+		}
+
+		if (add)
+		{
+			mqtt_topic o = mqtt_topic();
+			o.name = "Default";
+			o.topic_listen = config.mqtt.topic_listen;
+			o.topic_publish = config.mqtt.publish_topic;
+
+			config.mqtt.topics.push_back(o);
+			config.mqtt.topic_listen = "";	// depreciated
+			config.mqtt.publish_topic = ""; // depreciated
+			Serial.printf("added mqtt_topic: %s, %s, %s\n", config.mqtt.topics[0].name.c_str(), config.mqtt.topics[0].topic_listen.c_str(), config.mqtt.topics[0].topic_publish.c_str());
+		}
+	}
 
 	Serial.println("Settings: Load complete!");
 
@@ -367,6 +403,9 @@ void Settings::init()
 	widget_rss_feed_url.register_option();
 	widget_rss_poll_interval.register_option();
 
+	// Expansion
+	expansion_bme_address.register_option();
+
 	// Haptics
 	setting_haptics_enabled.register_option();
 	setting_haptics_trig_boot.register_option();
@@ -384,7 +423,7 @@ void Settings::init()
 	mqtt_username.register_option();
 	mqtt_password.register_option();
 	mqtt_device_name.register_option();
-	mqtt_topic_listen.register_option();
+	mqtt_topics.register_option();
 
 	// Audio UI
 	setting_audio_ui.register_option();
@@ -399,7 +438,6 @@ void Settings::init()
 	screenshot_black.register_option();
 	screenshot_white.register_option();
 	screenshot_gamma.register_option();
-
 	screenshot_wb_temp.register_option();
 	screenshot_wb_tint.register_option();
 }

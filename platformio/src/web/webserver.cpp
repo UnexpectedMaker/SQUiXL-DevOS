@@ -413,6 +413,9 @@ bool WebServer::start()
 		return false;
 	}
 
+	// Add service to MDNS-SD
+	MDNS.addService("http", "tcp", 80);
+
 	web_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_html, processor); });
 
 	web_server.on("/wifi", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", index_wifi_html, processor); });
@@ -523,6 +526,50 @@ bool WebServer::start()
 								// We update all stations, even with empty data, to ensure we keep the vector intact
 								// after the updates, we'll prune any that are empty.
 								intPtr->update(v, data1, data2);
+							}
+						}
+					}
+
+					// remove empty entries
+					intPtr->remove_if_empty();
+				}
+				else if (setting->getType() == SettingsOptionBase::MQTT_TOPIC)
+				{
+					SettingsOptionMQTTTopic *intPtr = static_cast<SettingsOptionMQTTTopic *>(setting);
+					for (size_t v = 0; v <= intPtr->vector_size(); v++)
+					{
+						String fn_name = String(group_id) + "," + String(i) + "__" + fn + "_name_" + String(v);
+						String fn_listen = String(group_id) + "," + String(i) + "__" + fn + "_topic_listen_" + String(v);
+						String fn_publish = String(group_id) + "," + String(i) + "__" + fn + "_topic_publish_" + String(v);
+
+						// 1,6__wifi_stations_ssid_0
+						if (request->hasParam(fn_name, true) && request->hasParam(fn_listen, true) && request->hasParam(fn_publish, true))
+						{
+							// Serial.print("Found - ");
+							const AsyncWebParameter *_param1 = request->getParam(fn_name, true);
+							String data1 = String(_param1->value().c_str());
+
+							const AsyncWebParameter *_param2 = request->getParam(fn_listen, true);
+							String data2 = String(_param2->value().c_str());
+
+							const AsyncWebParameter *_param3 = request->getParam(fn_publish, true);
+							String data3 = String(_param3->value().c_str());
+
+							data1.trim();
+							data2.trim();
+							data3.trim();
+
+							if (v == intPtr->vector_size())
+							{
+								// this is a new one, so we add it, assuming there is data to add
+								if (!data1.isEmpty() || !data2.isEmpty() || !data3.isEmpty())
+									intPtr->add_topic(data1, data2, data3);
+							}
+							else
+							{
+								// We update all stations, even with empty data, to ensure we keep the vector intact
+								// after the updates, we'll prune any that are empty.
+								intPtr->update(v, data1, data2, data3);
 							}
 						}
 					}

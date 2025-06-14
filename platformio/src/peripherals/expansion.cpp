@@ -1,4 +1,5 @@
 #include "expansion.h"
+#include "settings/settings_async.h"
 
 bool Expansion::init_bme280()
 {
@@ -7,11 +8,12 @@ bool Expansion::init_bme280()
 
 	if (bme_status != BME280_OK)
 	{
-		bme_status = bme.init_device();
+		uint8_t i2c_address = settings.config.expansion.bme280_address ? 0x76 : 0x77;
+		bme_status = bme.init_device(i2c_address);
 
 		if (bme280_available())
 		{
-			Serial.println("EXPANSION: Found BME280, Please wait....");
+			Serial.printf("EXPANSION: Found BME280 @ I2C address 0x%02X, Please wait....\n", i2c_address);
 			bme.set_weather_monitoring_configuration();
 			return true;
 		}

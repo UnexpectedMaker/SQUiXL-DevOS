@@ -62,10 +62,10 @@ bool ui_control_tabgroup::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 
-	_sprite_content.setFreeFont(UbuntuMono_R[1]);
+	_sprite_content.setFreeFont(UbuntuMono_R[0]);
 	_sprite_content.setTextColor(TFT_WHITE, -1);
 
-	squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 1, &char_width, &char_height);
+	squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 0, &char_width, &char_height);
 
 	_sprite_content.fillRoundRect(5, 5, _w - 10, _h - 10, 5, static_cast<ui_screen *>(get_ui_parent())->dark_tint[4], DRAW_TO_RAM);
 

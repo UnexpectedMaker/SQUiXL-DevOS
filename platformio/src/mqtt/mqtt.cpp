@@ -86,17 +86,24 @@ void MQTT_Stuff::mqtt_reconnect()
 		return;
 	}
 
-	Serial.print("\nAttempting MQTT connection to ");
+	Serial.print("\nMQTT: Attempting connection to ");
 	Serial.println(settings.config.mqtt.broker_ip);
-	Serial.print("My IP address is ");
-	Serial.println(WiFi.localIP());
-	Serial.println();
+	// Serial.print("My IP address is ");
+	// Serial.println(WiFi.localIP());
+	// Serial.println();
 	// Attempt to connect
 	if (mqtt_client.connect(settings.config.mqtt.device_name.c_str(), settings.config.mqtt.username.c_str(), settings.config.mqtt.password.c_str()))
 	{
-		Serial.println("** mqtt connected **");
+		Serial.println("MQTT: connected");
 		// Subscribe
-		mqtt_client.subscribe("um_space/sensors/#", 1);
+		for (int i = 0; i < settings.config.mqtt.topics.size(); i++)
+		{
+			if (!settings.config.mqtt.topics[i].topic_listen.isEmpty())
+			{
+				Serial.printf("MQTT: Subscribing to topic: %s\n", settings.config.mqtt.topics[i].topic_listen.c_str());
+				mqtt_client.subscribe(settings.config.mqtt.topics[i].topic_listen.c_str(), 1);
+			}
+		}
 
 		is_mqtt_connecting = false;
 	}
@@ -106,12 +113,12 @@ void MQTT_Stuff::mqtt_reconnect()
 		retry_attemps--;
 		retry_time += 5000;
 
-		Serial.print("failed, rc=");
+		Serial.print("MQTT: connection failed, rc=");
 		Serial.print(mqtt_client.state());
 		if (retry_attemps >= 0)
 			Serial.printf(" try again (attempt %d/3) in %d seconds\n", (4 - retry_attemps), (retry_time / 1000));
 		else
-			Serial.println("\nNo more attempts to cpnect to MQTT!");
+			Serial.println("\nMQTT: No more attempts to cpnect to MQTT!");
 
 		// Wait 5 seconds before retrying
 

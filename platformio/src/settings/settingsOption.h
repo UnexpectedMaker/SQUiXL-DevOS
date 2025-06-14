@@ -9,7 +9,7 @@
 #include <vector>
 
 struct wifi_station;
-// struct theme;
+struct mqtt_topic;
 
 class SettingsOptionBase
 {
@@ -32,6 +32,7 @@ class SettingsOptionBase
 			INT_RANGE,
 			FLOAT_RANGE,
 			WIFI_STATION,
+			MQTT_TOPIC,
 			THEME
 		};
 
@@ -337,47 +338,34 @@ class SettingsOptionWiFiStations : public SettingsOptionBase
 		std::vector<wifi_station> *setting_ref = nullptr;
 };
 
-// class SettingsOptionTheme : public SettingsOptionBase
-// {
-// 	public:
-// 		SettingsOptionTheme(std::vector<theme> *val, int _group, const String &_fn) : setting_ref(val)
-// 		{
-// 			group = _group;
-// 			fieldname = _fn;
-// 			data_is_vector = true;
-// 			req_full_width = true;
-// 			register_option(_group);
-// 		}
+class SettingsOptionMQTTTopic : public SettingsOptionBase
+{
+	public:
+		SettingsOptionMQTTTopic(std::vector<mqtt_topic> *val, int _group, const String &_fn) : setting_ref(val)
+		{
+			group = _group;
+			fieldname = _fn;
+			data_is_vector = true;
+			req_full_width = true;
+			// register_option();
+		}
 
-// 		Type getType() const override
-// 		{
-// 			return THEME;
-// 		}
+		Type getType() const override
+		{
+			return MQTT_TOPIC;
+		}
 
-// 		bool update(int index, String _name, int32_t _col_background_dull, uint32_t _col_background_bright, uint32_t _col_control_back, uint32_t _col_primary, uint32_t _col_secondary, uint32_t _col_low_intensity, uint32_t _col_warning, uint32_t _col_error, uint8_t _widget_style);
-// 		void remove_if_empty();
-// 		theme &get_theme(int index);
-// 		// String get_pass(int index);
-// 		void add_theme(String _name, int32_t _col_background_dull, uint32_t _col_background_bright, uint32_t _col_control_back, uint32_t _col_primary, uint32_t _col_secondary, uint32_t _col_low_intensity, uint32_t _col_warning, uint32_t _col_error, uint8_t _widget_style);
-// 		String generate_html(uint16_t index);
-// 		uint8_t vector_size();
-// 		String rgbToHex(uint32_t rgbColor);
-// 		String rgb565ToHex(uint16_t rgbColor);
-// 		uint16_t hexToRgb565(String hexColor);
+		bool update(int index, String _name, String _listen, String _publish);
+		void remove_if_empty();
+		String get_name(int index);
+		String get_listen(int index);
+		String get_publish(int index);
+		void add_topic(String _name, String _listen, String _publish);
+		String generate_html(uint16_t index);
+		uint8_t vector_size();
 
-// 	private:
-// 		std::vector<theme> *setting_ref = nullptr;
-// };
-
-/*
-		uint32_t col_background_dull = 0;
-		uint32_t col_background_bright = 0;
-		uint32_t col_control_back = 0;
-		uint32_t col_primary = 0;
-		uint32_t col_secondary = 0;
-		uint32_t col_low_intensity = 0;
-		uint32_t col_warning = 0;
-		uint32_t col_error = 0;
-		uint8_t widget_style = 0;*/
+	private:
+		std::vector<mqtt_topic> *setting_ref = nullptr;
+};
 
 #endif // SETTINGS_OPTIONS_H

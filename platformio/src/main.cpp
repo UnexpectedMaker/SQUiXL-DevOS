@@ -81,6 +81,15 @@ ui_control_button button_get_lon_lat;
 ui_control_toggle toggle_rss_enable;
 ui_control_slider slider_rss_refresh;
 ui_control_textbox text_rss_feed_url;
+// Expansion
+ui_control_toggle toggle_bme280_I2C_address;
+// MQTT
+ui_control_toggle toggle_mqtt_enable;
+ui_control_textbox text_mqtt_broker_ip;
+ui_control_textbox text_mqtt_broker_port;
+ui_control_textbox text_mqtt_broker_username;
+ui_control_textbox text_mqtt_broker_password;
+
 // // Screenshot stuff
 // ui_control_toggle toggle_screenshot_enable;
 // ui_control_slider slider_screenshot_wb_temp;
@@ -189,7 +198,7 @@ void create_ui_elements()
 	// and then pass it a list of strings for each group
 	//
 	settings_tab_group.create(0, 0, 480, 40);
-	settings_tab_group.set_tabs(std::vector<std::string>{"General", "Location", "WiFi", "Snd/Hap", "Widgets"});
+	settings_tab_group.set_tabs(std::vector<std::string>{"General", "Location", "WiFi", "Snd/Hap", "Widgets", "MQTT"});
 	screen_settings.set_page_tabgroup(&settings_tab_group);
 
 	// grid layout is on a 6 column, 6 row array
@@ -346,6 +355,34 @@ void create_ui_elements()
 	text_rss_feed_url.create_on_grid(6, 1, "RSS Feed URL");
 	text_rss_feed_url.set_options_data(&settings.widget_rss_feed_url);
 	settings_tab_group.add_child_ui(&text_rss_feed_url, 4);
+
+	toggle_bme280_I2C_address.create_on_grid(2, 1, "BME280 I2C ADR");
+	toggle_bme280_I2C_address.set_toggle_text("0x77", "0x76");
+	toggle_bme280_I2C_address.set_options_data(&settings.expansion_bme_address);
+	settings_tab_group.add_child_ui(&toggle_bme280_I2C_address, 4);
+
+	// MQTT
+	toggle_mqtt_enable.create_on_grid(2, 1, "MQTT ENABLED");
+	toggle_mqtt_enable.set_toggle_text("NO", "YES");
+	toggle_mqtt_enable.set_options_data(&settings.mqtt_enabled);
+	settings_tab_group.add_child_ui(&toggle_mqtt_enable, 5);
+
+	text_mqtt_broker_ip.create_on_grid(2, 1, "BROKER IP");
+	text_mqtt_broker_ip.set_options_data(&settings.mqtt_broker_ip);
+	settings_tab_group.add_child_ui(&text_mqtt_broker_ip, 5);
+
+	text_mqtt_broker_port.create_on_grid(2, 1, "BROKER PORT");
+	text_mqtt_broker_port.set_alphanumeric(false);
+	text_mqtt_broker_port.set_options_data(&settings.mqtt_broker_port);
+	settings_tab_group.add_child_ui(&text_mqtt_broker_port, 5);
+
+	text_mqtt_broker_username.create_on_grid(3, 1, "USERNAME");
+	text_mqtt_broker_username.set_options_data(&settings.mqtt_username);
+	settings_tab_group.add_child_ui(&text_mqtt_broker_username, 5);
+
+	text_mqtt_broker_password.create_on_grid(3, 1, "PASSWORD");
+	text_mqtt_broker_password.set_options_data(&settings.mqtt_password);
+	settings_tab_group.add_child_ui(&text_mqtt_broker_password, 5);
 
 	// // Screenshot stuff
 	// slider_screenshot_lvl_black.create_on_grid(3, 1);
@@ -643,8 +680,8 @@ void loop()
 
 	// If there are any active animations running,
 	// don't perocess further to allow the anims to play smoothly
-	if (animation_manager.active_animations() > 0)
-		return;
+	// if (animation_manager.active_animations() > 0)
+	// 	return;
 
 	// This allows desktop access to the LittleFS partition on the SQUiXL
 	// littlefs_cli();
@@ -667,7 +704,7 @@ void loop()
 	// Process the backlight - if it gets too dark, sleepy time
 	squixl.process_backlight_dimmer();
 
-	// This is used if you sattempt to setup your wifi credentials from the first boot screen or if you setup credentials while you are doing other things in SQUiXL.
+	// WiFi Setup stays running all of the time until you have configures a WiFi router to connect SQUiXL to. You can configure the credentials any time, regardless of leaving the "first time" screen.
 	if (wifiSetup.running())
 	{
 		if (settings.config.first_time)
@@ -685,7 +722,6 @@ void loop()
 
 				squixl.lcd.setTextColor(darken565(TFT_WHITE, 0.1), darken565(0x5AEB, 0.5));
 
-				// squixl.lcd.fillRect(80, 390, 400, 80, darken565(0x5AEB, 0.5));
 				squixl.lcd.setCursor(70, 443);
 				squixl.lcd.print(wifiSetup.wifi_ap_messages);
 

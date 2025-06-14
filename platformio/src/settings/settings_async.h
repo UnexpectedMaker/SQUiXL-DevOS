@@ -27,13 +27,6 @@ struct Config_locaton
 		int utc_offset = 999;
 };
 
-struct mqtt_topic
-{
-		String name = "";
-		String topic_listen = "";
-		String topic_publish = "";
-};
-
 struct Config_screenshot
 {
 		bool enabled = true;
@@ -44,6 +37,20 @@ struct Config_screenshot
 		float gamma = 0.9;
 		float saturation = 1.0;
 		float contrast = 1.0;
+};
+
+struct mqtt_topic
+{
+		String name = "";
+		String topic_listen = "";
+		String topic_publish = "";
+
+		// mqtt_topic(String _name, String _listen, String _publish) : name(_name), topic_listen(_listen), topic_publish(_publish) {};
+
+		bool match_or_partial(String _listen, String _publish)
+		{
+			return (topic_listen == _listen || topic_publish == _publish);
+		}
 };
 
 struct Config_mqtt
@@ -106,6 +113,12 @@ struct Config_widget_battery
 		float low_volt_cutoff = 3.2;
 };
 
+struct Config_expansion
+{
+		// false is 0x77 (secondary), true is 0x76 (primary)
+		bool bme280_address = false; // use primary or secondary I2C address for bme280
+};
+
 struct Config_widget_open_weather
 {
 		int poll_frequency = 30;
@@ -147,7 +160,7 @@ struct Config
 
 		bool ota_start = false;
 		int wifi_tx_power = 44;
-		bool use_local_dns = true;
+		bool use_local_dns = false;
 		bool show_extra_wifi_details = false;
 		bool wifi_check_for_updates = true;
 		String mdns_name = "SQUiXL";
@@ -187,6 +200,7 @@ struct Config
 		Config_mqtt mqtt;
 		Config_haptics haptics;
 		Config_screenshot screenshot;
+		Config_expansion expansion;
 		json last_saved_data;
 
 		String case_color_in_hex()
@@ -267,6 +281,8 @@ class Settings
 			settings_groups.push_back({"RSS Feed Settings", SettingType::WIDGET, "Add your RSS Feed URL here to be able to see your favourte RSS feed on your SQUiXL."});
 
 			settings_groups.push_back({"Location Settings", SettingType::WEB});
+
+			settings_groups.push_back({"Expansion Settings", SettingType::WIDGET, "I2C Expansion Port Settings"});
 		}
 
 		void init();
@@ -302,14 +318,6 @@ class Settings
 		SettingsOptionBool setting_wifi_check_updates{&config.wifi_check_for_updates, 1, "Notify Updates", "NO", "YES"};
 		SettingsOptionString setting_web_mdns{&config.mdns_name, 1, "mDNS Name", 0, -1, "SQUiXL", false};
 
-		// Location
-		SettingsOptionString setting_loc_country{&config.location.country, 8, "Country Code", 0, 2};
-		SettingsOptionString setting_loc_city{&config.location.city, 8, "City"};
-		SettingsOptionString setting_loc_state{&config.location.state, 8, "State"};
-		SettingsOptionString setting_loc_lat{&config.location.lat, 8, "Latitude"};
-		SettingsOptionString setting_loc_lon{&config.location.lon, 8, "Longitude"};
-		SettingsOptionIntRange settings_utc_offset{&config.location.utc_offset, -12, 14, 1, false, 8, "UTC Offset"};
-
 		SettingsOptionWiFiStations wifi_stations{&config.wifi_options, 1, "Wifi Stations"};
 		SettingsOptionString setting_ntpserver{&config.ntp_server, 1, "NTP Server"};
 		SettingsOptionBool setting_wifi_extra_details{&config.show_extra_wifi_details, 1, "Verbose WiFi Details", "NO", "YES"};
@@ -341,7 +349,8 @@ class Settings
 		SettingsOptionString mqtt_username{&config.mqtt.username, 5, "Username", 0, -1, "", false};
 		SettingsOptionString mqtt_password{&config.mqtt.password, 5, "Password", 0, -1, "", false};
 		SettingsOptionString mqtt_device_name{&config.mqtt.device_name, 5, "Device Name"};
-		SettingsOptionString mqtt_topic_listen{&config.mqtt.topic_listen, 5, "Listen Topic"};
+		SettingsOptionMQTTTopic mqtt_topics{&config.mqtt.topics, 5, "Topics"};
+		// SettingsOptionString mqtt_topic_listen{&config.mqtt.topic_listen, 5, "Listen Topic"};
 
 		SettingsOptionBool screenshot_enabled{&config.screenshot.enabled, 6, "Enabled", "NO", "YES"};
 		SettingsOptionFloatRange screenshot_wb_temp{&config.screenshot.temperature, -1.0f, 1.0f, 0.1f, false, 6, "WB White Balance - Temperature"};
@@ -355,6 +364,17 @@ class Settings
 		SettingsOptionBool widget_rss_enabled{&config.rss_feed.enabled, 7, "Enabled", "NO", "YES"};
 		SettingsOptionString widget_rss_feed_url{&config.rss_feed.feed_url, 7, "Feed URL", 0, -1, "", false};
 		SettingsOptionIntRange widget_rss_poll_interval{&config.rss_feed.poll_frequency, 10, 300, 60, false, 7, "RSS Poll Interval (Min)"};
+
+		// Location
+		SettingsOptionString setting_loc_country{&config.location.country, 8, "Country Code", 0, 2};
+		SettingsOptionString setting_loc_city{&config.location.city, 8, "City"};
+		SettingsOptionString setting_loc_state{&config.location.state, 8, "State"};
+		SettingsOptionString setting_loc_lat{&config.location.lat, 8, "Latitude"};
+		SettingsOptionString setting_loc_lon{&config.location.lon, 8, "Longitude"};
+		SettingsOptionIntRange settings_utc_offset{&config.location.utc_offset, -12, 14, 1, false, 8, "UTC Offset"};
+
+		// Expansion
+		SettingsOptionBool expansion_bme_address{&config.expansion.bme280_address, 9, "I2C Address", "0x77", "0x76"};
 
 		// ==== ASYNC SUPPORT ====
 	public:

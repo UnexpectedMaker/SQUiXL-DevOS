@@ -626,6 +626,85 @@ String SettingsOptionWiFiStations::generate_html(uint16_t index)
 }
 
 //
+// MQTT
+//
+
+bool SettingsOptionMQTTTopic::update(int index, String _name, String _listen, String _publish)
+{
+	(*setting_ref)[index].name = _name.c_str();
+	(*setting_ref)[index].topic_listen = _listen.c_str();
+	(*setting_ref)[index].topic_publish = _publish.c_str();
+	settings.save(false);
+
+	return true;
+}
+
+void SettingsOptionMQTTTopic::remove_if_empty()
+{
+	(*setting_ref).erase(std::remove_if((*setting_ref).begin(), (*setting_ref).end(), [](const mqtt_topic &topic) {
+							 return topic.name == "" && topic.topic_listen == "" && topic.topic_publish == "";
+						 }),
+						 (*setting_ref).end());
+}
+
+uint8_t SettingsOptionMQTTTopic::vector_size() { return (*setting_ref).size(); }
+String SettingsOptionMQTTTopic::get_name(int index) { return String((*setting_ref)[index].name.c_str()); }
+String SettingsOptionMQTTTopic::get_listen(int index) { return String((*setting_ref)[index].topic_listen.c_str()); }
+String SettingsOptionMQTTTopic::get_publish(int index) { return String((*setting_ref)[index].topic_publish.c_str()); }
+
+void SettingsOptionMQTTTopic::add_topic(String _name, String _listen, String _publish)
+{
+
+	mqtt_topic o = mqtt_topic();
+	o.name = _name.c_str();
+	o.topic_listen = _listen.c_str();
+	o.topic_publish = _publish.c_str();
+	(*setting_ref).push_back(o);
+}
+
+String SettingsOptionMQTTTopic::generate_html(uint16_t index)
+{
+	String fn = fieldname;
+	fn.replace(" ", "_");
+	fn.toLowerCase();
+	fn = String(group) + "," + String(index) + "__" + fn;
+
+	String html = "					<div class='input-group input-group-sm mb-1'>\n";
+	html += "						<div class='row g-2'>\n";
+	html += "							<div class='col-sm-12 ps-3 pt-2 pb-0' style='font-size:14px;'>" + fieldname + "</div>\n";
+
+	for (size_t i = 0; i < (*setting_ref).size(); i++)
+	{
+		html += "								<div class='input-group input-group-sm'>\n";
+		html += "									<span class='input-group-text' id='inputGroup-sizing-sm'>" + String(i + 1) + "</span>\n";
+		html += "									<span class='input-group-text' id='inputGroup-sizing-sm'>Name</span>\n";
+		html += "									<input type='text' class='form-control form-control-sm' id='" + fn + "_ss_name_id_" + String(i) + "' name='" + fn + "_name_" + String(i) + "' value='" + String(get_name(i)) + "' />\n";
+		html += "									<span class='input-group-text' id='inputGroup-sizing-sm'>Listen</span>\n";
+		html += "									<input type='text' class='form-control form-control-sm' id='" + fn + "_topic_listen_" + String(i) + "' name='" + fn + "_topic_listen_" + String(i) + "' value='" + String(get_listen(i)) + "' />\n";
+		html += "									<span class='input-group-text' id='inputGroup-sizing-sm'>Publish</span>\n";
+		html += "									<input type='text' class='form-control form-control-sm' id='" + fn + "_topic_publish_" + String(i) + "' name='" + fn + "_topic_publish_" + String(i) + "' value='" + String(get_publish(i)) + "' />\n";
+
+		html += "								</div>\n";
+	}
+	// Add the empty
+	int i = (*setting_ref).size();
+	html += "								<div class='input-group input-group-sm'>\n";
+	html += "									<span class='input-group-text' id='inputGroup-sizing-sm'>+</span>\n";
+	html += "									<span class='input-group-text' id='inputGroup-sizing-sm'>Name</span>\n";
+	html += "									<input type='text' class='form-control form-control-sm' id='" + fn + "_name_" + String(i) + "' name='" + fn + "_name_" + String(i) + "' placeholder='New Name' />\n";
+	html += "									<span class='input-group-text' id='inputGroup-sizing-sm'>Listen</span>\n";
+	html += "									<input type='text' class='form-control form-control-sm' id='" + fn + "_topic_listen_" + String(i) + "' name='" + fn + "_topic_listen_" + String(i) + "' placeholder='New Listen Topic' />\n";
+	html += "									<span class='input-group-text' id='inputGroup-sizing-sm'>Publish</span>\n";
+	html += "									<input type='text' class='form-control form-control-sm' id='" + fn + "_topic_publish_" + String(i) + "' name='" + fn + "_topic_publish_" + String(i) + "' placeholder='New Publish Topic' />\n";
+	html += "								</div>\n";
+
+	html += "							</div>\n";
+	html += "						</div>\n";
+
+	return html;
+}
+
+//
 // THEMES
 //
 

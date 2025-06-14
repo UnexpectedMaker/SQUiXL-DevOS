@@ -10,6 +10,7 @@ class ui_control_textbox : public ui_control
 		void set_text(const char *text);
 		std::string get_text();
 
+		void set_alphanumeric(bool state) { alphanumeric = state; }
 		void set_options_data(SettingsOptionBase *sett) override;
 
 	protected:
@@ -17,4 +18,5 @@ class ui_control_textbox : public ui_control
 		uint16_t string_len_pixels = 0;
 		uint8_t cursor_char = 0;
 		bool cursor_flash = false;
+		bool alphanumeric = true;
 };

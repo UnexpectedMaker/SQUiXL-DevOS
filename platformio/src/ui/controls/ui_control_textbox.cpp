@@ -9,8 +9,16 @@ void ui_control_textbox::set_options_data(SettingsOptionBase *sett)
 
 	setting_option = sett;
 
-	auto *opt = static_cast<SettingsOptionString *>(setting_option);
-	_text = opt->get().c_str();
+	if (alphanumeric)
+	{
+		auto *opt = static_cast<SettingsOptionString *>(setting_option);
+		_text = opt->get().c_str();
+	}
+	else
+	{
+		auto *opt = static_cast<SettingsOptionInt *>(setting_option);
+		_text = String(opt->get()).c_str();
+	}
 }
 
 bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
@@ -30,8 +38,16 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 	}
 
 	// Always get the latest value to ensure changes done externally (like web server) are reflected
-	auto *opt = static_cast<SettingsOptionString *>(setting_option);
-	_text = opt->get().c_str();
+	if (alphanumeric)
+	{
+		auto *opt = static_cast<SettingsOptionString *>(setting_option);
+		_text = opt->get().c_str();
+	}
+	else
+	{
+		auto *opt = static_cast<SettingsOptionInt *>(setting_option);
+		_text = String(opt->get()).c_str();
+	}
 
 	// Clear the content sprite
 	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
@@ -84,9 +100,17 @@ void ui_control_textbox::set_text(const char *text)
 	_text = text;
 	if (setting_option)
 	{
-		auto *opt = static_cast<SettingsOptionString *>(setting_option);
-		String new_text = String(text);
-		opt->update(&new_text);
+		if (alphanumeric)
+		{
+			auto *opt = static_cast<SettingsOptionString *>(setting_option);
+			String new_text = String(text);
+			opt->update(&new_text);
+		}
+		else
+		{
+			auto *opt = static_cast<SettingsOptionInt *>(setting_option);
+			opt->update(int(text));
+		}
 	}
 	string_len_pixels = 0;
 }

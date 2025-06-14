@@ -9,15 +9,20 @@ void ui_control_textbox::set_options_data(SettingsOptionBase *sett)
 
 	setting_option = sett;
 
-	if (alphanumeric)
+	if (data_type == SettingsOptionBase::Type::FLOAT)
 	{
-		auto *opt = static_cast<SettingsOptionString *>(setting_option);
-		_text = opt->get().c_str();
+		auto *opt = static_cast<SettingsOptionFloat *>(setting_option);
+		_text = String(opt->get()).c_str();
 	}
-	else
+	else if (data_type == SettingsOptionBase::Type::INT)
 	{
 		auto *opt = static_cast<SettingsOptionInt *>(setting_option);
 		_text = String(opt->get()).c_str();
+	}
+	else
+	{
+		auto *opt = static_cast<SettingsOptionString *>(setting_option);
+		_text = opt->get().c_str();
 	}
 }
 
@@ -38,15 +43,20 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 	}
 
 	// Always get the latest value to ensure changes done externally (like web server) are reflected
-	if (alphanumeric)
+	if (data_type == SettingsOptionBase::Type::FLOAT)
 	{
-		auto *opt = static_cast<SettingsOptionString *>(setting_option);
-		_text = opt->get().c_str();
+		auto *opt = static_cast<SettingsOptionFloat *>(setting_option);
+		_text = String(opt->get()).c_str();
 	}
-	else
+	else if (data_type == SettingsOptionBase::Type::INT)
 	{
 		auto *opt = static_cast<SettingsOptionInt *>(setting_option);
 		_text = String(opt->get()).c_str();
+	}
+	else
+	{
+		auto *opt = static_cast<SettingsOptionString *>(setting_option);
+		_text = opt->get().c_str();
 	}
 
 	// Clear the content sprite
@@ -100,16 +110,21 @@ void ui_control_textbox::set_text(const char *text)
 	_text = text;
 	if (setting_option)
 	{
-		if (alphanumeric)
+		if (data_type == SettingsOptionBase::Type::FLOAT)
+		{
+			auto *opt = static_cast<SettingsOptionFloat *>(setting_option);
+			opt->update(atof(text));
+		}
+		else if (data_type == SettingsOptionBase::Type::INT)
+		{
+			auto *opt = static_cast<SettingsOptionInt *>(setting_option);
+			opt->update(atoi(text));
+		}
+		else
 		{
 			auto *opt = static_cast<SettingsOptionString *>(setting_option);
 			String new_text = String(text);
 			opt->update(&new_text);
-		}
-		else
-		{
-			auto *opt = static_cast<SettingsOptionInt *>(setting_option);
-			opt->update(int(text));
 		}
 	}
 	string_len_pixels = 0;

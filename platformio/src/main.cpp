@@ -372,7 +372,7 @@ void create_ui_elements()
 	settings_tab_group.add_child_ui(&text_mqtt_broker_ip, 5);
 
 	text_mqtt_broker_port.create_on_grid(2, 1, "BROKER PORT");
-	text_mqtt_broker_port.set_alphanumeric(false);
+	text_mqtt_broker_port.set_data_type(SettingsOptionBase::Type::INT);
 	text_mqtt_broker_port.set_options_data(&settings.mqtt_broker_port);
 	settings_tab_group.add_child_ui(&text_mqtt_broker_port, 5);
 

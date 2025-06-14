@@ -301,6 +301,13 @@ void widgetRSSFeeds::process_article_data(bool success, const String &response)
 
 	if (ok)
 	{
+		if (!has_had_any_articles)
+		{
+			has_had_any_articles = true;
+			_sprite_article.fillScreen(TFT_MAGENTA);
+			// get rid of any waiting or other messages so we can draw the article info
+		}
+
 		if (!is_getting_more_articles && stored_articles.size() > 0)
 		{
 			DEBUG_PRINTLN("DEBUG: Resetting refresh timer due to successful parse");

@@ -75,7 +75,12 @@ void widgetJokes::process_joke_data(bool success, const String &response)
 
 	if (ok)
 	{
-		has_had_any_jokes = true;
+		if (!has_had_any_jokes)
+		{
+			has_had_any_jokes = true;
+			_sprite_joke.fillScreen(TFT_MAGENTA);
+			// get rid of any waiting or other messages so we can draw the joke text
+		}
 		if (!is_getting_more_jokes)
 		{
 			// If we have local jokes stored now, we process the first one into word wrapped lines
@@ -123,10 +128,6 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 		show_next_joke();
 		return false;
 	}
-
-	// if (!has_had_any_jokes)
-	// {
-	// }
 
 	if (is_busy)
 	{

@@ -595,6 +595,8 @@ void setup()
 	next_background_swap = millis();
 	every_second = millis();
 
+	squixl.log_heap("setup");
+
 	wifi_controller.connect();
 
 	// Serial.printf("\n>>> Setup done in %0.2f ms\n\n", (millis() - timer));
@@ -606,6 +608,9 @@ void setup()
 
 void loop()
 {
+	if (squixl.switching_screens)
+		return;
+
 	if (wifi_controller.is_connected() && rtc.requiresNTP && millis() - ntp_time_set > 10000)
 	{
 		ntp_time_set = millis();
@@ -614,9 +619,6 @@ void loop()
 		rtc.set_time_from_NTP(settings.config.location.utc_offset);
 		// return;
 	}
-
-	if (squixl.switching_screens)
-		return;
 
 	// Seems we always need audio - so long as the SD card is not enabled
 	if (squixl.mux_check_state(MUX_STATE::MUX_I2S))
@@ -632,7 +634,7 @@ void loop()
 
 		squixl.cache_text_sizes();
 
-		// Func above setup() that is used to create all o ftheUI screens and controls an widgets
+		// Func above setup() that is used to create all of tge ui_screens and ui_controls and ui_widgets
 		create_ui_elements();
 
 		// Continue processing startup

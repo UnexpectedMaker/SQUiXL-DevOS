@@ -184,34 +184,42 @@ void WifiController::disconnect(bool force)
 
 // Process the task queue - called from the main thread in loop() in squixl.cpp
 // only process every 2 seconds
+// void WifiController::loop()
+// {
+// 	if (millis() - next_wifi_loop > 2000)
+// 	{
+// 		next_wifi_loop = millis();
+// 		wifi_callback_item result;
+// 		if (xQueueReceive(wifi_callback_queue, &result, 0) == pdTRUE)
+// 		{
+// 			result.callback(result.success, *result.response);
+// 			delete result.response;
+// 		}
+
+// 		xSemaphoreTake(pending_mutex, portMAX_DELAY);
+// 		if (!pending_requests.empty())
+// 		{
+// 			wifi_task_item *item = pending_requests.front();
+// 			pending_requests.pop();
+
+// 			perform_wifi_request(item->url, item->callback);
+// 			delete item;
+// 		}
+// 		xSemaphoreGive(pending_mutex);
+// 	}
+// }
+
 void WifiController::loop()
 {
 	if (millis() - next_wifi_loop > 2000)
 	{
 		next_wifi_loop = millis();
 		wifi_callback_item result;
-		if (xQueueReceive(wifi_callback_queue, &result, 0) == pdTRUE)
+		while (xQueueReceive(wifi_callback_queue, &result, 0) == pdTRUE)
 		{
 			result.callback(result.success, *result.response);
 			delete result.response;
 		}
-
-		xSemaphoreTake(pending_mutex, portMAX_DELAY);
-		if (!pending_requests.empty())
-		{
-			// Serial.print("Primary DNS: ");
-			// Serial.println(WiFi.dnsIP(0)); // 0 = primary
-
-			// Serial.print("Secondary DNS: ");
-			// Serial.println(WiFi.dnsIP(1)); // 1 = secondary
-
-			wifi_task_item *item = pending_requests.front();
-			pending_requests.pop();
-
-			perform_wifi_request(item->url, item->callback);
-			delete item;
-		}
-		xSemaphoreGive(pending_mutex);
 	}
 }
 
@@ -351,12 +359,12 @@ void WifiController::wifi_task(void *pvParameters)
 				controller->wifi_busy = true;
 				// Perform the request
 
-				xSemaphoreTake(controller->pending_mutex, portMAX_DELAY);
-				controller->pending_requests.push(item);
-				xSemaphoreGive(controller->pending_mutex);
+				// xSemaphoreTake(controller->pending_mutex, portMAX_DELAY);
+				// controller->pending_requests.push(item);
+				// xSemaphoreGive(controller->pending_mutex);
 
-				// controller->perform_wifi_request(item->url, item->callback);
-				// delete item;
+				controller->perform_wifi_request(item->url, item->callback);
+				delete item;
 
 				// Optional: delay if queue is long
 				controller->queue_size = uxQueueMessagesWaiting(controller->wifi_task_queue);
@@ -365,6 +373,8 @@ void WifiController::wifi_task(void *pvParameters)
 				// 	vTaskDelay(pdMS_TO_TICKS(100)); // adjust delay as needed
 				// }
 				controller->wifi_busy = false;
+
+				vTaskDelay(1000);
 
 				// Clean up once done:
 			}
@@ -379,11 +389,6 @@ void WifiController::add_to_queue(std::string url, _CALLBACK callback)
 
 	item->url = url;
 	item->callback = callback;
-
-	// if (item->url == "")
-	// 	Serial.println("Adding request to connect to wifi if not connected!");
-	// else
-	// 	Serial.println("Adding request to " + String(item->url.c_str()));
 
 	xQueueSend(wifi_task_queue, &item, portMAX_DELAY);
 

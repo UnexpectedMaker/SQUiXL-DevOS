@@ -208,7 +208,58 @@ class SQUiXL : public SQUiXL_LITE
 		bool hint_reload_wallpaper = false;
 
 		// Helpers
-		void split_text_into_lines(const String &text, int max_chars_per_line, std::vector<String> &lines);
+		template <typename Alloc>
+		void split_text_into_lines(const String &text, int max_chars_per_line, std::vector<String, Alloc> &lines)
+		{
+			String currentLine = "";
+			int pos = 0;
+
+			while (pos < text.length())
+			{
+				// Find the next space starting from pos.
+				int spaceIndex = text.indexOf(' ', pos);
+				String word;
+
+				// If no more spaces, grab the rest of the string.
+				if (spaceIndex == -1)
+				{
+					word = text.substring(pos);
+					pos = text.length();
+				}
+				else
+				{
+					word = text.substring(pos, spaceIndex);
+					pos = spaceIndex + 1; // Move past the space.
+				}
+
+				// If currentLine is empty, start it with the word.
+				if (currentLine.length() == 0)
+				{
+					currentLine = word;
+				}
+				// Otherwise, check if adding the next word (with a space) would exceed the limit.
+				else if (currentLine.length() + 1 + word.length() <= max_chars_per_line)
+				{
+					currentLine += " " + word;
+				}
+				// If it would exceed the limit, push the current line and start a new one.
+				else
+				{
+					currentLine.replace("\n", " ");
+					currentLine.replace("\r", " ");
+					lines.push_back(currentLine);
+					currentLine = word;
+				}
+			}
+
+			// Add the last line if not empty.
+			if (currentLine.length() > 0)
+			{
+				currentLine.replace("\n", " ");
+				currentLine.replace("\r", " ");
+				lines.push_back(currentLine);
+			}
+		}
 
 		uint8_t *user_wallpaper_buffer = nullptr;
 		int user_wallpaper_length = 0;

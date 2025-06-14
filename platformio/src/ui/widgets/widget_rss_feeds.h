@@ -42,9 +42,9 @@ class widgetRSSFeeds : public ui_window
 		uint8_t max_chars_per_line = 0;
 		uint8_t max_lines = 0;
 
-		std::vector<String> lines;
+		std::vector<String, psram_allocator<String>> lines;
 
-		std::vector<ARTICLE> stored_articles;
+		std::vector<ARTICLE, psram_allocator<ARTICLE>> stored_articles;
 
 		BB_SPI_LCD _sprite_article;
 

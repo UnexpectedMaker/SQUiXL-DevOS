@@ -37,9 +37,9 @@ class widgetJokes : public ui_window
 		uint8_t max_chars_per_line = 0;
 		uint8_t max_lines = 0;
 
-		std::vector<String> lines;
+		std::vector<String, psram_allocator<String>> lines;
 
-		std::vector<JOKE> stored_jokes;
+		std::vector<JOKE, psram_allocator<JOKE>> stored_jokes;
 
 		BB_SPI_LCD _sprite_joke;
 

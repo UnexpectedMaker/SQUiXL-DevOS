@@ -807,56 +807,56 @@ void SQUiXL::take_screenshot()
 	// });
 }
 
-void SQUiXL::split_text_into_lines(const String &text, int max_chars_per_line, std::vector<String> &lines)
-{
-	String currentLine = "";
-	int pos = 0;
+// void SQUiXL::split_text_into_lines(const String &text, int max_chars_per_line, std::vector<String, Alloc> &lines)
+// {
+// 	String currentLine = "";
+// 	int pos = 0;
 
-	while (pos < text.length())
-	{
-		// Find the next space starting from pos.
-		int spaceIndex = text.indexOf(' ', pos);
-		String word;
+// 	while (pos < text.length())
+// 	{
+// 		// Find the next space starting from pos.
+// 		int spaceIndex = text.indexOf(' ', pos);
+// 		String word;
 
-		// If no more spaces, grab the rest of the string.
-		if (spaceIndex == -1)
-		{
-			word = text.substring(pos);
-			pos = text.length();
-		}
-		else
-		{
-			word = text.substring(pos, spaceIndex);
-			pos = spaceIndex + 1; // Move past the space.
-		}
+// 		// If no more spaces, grab the rest of the string.
+// 		if (spaceIndex == -1)
+// 		{
+// 			word = text.substring(pos);
+// 			pos = text.length();
+// 		}
+// 		else
+// 		{
+// 			word = text.substring(pos, spaceIndex);
+// 			pos = spaceIndex + 1; // Move past the space.
+// 		}
 
-		// If currentLine is empty, start it with the word.
-		if (currentLine.length() == 0)
-		{
-			currentLine = word;
-		}
-		// Otherwise, check if adding the next word (with a space) would exceed the limit.
-		else if (currentLine.length() + 1 + word.length() <= max_chars_per_line)
-		{
-			currentLine += " " + word;
-		}
-		// If it would exceed the limit, push the current line and start a new one.
-		else
-		{
-			currentLine.replace("\n", " ");
-			currentLine.replace("\r", " ");
-			lines.push_back(currentLine);
-			currentLine = word;
-		}
-	}
+// 		// If currentLine is empty, start it with the word.
+// 		if (currentLine.length() == 0)
+// 		{
+// 			currentLine = word;
+// 		}
+// 		// Otherwise, check if adding the next word (with a space) would exceed the limit.
+// 		else if (currentLine.length() + 1 + word.length() <= max_chars_per_line)
+// 		{
+// 			currentLine += " " + word;
+// 		}
+// 		// If it would exceed the limit, push the current line and start a new one.
+// 		else
+// 		{
+// 			currentLine.replace("\n", " ");
+// 			currentLine.replace("\r", " ");
+// 			lines.push_back(currentLine);
+// 			currentLine = word;
+// 		}
+// 	}
 
-	// Add the last line if not empty.
-	if (currentLine.length() > 0)
-	{
-		currentLine.replace("\n", " ");
-		currentLine.replace("\r", " ");
-		lines.push_back(currentLine);
-	}
-}
+// 	// Add the last line if not empty.
+// 	if (currentLine.length() > 0)
+// 	{
+// 		currentLine.replace("\n", " ");
+// 		currentLine.replace("\r", " ");
+// 		lines.push_back(currentLine);
+// 	}
+// }
 
 SQUiXL squixl;

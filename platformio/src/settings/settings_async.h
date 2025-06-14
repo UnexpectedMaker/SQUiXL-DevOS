@@ -1,6 +1,33 @@
 #ifndef SETTINGS_ASYNC_H
 #define SETTINGS_ASYNC_H
 
+#include <esp_heap_caps.h>
+#include <memory>
+
+template <typename T>
+struct psram_allocator
+{
+		typedef T value_type;
+		psram_allocator() = default;
+		template <class U>
+		constexpr psram_allocator(const psram_allocator<U> &) noexcept {}
+		T *allocate(std::size_t n)
+		{
+			T *p = static_cast<T *>(heap_caps_malloc(n * sizeof(T), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+			if (!p)
+				throw std::bad_alloc();
+			return p;
+		}
+		void deallocate(T *p, std::size_t) noexcept
+		{
+			heap_caps_free(p);
+		}
+};
+template <class T, class U>
+bool operator==(const psram_allocator<T> &, const psram_allocator<U> &) { return true; }
+template <class T, class U>
+bool operator!=(const psram_allocator<T> &, const psram_allocator<U> &) { return false; }
+
 #include <vector>
 #include <map>
 #include <string>
@@ -234,7 +261,7 @@ struct setting_group
 {
 		String name = "";
 		String description = "";
-		std::vector<SettingsOptionBase *> groups = {};
+		std::vector<SettingsOptionBase *, psram_allocator<SettingsOptionBase>> groups = {};
 		SettingType type = SettingType::MAIN;
 
 		setting_group(String nm, SettingType t, String d = "") : name(nm), type(t), description(d) {};
@@ -258,7 +285,8 @@ class Settings
 		};
 
 	public:
-		std::vector<setting_group> settings_groups;
+		// std::vector<setting_group> settings_groups;
+		std::vector<setting_group, psram_allocator<setting_group>> settings_groups;
 		Config config;
 
 		Settings(void)

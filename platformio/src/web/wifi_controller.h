@@ -9,6 +9,7 @@
 #include <string>
 
 #include <queue>
+#include <map>
 #include <freertos/semphr.h>
 
 typedef std::function<void(bool, const String &)> _CALLBACK;
@@ -59,6 +60,13 @@ class WifiController
 				_CALLBACK callback;
 		};
 
+		// Maybe a way to cache DNS lookups?
+		struct request_dns
+		{
+				std::string domain;
+				IPAddress ip;
+		};
+
 		TaskHandle_t wifi_task_handler;
 		QueueHandle_t wifi_task_queue;
 		QueueHandle_t wifi_callback_queue;
@@ -67,6 +75,9 @@ class WifiController
 		SemaphoreHandle_t pending_mutex = nullptr;
 
 		static void wifi_task(void *pvParameters);
+
+		std::map<std::string, request_dns> dns_cache;
+		std::string extract_domain(const std::string &url);
 };
 
 extern WifiController wifi_controller;

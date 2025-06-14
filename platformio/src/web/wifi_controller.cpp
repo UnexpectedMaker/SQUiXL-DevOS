@@ -219,33 +219,70 @@ void WifiController::loop()
 String WifiController::http_request(std::string url)
 {
 	String payload = "ERROR";
-
 	int http_code = -1;
 	String url_lower = String(url.c_str());
 	url_lower.toLowerCase();
 
-	Serial.printf("http_request: %s\n", url_lower.c_str());
-
 	bool is_https = (url_lower.substring(0, 5) == "https");
+	std::string domain = extract_domain(url);
 
+	// Only resolve/cache/use IP for HTTP
+	IPAddress resolved_ip;
+	bool ip_cached = false;
+
+	// For HTTP: try cache and/or resolve, else bail out
+	if (!is_https)
+	{
+		auto it = dns_cache.find(domain);
+		if (it != dns_cache.end())
+		{
+			resolved_ip = it->second.ip;
+			ip_cached = true;
+			Serial.printf("Using cached DNS for %s - %d.%d.%d.%d\n", domain.c_str(), resolved_ip[0], resolved_ip[1], resolved_ip[2], resolved_ip[3]);
+		}
+		else
+		{
+			if (WiFi.hostByName(domain.c_str(), resolved_ip) == 1)
+			{
+				dns_cache[domain] = {domain, resolved_ip};
+				ip_cached = true;
+				Serial.printf("Cached DNS for %s as %d.%d.%d.%d\n", domain.c_str(), resolved_ip[0], resolved_ip[1], resolved_ip[2], resolved_ip[3]);
+			}
+			else
+			{
+				Serial.printf("DNS Failed for '%s'\n", domain.c_str());
+				Serial.println("No cached IP, aborting");
+				return payload;
+			}
+		}
+	}
+
+	// --- HTTP request ---
 	HTTPClient http;
-	// http.setTimeout(5000);
-
 	if (is_https)
 	{
+		Serial.printf("HTTPS request: %s\n", url.c_str());
 		http.begin(url.c_str());
 	}
 	else
 	{
 		WiFiClient client;
-		http.begin(client, url.c_str());
+		std::string url_with_ip = url;
+
+		// Always use the cached IP for HTTP (if we have it, and at this point we always do or would have returned)
+		size_t pos = url_with_ip.find(domain);
+		if (pos != std::string::npos)
+			url_with_ip.replace(pos, domain.length(), resolved_ip.toString().c_str());
+
+		Serial.printf("HTTP IP request: %s\n", url_with_ip.c_str());
+		http.begin(client, url_with_ip.c_str());
+		http.addHeader("Host", domain.c_str());
 	}
 
-	http_code = http.GET(); // send GET request
+	http_code = http.GET();
 
 	if (http_code != 200)
 	{
-		Serial.println("URL: " + url_lower);
 		Serial.println("** Response Code: " + String(http_code));
 		http.end();
 	}
@@ -256,6 +293,17 @@ String WifiController::http_request(std::string url)
 	}
 
 	return payload;
+}
+
+std::string WifiController::extract_domain(const std::string &url)
+{
+	size_t start = url.find("://");
+	if (start == std::string::npos)
+		start = 0;
+	else
+		start += 3;
+	size_t end = url.find('/', start);
+	return url.substr(start, end - start);
 }
 
 // Function to call out to the HTTP Request and then add the result to the outgoing queue

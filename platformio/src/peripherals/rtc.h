@@ -117,6 +117,7 @@ class RTC
 		bool did_time_change();
 
 		void get_step_date(uint16_t &day, uint16_t &month, uint16_t &year);
+		const char *unix_timestamp_to_time_str(uint32_t timestamp);
 
 		TT_Time time_components;
 		RV3028C7 rtc;
@@ -150,7 +151,7 @@ class RTC
 
 		String cached_date = "";
 
-        unsigned long last_time_change = 0;
+		unsigned long last_time_change = 0;
 
 		static constexpr const char *filename = "/alarms.json";
 		static constexpr const char *tmp_filename = "/tmp_alarms.json";

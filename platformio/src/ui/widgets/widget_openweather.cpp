@@ -1,4 +1,5 @@
 #include "ui/widgets/widget_openweather.h"
+#include "peripherals/rtc.h"
 #include "ui/ui_screen.h"
 
 using json = nlohmann::json;
@@ -98,7 +99,13 @@ void widgetOpenWeather::process_weather_data(bool success, const String &respons
 			{
 				_temp = (uint16_t)(main.value("temp", 0));
 				_humidity = (uint16_t)(main.value("humidity", 0));
-				Serial.printf("Temp: %d, Humidity: %d\n", _temp, _humidity);
+
+				_feels_like = (uint16_t)(main.value("feels_like", 0));
+				_pressure = (uint16_t)(main.value("pressure", 0));		 // hPa
+				_sea_level = (uint16_t)(main.value("sea_level", 0));	 // hPa
+				_ground_level = (uint16_t)(main.value("grnd_level", 0)); // hPa
+
+				Serial.printf("Temp: %dC, Feels Like: %dC, Humidity: %d, Pressure: %d hPa, Sea Level: %d hPa, Gnd Level: %d hPa\n", _temp, _feels_like, _humidity, _pressure, _sea_level, _ground_level);
 			}
 			else
 			{
@@ -154,6 +161,38 @@ void widgetOpenWeather::process_weather_data(bool success, const String &respons
 				}
 			}
 		}
+
+		if (data.contains("sys"))
+		{
+			json sys = data["sys"];
+			if (sys.is_object())
+			{
+				uint32_t sunrise_utc = (uint32_t)(sys.value("sunrise", 0));
+				uint32_t sunset_utc = (uint32_t)(sys.value("sunset", 0));
+				uint32_t tz_offset = (settings.config.utc_offset * 60 * 60);
+
+				uint32_t sunrise_local = sunrise_utc;
+				uint32_t sunset_local = sunset_utc;
+
+				// Calc local tim for sunrise and sunset
+				_sunrise = rtc.unix_timestamp_to_time_str(sunrise_local);
+				_sunset = rtc.unix_timestamp_to_time_str(sunset_local);
+
+				Serial.printf("OW: Sunrise %s, sunset %s\n ", _sunrise.c_str(), _sunset.c_str());
+			}
+		}
+
+		if (data.contains("wind"))
+		{
+			json wind = data["wind"];
+			if (wind.is_object())
+			{
+				_wind_dir = (uint16_t)(wind.value("deg", 0));	  // deg
+				_wind_speed = (float)(wind.value("speed", 0.0f)); // m/sec
+
+				Serial.printf("OW: Wind dir %ddeg, Speed %0.2fm/s\n ", _wind_dir, _wind_speed);
+			}
+		}
 	}
 	catch (json::exception &e)
 	{
@@ -167,6 +206,8 @@ void widgetOpenWeather::process_weather_data(bool success, const String &respons
 
 	has_data = ok;
 	should_redraw = true;
+
+	delete &response;
 }
 
 bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)

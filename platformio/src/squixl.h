@@ -207,7 +207,11 @@ class SQUiXL : public SQUiXL_LITE
 		void take_screenshot();
 		bool hint_reload_wallpaper = false;
 
+		uint8_t *user_wallpaper_buffer = nullptr;
+		int user_wallpaper_length = 0;
+
 		// Helpers
+		// This definition needs to live here becaue it's templated to allow for the contents of the data being parsed to live in PSRAM
 		template <typename Alloc>
 		void split_text_into_lines(const String &text, int max_chars_per_line, std::vector<String, Alloc> &lines)
 		{
@@ -260,9 +264,6 @@ class SQUiXL : public SQUiXL_LITE
 				lines.push_back(currentLine);
 			}
 		}
-
-		uint8_t *user_wallpaper_buffer = nullptr;
-		int user_wallpaper_length = 0;
 
 	protected:
 		float current_backlight_pwm = 0.0f;

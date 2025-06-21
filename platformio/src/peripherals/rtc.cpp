@@ -553,4 +553,20 @@ void RTC::print_file()
 	file.close();
 }
 
+const char *RTC::unix_timestamp_to_time_str(uint32_t timestamp)
+{
+	static char buf[6]; // "HH:MM" + null
+	time_t t = (time_t)timestamp;
+	struct tm *tm_time = gmtime(&t); // Or localtime(&t) for local time
+	if (tm_time)
+	{
+		snprintf(buf, sizeof(buf), "%02d:%02d", tm_time->tm_hour, tm_time->tm_min);
+	}
+	else
+	{
+		snprintf(buf, sizeof(buf), "--:--");
+	}
+	return buf;
+}
+
 RTC rtc;

@@ -261,7 +261,7 @@ struct setting_group
 {
 		String name = "";
 		String description = "";
-		std::vector<SettingsOptionBase *, psram_allocator<SettingsOptionBase>> groups = {};
+		std::vector<SettingsOptionBase *, psram_allocator<SettingsOptionBase *>> groups = {};
 		SettingType type = SettingType::MAIN;
 
 		setting_group(String nm, SettingType t, String d = "") : name(nm), type(t), description(d) {};

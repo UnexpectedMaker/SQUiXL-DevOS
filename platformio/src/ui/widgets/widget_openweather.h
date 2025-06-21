@@ -43,6 +43,16 @@ class widgetOpenWeather : public ui_window
 		String _weather_desc = "";
 		uint8_t stat = 0;
 
+		// Xtras for wider display
+		int16_t _feels_like = -999;
+		float _wind_speed = 0.0f;
+		int16_t _pressure = 0;
+		int16_t _sea_level = 0;
+		int16_t _ground_level = 0;
+		int _wind_dir = 0;
+		std::string _sunrise = "";
+		std::string _sunset = "";
+
 		std::map<String, BB_SPI_LCD> ow_icons;
 };
 

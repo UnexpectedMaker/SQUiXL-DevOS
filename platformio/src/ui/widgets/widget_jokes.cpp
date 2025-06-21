@@ -94,6 +94,8 @@ void widgetJokes::process_joke_data(bool success, const String &response)
 	}
 
 	is_dirty = ok;
+
+	delete &response;
 }
 
 bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)

@@ -65,7 +65,7 @@ class ui_dialogbox
 		uint16_t _b_col = darken565(0x5AEB, 0.5);
 		uint16_t _t_col = TFT_WHITE;
 
-		std::vector<String> lines;
+		std::vector<String, psram_allocator<String>> lines;
 };
 
 extern ui_dialogbox dialogbox;

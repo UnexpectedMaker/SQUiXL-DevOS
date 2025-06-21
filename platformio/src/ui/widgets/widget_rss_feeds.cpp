@@ -319,6 +319,8 @@ void widgetRSSFeeds::process_article_data(bool success, const String &response)
 
 	is_dirty = ok;
 	DEBUG_PRINTF("DEBUG: Set is_dirty to %d\n", is_dirty);
+
+	delete &response;
 }
 
 bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)

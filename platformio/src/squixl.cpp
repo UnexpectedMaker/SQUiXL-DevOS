@@ -308,6 +308,8 @@ void SQUiXL::get_and_update_utc_settings(bool success, const String &response)
 	}
 
 	wifi_controller.wifi_blocking_access = false;
+
+	delete &response;
 }
 
 bool SQUiXL::process_touch_full()
@@ -753,9 +755,13 @@ void SQUiXL::go_to_sleep()
 
 void SQUiXL::process_version(bool success, const String &response)
 {
-	try
+	if (response == "ERROR")
 	{
-		if (response != "ERROR")
+		// wifi_controller.add_to_queue("https://squixl.io/latestver", [](bool success, const String &response) { squixl.process_version(success, response); });
+	}
+	else
+	{
+		try
 		{
 			json data = json::parse(response);
 
@@ -764,14 +770,16 @@ void SQUiXL::process_version(bool success, const String &response)
 			Serial.printf("\n ***Latest Version: %d, Build Version: %d, Should notify? %s\n\n", latest_version, version_build, String(latest_version > version_build ? "YES!" : "no"));
 			version_latest = latest_version;
 		}
-	}
-	catch (json::exception &e)
-	{
+		catch (json::exception &e)
+		{
 
-		Serial.println("Version Check parse error:");
-		Serial.println(e.what());
-		Serial.printf("Response was: %s\n", response.c_str());
+			Serial.println("Version Check parse error:");
+			Serial.println(e.what());
+			Serial.printf("Response was: %s\n", response.c_str());
+		}
 	}
+
+	delete &response;
 }
 
 void SQUiXL::take_screenshot()
@@ -806,57 +814,5 @@ void SQUiXL::take_screenshot()
 	// 	}
 	// });
 }
-
-// void SQUiXL::split_text_into_lines(const String &text, int max_chars_per_line, std::vector<String, Alloc> &lines)
-// {
-// 	String currentLine = "";
-// 	int pos = 0;
-
-// 	while (pos < text.length())
-// 	{
-// 		// Find the next space starting from pos.
-// 		int spaceIndex = text.indexOf(' ', pos);
-// 		String word;
-
-// 		// If no more spaces, grab the rest of the string.
-// 		if (spaceIndex == -1)
-// 		{
-// 			word = text.substring(pos);
-// 			pos = text.length();
-// 		}
-// 		else
-// 		{
-// 			word = text.substring(pos, spaceIndex);
-// 			pos = spaceIndex + 1; // Move past the space.
-// 		}
-
-// 		// If currentLine is empty, start it with the word.
-// 		if (currentLine.length() == 0)
-// 		{
-// 			currentLine = word;
-// 		}
-// 		// Otherwise, check if adding the next word (with a space) would exceed the limit.
-// 		else if (currentLine.length() + 1 + word.length() <= max_chars_per_line)
-// 		{
-// 			currentLine += " " + word;
-// 		}
-// 		// If it would exceed the limit, push the current line and start a new one.
-// 		else
-// 		{
-// 			currentLine.replace("\n", " ");
-// 			currentLine.replace("\r", " ");
-// 			lines.push_back(currentLine);
-// 			currentLine = word;
-// 		}
-// 	}
-
-// 	// Add the last line if not empty.
-// 	if (currentLine.length() > 0)
-// 	{
-// 		currentLine.replace("\n", " ");
-// 		currentLine.replace("\r", " ");
-// 		lines.push_back(currentLine);
-// 	}
-// }
 
 SQUiXL squixl;

@@ -7,7 +7,7 @@
 #include "ui/widgets/widget_jokes.h"
 #include "ui/widgets/widget_rss_feeds.h"
 #include "ui/widgets/widget_time.h"
-#include "ui/widgets/widget_bme280.h"
+// #include "ui/widgets/widget_bme280.h"
 #include "ui/widgets/widget_battery.h"
 #include "ui/widgets/widget_wifimanager.h"
 
@@ -179,6 +179,8 @@ void process_longitude_latitude(bool success, const String &response)
 		Serial.println(e.what());
 		Serial.printf("Response was: %s\n", response.c_str());
 	}
+
+	delete &response;
 }
 
 void update_longitude_latitude()
@@ -454,10 +456,10 @@ void create_ui_elements()
 	/*
 	This widget will only show if a BME280 sensor is found
 	*/
-	widget_bme280.create(245, 160, 225, 40, TFT_BLACK, 16, 0, "BME280");
-	widget_bme280.set_refresh_interval(5000); // we only want this to update every 5 seconds
-	widget_bme280.set_delayed_frst_draw(2000);
-	screen_main.add_child_ui(&widget_bme280);
+	// widget_bme280.create(245, 160, 225, 40, TFT_BLACK, 16, 0, "BME280");
+	// widget_bme280.set_refresh_interval(5000); // we only want this to update every 5 seconds
+	// widget_bme280.set_delayed_frst_draw(2000);
+	// screen_main.add_child_ui(&widget_bme280);
 
 	/*
 	Setup MQTT Screen
@@ -597,7 +599,16 @@ void setup()
 
 	squixl.log_heap("setup");
 
-	wifi_controller.connect();
+	if (wifi_controller.connect())
+	{
+		if (settings.config.wifi_check_for_updates)
+		{
+			// If the user has opted in to check for firmware update notifications, kick off the check.
+			// This only happens once per boot up right now.
+			// TODO: Look at triggering this any time the user switches it on, if it was off?
+			wifi_controller.add_to_queue("https://squixl.io/latestver", [](bool success, const String &response) { squixl.process_version(success, response); });
+		}
+	}
 
 	// Serial.printf("\n>>> Setup done in %0.2f ms\n\n", (millis() - timer));
 	check_wifi_requirements();
@@ -764,13 +775,6 @@ void loop()
 				if (webserver.start())
 				{
 					start_webserver = false;
-					if (settings.config.wifi_check_for_updates)
-					{
-						// If the user has opted in to check for firmware update notifications, kick off the check.
-						// This only happens once per boot up right now.
-						// TODO: Look at triggering this any time the user switches it on, if it was off?
-						wifi_controller.add_to_queue("https://squixl.io/latestver", [](bool success, const String &response) { squixl.process_version(success, response); });
-					}
 				}
 			}
 		}

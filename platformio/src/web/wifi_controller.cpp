@@ -109,7 +109,7 @@ bool WifiController::connect()
 			// Time out the connection if it takes longer than 45 seconds
 			while ((millis() - start_time < 5000) && WiFi.status() != WL_CONNECTED)
 			{
-				delay(10);
+				delay(100);
 			}
 
 			if (WiFi.status() != WL_CONNECTED)
@@ -127,10 +127,13 @@ bool WifiController::connect()
 
 				break;
 			}
+			delay(500);
 		}
 	}
 
-	// Serial.printf("wifi status %d\n\n", WiFi.status());
+	delay(100);
+
+	Serial.printf("wifi status %d\n\n", WiFi.status());
 
 	if (WiFi.status() == WL_CONNECTED)
 	{
@@ -218,7 +221,7 @@ void WifiController::loop()
 		while (xQueueReceive(wifi_callback_queue, &result, 0) == pdTRUE)
 		{
 			result.callback(result.success, *result.response);
-			delete result.response;
+			// delete result.response;
 		}
 	}
 }
@@ -267,6 +270,7 @@ String WifiController::http_request(std::string url)
 
 	// --- HTTP request ---
 	HTTPClient http;
+	http.setTimeout(5000);
 	if (is_https)
 	{
 		Serial.printf("HTTPS request: %s\n", url.c_str());
@@ -358,25 +362,20 @@ void WifiController::wifi_task(void *pvParameters)
 			{
 				controller->wifi_busy = true;
 				// Perform the request
-
-				// xSemaphoreTake(controller->pending_mutex, portMAX_DELAY);
-				// controller->pending_requests.push(item);
-				// xSemaphoreGive(controller->pending_mutex);
-
 				controller->perform_wifi_request(item->url, item->callback);
-				delete item;
 
-				// Optional: delay if queue is long
-				controller->queue_size = uxQueueMessagesWaiting(controller->wifi_task_queue);
-				// if (controller->queue_size > 0)
-				// {
-				// 	vTaskDelay(pdMS_TO_TICKS(100)); // adjust delay as needed
-				// }
-				controller->wifi_busy = false;
-
-				vTaskDelay(1000);
+				// Wait until callback queue is empty before processing the next task
+				while (uxQueueMessagesWaiting(controller->wifi_callback_queue) > 0)
+				{
+					// Serial.print("~");
+					vTaskDelay(pdMS_TO_TICKS(10)); // Wait for callbacks to be processed
+				}
 
 				// Clean up once done:
+				delete item;
+				controller->wifi_busy = false;
+
+				vTaskDelay(100);
 			}
 		}
 	}

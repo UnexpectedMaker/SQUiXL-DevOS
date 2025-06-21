@@ -689,10 +689,11 @@ void ui_screen::cancel_drag()
 {
 	// Serial.println("Cancelling drag");
 
-	while (drag_x != 0 || drag_y != 0)
+	while (abs(drag_x) > 0 || abs(drag_y) > 0)
 	{
-		drag_x = round(drag_x / 2);
-		drag_y = round(drag_y / 2);
+		drag_x = round(drag_x / 3.0);
+		drag_y = round(drag_y / 3.0);
+
 		// Serial.printf(">Screen drag back %d,%d\n", drag_x, drag_y);
 		draw_draggable();
 	}
@@ -729,8 +730,8 @@ void ui_screen::finish_drag(Directions direction, int16_t dx, int16_t dy)
 
 	while (drag_x != to_x || drag_y != to_y)
 	{
-		drag_x = round(drag_x + (to_x - drag_x) / 2.0);
-		drag_y = round(drag_y + (to_y - drag_y) / 2.0);
+		drag_x = round(drag_x + (to_x - drag_x) / 1.3);
+		drag_y = round(drag_y + (to_y - drag_y) / 1.3);
 		draw_draggable();
 	}
 

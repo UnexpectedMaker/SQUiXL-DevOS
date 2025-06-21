@@ -38,6 +38,7 @@ class Keyboard
 		void update(touch_event_t touch);
 		void print_text();
 		bool showing = false;
+		void animate(bool open);
 
 		void move_cursor(uint16_t pos);
 		void flash_cursor();
@@ -51,12 +52,14 @@ class Keyboard
 		const Key *find_key_at(int tx, int ty) const;
 
 	private:
-		BB_SPI_LCD _sprite_keyboard, _sprite_background;
+		BB_SPI_LCD _sprite_keyboard, _sprite_background, _sprite_mixdown;
 
 		int16_t _x = 0;	  // X position
 		int16_t _y = 0;	  // Y position
 		int16_t _w = 480; // Width
 		int16_t _h = 280; // Height
+
+		int16_t _kb_y = 480; // KB animate Y position
 
 		uint8_t box_char_width = 0;
 		uint8_t box_char_height = 0;
@@ -69,6 +72,8 @@ class Keyboard
 
 		uint8_t titlechar_width = 0;
 		uint8_t titlechar_height = 0;
+
+		bool cached_char_sizes = false;
 
 		uint16_t touch_x = 0;
 		uint16_t touch_y = 0;

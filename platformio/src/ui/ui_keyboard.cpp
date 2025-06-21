@@ -137,17 +137,30 @@ void Keyboard::show(bool state, ui_control_textbox *target)
 	if (state && !_sprite_keyboard.getBuffer())
 	{
 		_sprite_keyboard.createVirtual(480, 300, NULL, true);
-		_sprite_background.createVirtual(480, 300, NULL, true);
-		squixl.lcd.readImage(0, 180, 480, 300, (uint16_t *)_sprite_background.getBuffer());
-		squixl.loadPNG_into(&_sprite_keyboard, 0, 0, kb_empty, sizeof(kb_empty));
+		_sprite_background.createVirtual(480, 480, NULL, true);
+		_sprite_mixdown.createVirtual(480, 480, NULL, true);
+		squixl.lcd.readImage(0, 0, 480, 480, (uint16_t *)_sprite_background.getBuffer());
+		delay(5);
+		_sprite_mixdown.fillScreen(0);
+
+		squixl.lcd.blendSprite(&_sprite_mixdown, &_sprite_background, &_sprite_mixdown, 12);
+
+		// squixl.lcd.readImage(0, 0, 480, 300, (uint16_t *)_sprite_mixdown.getBuffer());
+
+		// squixl.loadPNG_into(&_sprite_keyboard, 0, 0, kb_empty, sizeof(kb_empty));
 
 		_sprite_keyboard.setFreeFont(UbuntuMono_R[2]);
-		squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 1, &titlechar_width, &titlechar_height);
-		squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 2, &char_width, &char_height);
-		squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 3, &keychar_width, &keychar_height);
 
-		box_char_width = char_width;
-		box_char_height = char_height;
+		if (!cached_char_sizes)
+		{
+			cached_char_sizes = true;
+			squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 1, &titlechar_width, &titlechar_height);
+			squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 2, &char_width, &char_height);
+			squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 3, &keychar_width, &keychar_height);
+
+			box_char_width = char_width;
+			box_char_height = char_height;
+		}
 	}
 
 	if (state && target != nullptr)
@@ -163,6 +176,9 @@ void Keyboard::show(bool state, ui_control_textbox *target)
 	}
 	else
 	{
+		animate(false);
+
+		_kb_y = 480;
 		_target = nullptr;
 		showing = false;
 		can_flash = false;
@@ -176,9 +192,55 @@ void Keyboard::show(bool state, ui_control_textbox *target)
 		{
 			_sprite_keyboard.freeVirtual();
 			_sprite_background.freeVirtual();
+			_sprite_mixdown.freeVirtual();
 		}
 
 		// squixl.log_heap("close KB");
+	}
+}
+
+void Keyboard::animate(bool open)
+{
+	if (open)
+	{
+		if (_kb_y > 180)
+		{
+			int fade = 0;
+			// squixl.lcd.blendSpriteColor(0, &_sprite_background, &_sprite_mixdown, fade);
+			// _sprite_mixdown.blurGaussian();
+			// _sprite_mixdown.blurGaussian();
+
+			while (_kb_y > 180)
+			{
+				fade = constrain(fade + 4, 0, 20);
+				_kb_y = round(_kb_y + (180 - _kb_y) / 1.3);
+				squixl.lcd.blendSpriteColor(0, &_sprite_background, &_sprite_mixdown, fade);
+				_sprite_mixdown.drawSprite(0, _kb_y, &_sprite_keyboard, 1.0, -1);
+				squixl.lcd.drawSprite(0, 0, &_sprite_mixdown, 1.0, -1);
+			}
+
+			Serial.printf("Faded KB in, finished on fade: %d\n", fade);
+		}
+	}
+	else
+	{
+		if (_kb_y < 480)
+		{
+			int fade = 20;
+			int delta_y = 1;
+			while (fade > 0)
+			{
+				_kb_y += delta_y;
+				squixl.lcd.blendSpriteColor(0, &_sprite_background, &_sprite_mixdown, fade);
+				_sprite_mixdown.drawSprite(0, _kb_y, &_sprite_keyboard, 1.0, -1);
+				squixl.lcd.drawSprite(0, 0, &_sprite_mixdown, 1.0, -1);
+
+				fade = constrain(fade - 3, 0, 20);
+				delta_y = constrain(delta_y * 2, 0, 150);
+			}
+
+			_kb_y = 480;
+		}
 	}
 }
 
@@ -194,11 +256,7 @@ void Keyboard::update(touch_event_t t)
 		// 1) clamp your touch X to the exact text‐bounds
 		int x0 = string_start_pos_x;
 		int x1 = string_start_pos_x + string_len_pixels;
-		int cx = tx < x0
-					 ? x0
-					 : (tx > x1
-							? x1
-							: tx);
+		int cx = tx < x0 ? x0 : (tx > x1 ? x1 : tx);
 
 		// 2) convert into a 0-based “which character cell” index
 		int rel = cx - x0;				 // 0…string_len_pixels
@@ -338,8 +396,6 @@ void Keyboard::redraw_kayboard()
 
 void Keyboard::print_text()
 {
-	// 8,8,45,472
-
 	string_len = _edited_text.length();
 
 	if (string_len < 40)
@@ -368,11 +424,9 @@ void Keyboard::print_text()
 		cursor_pos_x = string_start_pos_x + cursor_pos * box_char_width;
 	}
 
-	// _sprite_keyboard.setCursor(20, 26 + (char_height / 2));
-	// for (int c = 128; c < 140; c++)
-	// 	_sprite_keyboard.print((char)c);
+	animate(true);
 
-	squixl.lcd.drawSprite(0, 180, &_sprite_keyboard, 1.0, -1);
+	squixl.lcd.drawSprite(0, 0, &_sprite_mixdown, 1.0, -1);
 }
 
 void Keyboard::move_cursor(uint16_t pos)

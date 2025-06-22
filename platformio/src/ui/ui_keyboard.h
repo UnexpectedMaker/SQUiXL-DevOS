@@ -99,6 +99,8 @@ class Keyboard
 
 		std::array<std::vector<Key>, ROWS> _keys_by_row;
 		std::array<std::vector<Key>, ROWS> _keys_by_row_numeric;
+
+		std::array<std::vector<Key>, ROWS> _keys_by_row_numeric_only;
 };
 
 extern Keyboard keyboard;

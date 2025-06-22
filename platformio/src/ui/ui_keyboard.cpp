@@ -1,6 +1,7 @@
 #include "ui/ui_keyboard.h"
 #include "ui/ui_screen.h"
 #include "ui/images/kboards/kb_empty.h"
+#include "ui/images/kboards/kb_numeric.h"
 #include "squixl.h"
 
 void Keyboard::init_keymap()
@@ -11,6 +12,10 @@ void Keyboard::init_keymap()
 
 	// clear any old data
 	for (auto &r : _keys_by_row_numeric)
+		r.clear();
+
+	// clear any old data
+	for (auto &r : _keys_by_row_numeric_only)
 		r.clear();
 
 	// ─── Row 1: "q w e r t y u i o p" ──────────────────────────────
@@ -41,6 +46,13 @@ void Keyboard::init_keymap()
 		{'p', {"0", "="}, 421, 57, 39, 51, true},
 	};
 
+	_keys_by_row_numeric_only[1] = {
+		{'1', {"1", "1"}, 65, 57, 83, 51, true},
+		{'2', {"2", "2"}, 155, 57, 83, 51, true},
+		{'3', {"3", "3"}, 244, 57, 83, 51, true},
+		{KC_BACKSPACE, {"⌫", "⌫"}, 352, 57, 83, 51, true},
+	};
+
 	// ─── Row 2: "a s d f g h j k l" ─────────────────────────────
 	//   y=114…164 (height=51), 9 equal keys
 	_keys_by_row[2] = {
@@ -65,6 +77,13 @@ void Keyboard::init_keymap()
 		{'j', {"$", "\x80"}, 311, 114, 38, 51, true},
 		{'k', {"&", "\xA3"}, 355, 114, 38, 51, true},
 		{'l', {"@", "\xA5"}, 399, 114, 39, 51, true},
+	};
+
+	_keys_by_row_numeric_only[2] = {
+		{'4', {"4", "4"}, 65, 114, 83, 51, true},
+		{'5', {"5", "5"}, 155, 114, 83, 51, true},
+		{'6', {"6", "6"}, 244, 114, 83, 51, true},
+		{'-', {"-", "-"}, 331, 114, 83, 51, true},
 	};
 
 	// ─── Row 3: Shift, "z x c v b n m", Backspace ───────────────
@@ -93,6 +112,13 @@ void Keyboard::init_keymap()
 		{KC_BACKSPACE, {"⌫", "⌫"}, 409, 171, 51, 51, false},
 	};
 
+	_keys_by_row_numeric_only[3] = {
+		{'7', {"7", "7"}, 65, 171, 83, 51, true},
+		{'8', {"8", "8"}, 155, 171, 83, 51, true},
+		{'9', {"9", "9"}, 244, 171, 83, 51, true},
+		{'.', {".", "."}, 331, 171, 83, 51, true},
+	};
+
 	// ─── Row 4: "?123", Hide, Space, Return ──────────────────────
 	//   y=228…277 (height=50), 4 keys
 	_keys_by_row[4] = {
@@ -106,6 +132,13 @@ void Keyboard::init_keymap()
 		{KC_SPACE, {"space", "space"}, 133, 228, 228, 50, true},
 		{KC_RETURN, {"set", "set"}, 367, 228, 93, 50, true},
 	};
+
+	_keys_by_row_numeric_only[4] = {
+		// {'7', {"7", "7"}, 65, 171, 83, 51, true},
+		{'0', {"0", "0"}, 155, 228, 83, 51, true},
+		// {'9', {"9", "9"}, 244, 171, 83, 51, true},
+		{KC_RETURN, {"set", "set"}, 331, 228, 83, 51, true},
+	};
 }
 
 const Keyboard::Key *Keyboard::find_key_at(int tx, int ty) const
@@ -113,9 +146,13 @@ const Keyboard::Key *Keyboard::find_key_at(int tx, int ty) const
 	// scan each real row (1…4); row 0 is your suggestion bar
 	for (int r = 1; r < ROWS; ++r)
 	{
-		auto &row = is_numeric ? _keys_by_row_numeric[r] : _keys_by_row[r];
+		auto &row = (_target->get_data_type() != SettingsOptionBase::Type::STRING)
+						? _keys_by_row_numeric_only[r]
+						: (is_numeric ? _keys_by_row_numeric[r] : _keys_by_row[r]);
+
 		if (row.empty())
 			continue;
+
 		int y0 = row[0].y, h = row[0].h;
 		if (ty >= y0 && ty < y0 + h)
 		{
@@ -206,10 +243,6 @@ void Keyboard::animate(bool open)
 		if (_kb_y > 180)
 		{
 			int fade = 0;
-			// squixl.lcd.blendSpriteColor(0, &_sprite_background, &_sprite_mixdown, fade);
-			// _sprite_mixdown.blurGaussian();
-			// _sprite_mixdown.blurGaussian();
-
 			while (_kb_y > 180)
 			{
 				fade = constrain(fade + 4, 0, 20);
@@ -218,8 +251,6 @@ void Keyboard::animate(bool open)
 				_sprite_mixdown.drawSprite(0, _kb_y, &_sprite_keyboard, 1.0, -1);
 				squixl.lcd.drawSprite(0, 0, &_sprite_mixdown, 1.0, -1);
 			}
-
-			Serial.printf("Faded KB in, finished on fade: %d\n", fade);
 		}
 	}
 	else
@@ -355,7 +386,12 @@ void Keyboard::update(touch_event_t t)
 
 void Keyboard::redraw_kayboard()
 {
-	squixl.loadPNG_into(&_sprite_keyboard, 0, 0, kb_empty, sizeof(kb_empty));
+	// Load the correct KB layout
+	if (_target->get_data_type() == SettingsOptionBase::Type::STRING)
+		squixl.loadPNG_into(&_sprite_keyboard, 0, 0, kb_empty, sizeof(kb_empty));
+	else
+		squixl.loadPNG_into(&_sprite_keyboard, 0, 0, kb_numeric, sizeof(kb_numeric));
+
 	// set title
 	std::string title = _target->get_title();
 	int pixel_len = title.length() * titlechar_width;
@@ -370,7 +406,11 @@ void Keyboard::redraw_kayboard()
 
 	for (int r = 1; r < ROWS; ++r)
 	{
-		auto &row = is_numeric ? _keys_by_row_numeric[r] : _keys_by_row[r];
+		// auto &row = is_numeric ? _keys_by_row_numeric[r] : _keys_by_row[r];
+
+		auto &row = (_target->get_data_type() != SettingsOptionBase::Type::STRING)
+						? _keys_by_row_numeric_only[r]
+						: (is_numeric ? _keys_by_row_numeric[r] : _keys_by_row[r]);
 		if (row.empty())
 			continue;
 		for (auto &k : row)
@@ -413,7 +453,10 @@ void Keyboard::print_text()
 	string_start_pos_x = 240 - (string_len_pixels / 2);
 
 	_sprite_keyboard.setFreeFont(UbuntuMono_R[(string_len < 40 ? 2 : 1)]);
-	_sprite_keyboard.fillRect(10, 30, 460, 34, RGB(60, 60, 59));
+	if (_target->get_data_type() == SettingsOptionBase::Type::STRING)
+		_sprite_keyboard.fillRect(10, 30, 460, 34, RGB(60, 60, 59));
+	else
+		_sprite_keyboard.fillRect(70, 30, 340, 34, RGB(60, 60, 59));
 	_sprite_keyboard.setTextColor(TFT_WHITE, -1);
 	_sprite_keyboard.setCursor(string_start_pos_x, 46 + (box_char_height / 2));
 	_sprite_keyboard.print(_edited_text.c_str());
@@ -426,6 +469,7 @@ void Keyboard::print_text()
 
 	animate(true);
 
+	_sprite_mixdown.drawSprite(0, 180, &_sprite_keyboard, 1.0, -1);
 	squixl.lcd.drawSprite(0, 0, &_sprite_mixdown, 1.0, -1);
 }
 

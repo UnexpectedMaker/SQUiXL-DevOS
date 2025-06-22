@@ -11,6 +11,7 @@ class ui_control_textbox : public ui_control
 		std::string get_text();
 
 		void set_data_type(SettingsOptionBase::Type _type) { data_type = _type; }
+		SettingsOptionBase::Type get_data_type() { return data_type; }
 		void set_options_data(SettingsOptionBase *sett) override;
 
 	protected:

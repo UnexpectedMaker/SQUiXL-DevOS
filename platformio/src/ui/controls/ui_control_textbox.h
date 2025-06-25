@@ -18,6 +18,7 @@ class ui_control_textbox : public ui_control
 		std::string _text = "";
 		uint16_t string_len_pixels = 0;
 		uint8_t cursor_char = 0;
+		int8_t num_vis_chars = -1;
 		bool cursor_flash = false;
 		SettingsOptionBase::Type data_type = SettingsOptionBase::Type::STRING;
 };

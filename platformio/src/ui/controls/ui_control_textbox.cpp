@@ -61,19 +61,38 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	// Clear the content sprite
 	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
+	uint8_t starting_size = 2;
 
 	// Calculate the string pixel sizes to allow for text centering
-	// This is only needed once
-	// uses different font sizes based no string length
+	// uses different font sizes based on string length
 	if (char_width == 0 || string_len_pixels == 0)
 	{
-		uint8_t string_len = _text.length();
-		if (string_len < 40)
-			squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 2, &char_width, &char_height);
-		else
-			squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 1, &char_width, &char_height);
+		// Serial.printf("Starting to calc font size and string for: %s\n", _text.c_str());
+		num_vis_chars = -1;
 
+		squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, starting_size, &char_width, &char_height);
+		uint8_t string_len = _text.length();
 		string_len_pixels = string_len * char_width;
+
+		// Serial.printf("start: string_len_pixels: %d, w: %d using font size: %d\n", string_len_pixels, (_w - 10), starting_size);
+
+		while (string_len_pixels > _w - 10 && starting_size > 0)
+		{
+			starting_size--;
+			squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, starting_size, &char_width, &char_height);
+			string_len_pixels = string_len * char_width;
+			// Serial.printf("string_len_pixels: %d, w: %d using font size: %d\n", string_len_pixels, (_w - 10), starting_size);
+		}
+
+		// if we are still wider than the sprite, even at font size 0, we need to chop the string up.
+		if (string_len_pixels > _w - 10)
+		{
+			// calculate the number of visible chars, mins 3 so we can add ...
+			num_vis_chars = ((_w - 10) / char_width) - 3;
+			string_len_pixels = (num_vis_chars + 3) * char_width;
+
+			// Serial.printf("NOPE! string_len_pixels: %d, w: %d, num_vis_chars: %d\n", string_len_pixels, (_w - 10), num_vis_chars);
+		}
 	}
 
 	_sprite_content.fillRoundRect(0, 0, _w, _h, 8, static_cast<ui_screen *>(get_ui_parent())->dark_tint[1], DRAW_TO_RAM);
@@ -81,9 +100,17 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	_sprite_content.setTextColor(TFT_WHITE, -1);
 
-	_sprite_content.setFreeFont(UbuntuMono_R[(_text.length() < 40 ? 2 : 1)]);
+	_sprite_content.setFreeFont(UbuntuMono_R[starting_size]);
 	_sprite_content.setCursor((_w / 2) - (string_len_pixels / 2), 40 + char_height / 2);
-	_sprite_content.print(_text.c_str());
+
+	// If num_visible_chars is -1, then the entire string fits, so just print it to the screen.
+	if (num_vis_chars < 0)
+		_sprite_content.print(_text.c_str());
+	else
+	{
+		std::string visible_str = _text.substr(0, num_vis_chars) + "...";
+		_sprite_content.print(visible_str.c_str());
+	}
 
 	// If the control has a title, show it at the top center
 	if (_title.length() > 0)
@@ -137,20 +164,6 @@ bool ui_control_textbox::process_touch(touch_event_t touch_event)
 		if (check_bounds(touch_event.x, touch_event.y))
 		{
 			keyboard.show(true, this);
-			// flash = true;
-			// redraw(32);
-			// static_cast<ui_screen *>(get_ui_parent())->refresh(true);
-
-			// if (callbackFunction != nullptr)
-			// 	callbackFunction();
-
-			// audio.play_tone(500, 1);
-
-			// delay(10);
-			// flash = false;
-			// redraw(32);
-			// static_cast<ui_screen *>(get_ui_parent())->refresh(true);
-
 			return true;
 		}
 	}

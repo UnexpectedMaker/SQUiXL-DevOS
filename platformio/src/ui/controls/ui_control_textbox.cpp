@@ -117,8 +117,12 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 	// If the control has a title, show it at the top center
 	if (_title.length() > 0)
 	{
+		if (char_height_title == 0)
+		{
+			squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 0, &char_width_title, &char_height_title);
+		}
 		_sprite_content.setFreeFont(UbuntuMono_R[0]);
-		_sprite_content.setCursor((_w / 2) - (title_len_pixels / 2), char_height + 2);
+		_sprite_content.setCursor((_w / 2) - (title_len_pixels / 2), char_height_title + 2);
 		_sprite_content.setTextColor(static_cast<ui_screen *>(get_ui_parent())->light_tint[5], -1);
 		_sprite_content.print(_title.c_str());
 	}

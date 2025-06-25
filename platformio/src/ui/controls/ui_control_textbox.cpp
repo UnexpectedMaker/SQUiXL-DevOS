@@ -40,6 +40,8 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (!_sprite_content.getBuffer())
 	{
 		_sprite_content.createVirtual(_w, _h, NULL, true);
+		char_width = 0;
+		string_len_pixels = 0;
 	}
 
 	// Always get the latest value to ensure changes done externally (like web server) are reflected
@@ -101,7 +103,7 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 	_sprite_content.setTextColor(TFT_WHITE, -1);
 
 	_sprite_content.setFreeFont(UbuntuMono_R[starting_size]);
-	_sprite_content.setCursor((_w / 2) - (string_len_pixels / 2), 40 + char_height / 2);
+	_sprite_content.setCursor((_w / 2) - (string_len_pixels / 2), 37 + char_height / 2);
 
 	// If num_visible_chars is -1, then the entire string fits, so just print it to the screen.
 	if (num_vis_chars < 0)
@@ -154,6 +156,7 @@ void ui_control_textbox::set_text(const char *text)
 			opt->update(&new_text);
 		}
 	}
+	char_width = 0;
 	string_len_pixels = 0;
 }
 

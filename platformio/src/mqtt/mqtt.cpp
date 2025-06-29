@@ -16,57 +16,58 @@ void MQTT_Stuff::static_mqtt_callback(char *topic, byte *message, unsigned int l
 
 void MQTT_Stuff::mqtt_callback(char *topic, byte *message, unsigned int length)
 {
-	// Serial.print("Message arrived on topic: ");
-	// Serial.print(topic);
-	// Serial.print(". Message: ");
 	String messageTemp;
-
 	for (int i = 0; i < length; i++)
-	{
-		// Serial.print((char)message[i]);
 		messageTemp += (char)message[i];
-	}
-	// Serial.println();
 
-	// Serial.println(String(topic).substring(0, 16));
+	Serial.printf("New message on topic: %s\n", topic);
+	Serial.printf("message: %s\n", messageTemp.c_str());
 
-	if (String(topic).substring(0, 16) == "um_space/sensors" || true)
-	{
-		// Parse the string into a Json structure
-		json json_data = json::parse(messageTemp);
-		// Convert json to struct
-		MQTT_Payload payload = json_data.get<MQTT_Payload>();
+	/*
 
-		mqtt_dirty = false;
+	This is where you add whatever processing you need to do for topics and messages
 
-		if (mqtt_topic_payloads.find(payload.owner) == mqtt_topic_payloads.end())
-		{
-			mqtt_topic_payloads[payload.owner].push_back(payload);
-			Serial.printf("\nMQTT: New Sensor owner: %s\nAdded new %s sensor at %s\n", payload.owner.c_str(), payload.device_class.c_str(), payload.description.c_str());
-			mqtt_dirty = true;
-		}
-		else
-		{
-			for (int s = 0; s < mqtt_topic_payloads[payload.owner].size(); s++)
-			{
-				if (mqtt_topic_payloads[payload.owner][s].device_class == payload.device_class && mqtt_topic_payloads[payload.owner][s].timestamp < payload.timestamp)
-				{
-					mqtt_topic_payloads[payload.owner][s].upate_from(payload);
-					Serial.printf("\nMQTT: Updated sensor %s for %s\n", payload.device_class.c_str(), payload.owner.c_str());
-					mqtt_dirty = true;
-					break;
-				}
-			}
-		}
+	Ignore teh code below - that is specifically for UM setup and early prototyping
 
-		if (!mqtt_dirty)
-		{
-			mqtt_topic_payloads[payload.owner].push_back(payload);
-			Serial.printf("\nMQTT: Added new sensor %s for %s at %s\nNow has %d sensors\n", payload.device_class.c_str(), payload.owner.c_str(), payload.description.c_str(), mqtt_topic_payloads[payload.owner].size());
+	*/
 
-			mqtt_dirty = true;
-		}
-	}
+	// if (String(topic).substring(0, 16) == "um_space/sensors" || true)
+	// {
+	// 	// Parse the string into a Json structure
+	// 	json json_data = json::parse(messageTemp);
+	// 	// Convert json to struct
+	// 	MQTT_Payload payload = json_data.get<MQTT_Payload>();
+
+	// 	mqtt_dirty = false;
+
+	// 	if (mqtt_topic_payloads.find(payload.owner) == mqtt_topic_payloads.end())
+	// 	{
+	// 		mqtt_topic_payloads[payload.owner].push_back(payload);
+	// 		Serial.printf("\nMQTT: New Sensor owner: %s\nAdded new %s sensor at %s\n", payload.owner.c_str(), payload.device_class.c_str(), payload.description.c_str());
+	// 		mqtt_dirty = true;
+	// 	}
+	// 	else
+	// 	{
+	// 		for (int s = 0; s < mqtt_topic_payloads[payload.owner].size(); s++)
+	// 		{
+	// 			if (mqtt_topic_payloads[payload.owner][s].device_class == payload.device_class && mqtt_topic_payloads[payload.owner][s].timestamp < payload.timestamp)
+	// 			{
+	// 				mqtt_topic_payloads[payload.owner][s].upate_from(payload);
+	// 				Serial.printf("\nMQTT: Updated sensor %s for %s\n", payload.device_class.c_str(), payload.owner.c_str());
+	// 				mqtt_dirty = true;
+	// 				break;
+	// 			}
+	// 		}
+	// 	}
+
+	// 	if (!mqtt_dirty)
+	// 	{
+	// 		mqtt_topic_payloads[payload.owner].push_back(payload);
+	// 		Serial.printf("\nMQTT: Added new sensor %s for %s at %s\nNow has %d sensors\n", payload.device_class.c_str(), payload.owner.c_str(), payload.description.c_str(), mqtt_topic_payloads[payload.owner].size());
+
+	// 		mqtt_dirty = true;
+	// 	}
+	// }
 }
 
 void MQTT_Stuff::mqtt_reconnect()

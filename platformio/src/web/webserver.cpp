@@ -70,6 +70,10 @@ String WebServer::processor(const String &var)
 	{
 		return String(footer_wallpaper);
 	}
+	else if (var == "WEBFORM_DYNAMIC_JS")
+	{
+		return String(web_form_dynamic_js);
+	}
 	else if (var == "THEME")
 	{
 		return "dark";
@@ -197,7 +201,7 @@ String WebServer::generate_settings_html(int group_id)
 
 	String group_id_str = String(group_id);
 
-	String html = "\n<div id='settings_group_" + group_id_str + "'>\n";
+	String html = "\n<div class='settings_group' id='settings_group_" + group_id_str + "'>\n";
 	html += "	<span class='settings_heading'>" + String(group_name.name.c_str()) + "</span>\n";
 	html += "	<div class='settings_frame' id='group_" + group_id_str + "' style='margin-bottom:15px; padding-bottom:5px;'>\n";
 
@@ -208,7 +212,7 @@ String WebServer::generate_settings_html(int group_id)
 		html += "		</div>\n";
 	}
 
-	html += "		<form hx-post='/update_settings_group' hx-target='#settings_group_" + group_id_str + "' >\n";
+	html += "		<form class='ajax-settings-form' action='/update_settings_group' method='POST'>\n";
 	html += "			<input type='hidden' name='group_id' id='group_id' value='" + group_id_str + "'>\n";
 	html += "			<div class ='row'>\n";
 
@@ -652,7 +656,10 @@ bool WebServer::start()
 			// audio.play_dock();
 			settings.save(true);
 
-			const char *return_data = generate_settings_html(group_id).c_str();
+			// const char *return_data = generate_settings_html(group_id).c_str();
+			String html = generate_settings_html(group_id);
+			const char *return_data = html.c_str();
+
 			const size_t return_data_length = strlen_P(return_data);
 
 			delay(10);

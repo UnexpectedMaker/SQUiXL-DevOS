@@ -38,23 +38,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
 			%FOOTER%
 	
-			<script>
-				document.addEventListener('htmx:afterSwap', function(evt) {
-					// Ensure the target container is one of the form containers
-					if (evt.detail.target.id.startsWith("settings_group_")) {
-						var flashSpan = evt.detail.target.querySelector('.flash-span');
-						if (flashSpan) {
-							flashSpan.style.display = 'inline';
-							flashSpan.classList.add('flash_post');
-							setTimeout(function() {
-								flashSpan.classList.remove('flash_post');
-								flashSpan.style.display = 'none';
-							}, 1000); // Adjust the duration as needed
-						}
-					}
-				});
-
-			</script>
+            %WEBFORM_DYNAMIC_JS%
 	
 	)rawliteral";
 
@@ -96,23 +80,7 @@ const char index_wifi_html[] PROGMEM = R"rawliteral(
 
 			%FOOTER%
 	
-			<script>
-				document.addEventListener('htmx:afterSwap', function(evt) {
-					// Ensure the target container is one of the form containers
-					if (evt.detail.target.id.startsWith("settings_group_")) {
-						var flashSpan = evt.detail.target.querySelector('.flash-span');
-						if (flashSpan) {
-							flashSpan.style.display = 'inline';
-							flashSpan.classList.add('flash_post');
-							setTimeout(function() {
-								flashSpan.classList.remove('flash_post');
-								flashSpan.style.display = 'none';
-							}, 1000); // Adjust the duration as needed
-						}
-					}
-				});
-
-			</script>
+            %WEBFORM_DYNAMIC_JS%
 	
 	)rawliteral";
 
@@ -154,23 +122,7 @@ const char index_widgets_html[] PROGMEM = R"rawliteral(
 				
 			%FOOTER%
 	
-			<script>
-				document.addEventListener('htmx:afterSwap', function(evt) {
-					// Ensure the target container is one of the form containers
-					if (evt.detail.target.id.startsWith("settings_group_")) {
-						var flashSpan = evt.detail.target.querySelector('.flash-span');
-						if (flashSpan) {
-							flashSpan.style.display = 'inline';
-							flashSpan.classList.add('flash_post');
-							setTimeout(function() {
-								flashSpan.classList.remove('flash_post');
-								flashSpan.style.display = 'none';
-							}, 1000); // Adjust the duration as needed
-						}
-					}
-				});
-
-			</script>
+            %WEBFORM_DYNAMIC_JS%
 	
 	)rawliteral";
 
@@ -388,24 +340,95 @@ const char index_html_old[] PROGMEM = R"rawliteral(
 		%FOOTER%
 
 		<script>
-			document.addEventListener('htmx:afterSwap', function(evt) {
-				// Ensure the target container is one of the form containers
-				if (evt.detail.target.id.startsWith("settings_group_")) {
-					var flashSpan = evt.detail.target.querySelector('.flash-span');
-					if (flashSpan) {
-						flashSpan.style.display = 'inline';
-						flashSpan.classList.add('flash_post');
-						setTimeout(function() {
-							flashSpan.classList.remove('flash_post');
-							flashSpan.style.display = 'none';
-						}, 1000); // Adjust the duration as needed
-					}
-				}
-			});
+            document.addEventListener('submit', async function(event)
+            {
+                if (!event.target.classList.contains('ajax-settings-form')) return;
+                event.preventDefault();
+
+                const form = event.target;
+                const container = form.closest('.settings_group');
+                if (!container) return;
+
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData
+                });
+                const html = await response.text();
+
+                // Grab the parent for reinsertion reference
+                const parent = container.parentNode;
+                // Temporary div to parse the returned HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                // Find the new container (should have the same class/id)
+                const newContainer = tempDiv.firstElementChild;
+                // Replace the old container with the new one
+                parent.replaceChild(newContainer, container);
+
+                // Flash logic:
+                const flashSpan = newContainer.querySelector('.flash-span');
+                if (flashSpan) {
+                    flashSpan.style.display = 'inline';
+                    flashSpan.classList.add('flash_post');
+                    setTimeout(function() {
+                    flashSpan.classList.remove('flash_post');
+                    flashSpan.style.display = 'none';
+                    }, 1000); // Duration
+                }
+            });
 		</script>
 
 )rawliteral";
 
 const char settings_group_0_description[] PROGMEM = R"rawliteral(
 
+)rawliteral";
+
+const char web_form_dynamic_js[] PROGMEM = R"rawliteral(
+        <script>
+            document.addEventListener('submit', async function(event)
+            {
+                if (!event.target.classList.contains('ajax-settings-form')) return;
+                event.preventDefault();
+
+
+                const form = event.target;
+                const container = form.closest('.settings_group');
+                if (!container) return;
+
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData
+                });
+                const html = await response.text();
+
+                // Temporary div to parse the returned HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+
+                // *** Use the id to reliably select the new container ***
+                const newContainer = tempDiv.querySelector('#' + container.id);
+
+                if (newContainer) {
+                    container.replaceWith(newContainer);
+
+                    // Flash logic:
+                    const flashSpan = newContainer.querySelector('.flash-span');
+                    if (flashSpan) {
+                        flashSpan.style.display = 'inline';
+                        flashSpan.classList.add('flash_post');
+                        setTimeout(function() {
+                            flashSpan.classList.remove('flash_post');
+                            flashSpan.style.display = 'none';
+                        }, 1000); // Duration
+                    }
+                } else {
+                    // If not found, do not replace, maybe show error
+                    alert("Failed to update: server did not return expected content for #" + container.id);
+                    console.log("Returned HTML:", html);
+                }
+            });
+		</script>
 )rawliteral";

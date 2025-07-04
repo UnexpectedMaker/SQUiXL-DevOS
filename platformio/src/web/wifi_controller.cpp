@@ -10,6 +10,14 @@
 
 using json = nlohmann::json;
 
+void log_heap(const char *title)
+{
+	Serial.printf("\nHeap Log: %s\nHeap Size: %u of %u\n", title, ESP.getFreeHeap(), ESP.getHeapSize());
+	Serial.printf("Min Heap Size: %u, Max Alloc Heap Size: %u, ", ESP.getMinFreeHeap(), ESP.getMaxAllocHeap());
+	Serial.printf("PSRAM Free: %u\n", ESP.getFreePsram());
+	Serial.printf("Largest PSRAM Chunk Free %u\n\n", heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+}
+
 // Initialise the controller, create the incoming and outgoing queues and start the process task
 WifiController::WifiController()
 {
@@ -32,7 +40,7 @@ WifiController::WifiController()
 
 	// Start the WiFi task
 	// xTaskCreate(WifiController::wifi_task, "wifi_task", 8192 * 2, this, 2, &wifi_task_handler);
-	xTaskCreatePinnedToCore(WifiController::wifi_task, "wifi_task", 8192 * 2, this, 3, &wifi_task_handler, 0);
+	xTaskCreatePinnedToCore(WifiController::wifi_task, "wifi_task", 8192 * 3, this, 3, &wifi_task_handler, 0);
 
 	wifi_prevent_disconnect = true;
 
@@ -335,6 +343,8 @@ void WifiController::perform_wifi_request(std::string url, _CALLBACK callback)
 	{
 		download_error_count++;
 		Serial.printf("WIFI Download Error Count: %d\n", download_error_count);
+
+		log_heap("wifi error");
 
 		if (is_connected() && download_error_count == 5)
 		{

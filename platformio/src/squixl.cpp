@@ -377,7 +377,7 @@ bool SQUiXL::process_touch_full()
 		next_touch = millis();
 		return true;
 	}
-	else if (drag_lock != DRAGABLE::DRAG_BOTH)
+	else if (drag_lock != DRAGGABLE::DRAG_BOTH)
 	{
 		touch_rate = 10;
 	}
@@ -429,7 +429,7 @@ bool SQUiXL::process_touch_full()
 
 			tab_group_index = -1;
 
-			drag_lock = DRAGABLE::DRAG_BOTH;
+			drag_lock = DRAGGABLE::DRAG_BOTH;
 
 			if (current_screen() != nullptr)
 			{
@@ -486,7 +486,7 @@ bool SQUiXL::process_touch_full()
 				if (currently_selected != nullptr && currently_selected != current_screen())
 				{
 					// the element is not draggable, so fallback to the screen so the user can grab the screen
-					if (currently_selected->is_dragable() == DRAGABLE::DRAG_NONE)
+					if (currently_selected->is_dragable() == DRAGGABLE::DRAG_NONE)
 					{
 						currently_selected = current_screen();
 						// Serial.println("switched element to screen because the user is dragging.");
@@ -511,15 +511,15 @@ bool SQUiXL::process_touch_full()
 
 			if (currently_selected == current_screen() && (abs(deltaX) > move_margin_for_drag || abs(deltaY) > move_margin_for_drag))
 			{
-				if (drag_lock == DRAGABLE::DRAG_BOTH)
+				if (drag_lock == DRAGGABLE::DRAG_BOTH)
 				{
-					drag_lock = (abs(deltaX) > abs(deltaY)) ? DRAGABLE::DRAG_HORIZONTAL : DRAGABLE::DRAG_VERTICAL;
+					drag_lock = (abs(deltaX) > abs(deltaY)) ? DRAGGABLE::DRAG_HORIZONTAL : DRAGGABLE::DRAG_VERTICAL;
 					current_screen()->adjust_navigation_range(drag_lock, &clamp_delta_low, &clamp_delta_high);
 					// Serial.printf("Set drag constraints to %d <-> %d\n", clamp_delta_low, clamp_delta_high);
 				}
 
 				// Calculate the range of movement based on the locked axis and if the screen has linked neighbours
-				if (drag_lock == DRAGABLE::DRAG_HORIZONTAL)
+				if (drag_lock == DRAGGABLE::DRAG_HORIZONTAL)
 				{
 					deltaX = constrain(deltaX, clamp_delta_low, clamp_delta_high);
 					moved_much_x = constrain(moved_much_x, clamp_delta_low, clamp_delta_high);
@@ -535,9 +535,9 @@ bool SQUiXL::process_touch_full()
 				// Serial.printf("touch: dragging @ %u\n", millis());
 				return true;
 			}
-			else if (currently_selected != nullptr && currently_selected->is_dragable() != DRAGABLE::DRAG_NONE && (abs(deltaX) > move_margin_for_drag || abs(deltaY) > move_margin_for_drag))
+			else if (currently_selected != nullptr && currently_selected->is_dragable() != DRAGGABLE::DRAG_NONE && (abs(deltaX) > move_margin_for_drag || abs(deltaY) > move_margin_for_drag))
 			{
-				currently_selected->process_touch(touch_event_t(moved_x, moved_y, TOUCH_DRAG));
+				currently_selected->process_touch(touch_event_t(moved_x, moved_y, TOUCH_DRAG, moved_much_x, moved_much_y));
 				prevent_long_press = true;
 			}
 			else if (!prevent_long_press && last_touch - touchTime > 600)
@@ -600,6 +600,10 @@ bool SQUiXL::process_touch_full()
 					last_was_click = true;
 				}
 			}
+			else if (currently_selected != nullptr && currently_selected->is_element_dragging())
+			{
+				currently_selected->process_touch(touch_event_t(0, 0, TOUCH_DRAG_END));
+			}
 			// If the current screen is blocked from dragging, if the distance from first touch to last is enough to suggest a swipe, pass a swipe to the current ui element
 			// else if (currently_selected == current_screen() && (deltaX_abs > 25 || deltaY_abs > 25))
 			// {
@@ -626,12 +630,12 @@ bool SQUiXL::process_touch_full()
 	}
 
 	// If there was a pervious click, and the time past has been longer than what a double click would trigger, process the original single click
-	if (!isTouched && drag_lock != DRAGABLE::DRAG_BOTH && currently_selected != nullptr)
+	if (!isTouched && drag_lock != DRAGGABLE::DRAG_BOTH && currently_selected != nullptr)
 	{
 		// Serial.printf("touch: let go of drag @ %u\n", millis());
 		currently_selected->process_touch(touch_event_t(moved_x, moved_y, TOUCH_UNKNOWN));
 		currently_selected = nullptr;
-		drag_lock = DRAGABLE::DRAG_BOTH;
+		drag_lock = DRAGGABLE::DRAG_BOTH;
 		clamp_delta_low = -20;
 		clamp_delta_high = 20;
 	}

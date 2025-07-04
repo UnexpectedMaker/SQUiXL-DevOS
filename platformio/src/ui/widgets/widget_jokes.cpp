@@ -45,6 +45,7 @@ void widgetJokes::process_joke_data(bool success, const String &response)
 		if (response == "ERROR")
 		{
 			next_update = 0;
+			delete &response;
 			ok = false;
 			return;
 		}
@@ -93,9 +94,8 @@ void widgetJokes::process_joke_data(bool success, const String &response)
 		is_getting_more_jokes = false;
 	}
 
-	is_dirty = ok;
-
 	delete &response;
+	is_dirty = ok;
 }
 
 bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
@@ -116,10 +116,23 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 
 		_sprite_joke.createVirtual(_w, _h, NULL, true);
 
+		// if (settings.has_wifi_creds() && !server_path.empty() && !wifi_controller.wifi_blocking_access)
+		// {
+		// 	wifi_controller.add_to_queue(server_path, [this](bool success, const String &response) { this->process_joke_data(success, response); });
+		// }
+
+		next_joke_swap = 0;
+		return false;
+	}
+
+	if (!has_had_any_jokes && millis() - next_joke_swap > 10000)
+	{
+		next_joke_swap = millis();
 		if (settings.has_wifi_creds() && !server_path.empty() && !wifi_controller.wifi_blocking_access)
 		{
 			wifi_controller.add_to_queue(server_path, [this](bool success, const String &response) { this->process_joke_data(success, response); });
 		}
+
 		return false;
 	}
 

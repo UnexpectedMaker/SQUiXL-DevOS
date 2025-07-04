@@ -95,6 +95,8 @@ void widgetRSSFeeds::process_article_data(bool success, const String &response)
 		next_update = 0;
 		is_getting_more_articles = false;
 		is_dirty = false;
+		delete &response;
+
 		DEBUG_PRINTLN("DEBUG: Set next_update to 0, is_getting_more_articles to false, is_dirty to false");
 		return;
 	}

@@ -32,6 +32,9 @@ class ui_element
 		virtual void set_dirty(bool state) { is_dirty = state; }
 		virtual void set_dirty_hard(bool state) { is_dirty_hard = state; }
 
+		virtual void about_to_show_screen() {};
+		virtual void about_to_close_screen() {};
+
 		// Touch related stuff
 		virtual bool process_touch(touch_event_t touch_event) { return false; }
 
@@ -63,8 +66,9 @@ class ui_element
 		float normalise_float(float current, float min, float max);
 		float normalise_int(int x, int minX, int maxX);
 
-		DRAGABLE is_dragable() { return drag_able; }
-		void set_draggable(DRAGABLE state) { drag_able = state; }
+		DRAGGABLE is_dragable() { return drag_able; }
+		void set_draggable(DRAGGABLE state) { drag_able = state; }
+		bool is_element_dragging() { return is_dragging; }
 
 		void set_touchable(bool state) { is_touchable = state; }
 		void set_delayed_frst_draw(int val) { delay_first_draw = millis() + val; }
@@ -119,7 +123,7 @@ class ui_element
 		unsigned long delay_first_draw = 0;
 
 		bool is_touchable = true;
-		DRAGABLE drag_able = DRAGABLE::DRAG_NONE;
+		DRAGGABLE drag_able = DRAGGABLE::DRAG_NONE;
 
 		unsigned long click_hold_start_timer = 0;
 
@@ -128,6 +132,7 @@ class ui_element
 		bool is_busy = false;	   // Am I currently re-drawing?
 		bool is_aniamted_cached = false;
 		bool has_never_drawn = true;
+		bool is_dragging = false;
 
 		int8_t element_tab_group = -1;
 };

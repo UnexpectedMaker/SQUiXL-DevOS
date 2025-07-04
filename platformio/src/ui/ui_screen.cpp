@@ -33,7 +33,7 @@ void ui_screen::setup(uint16_t _back_color, bool add)
 
 	calc_new_tints();
 
-	set_draggable(DRAGABLE::DRAG_BOTH);
+	set_draggable(DRAGGABLE::DRAG_BOTH);
 }
 
 void ui_screen::calc_new_tints()
@@ -101,14 +101,14 @@ ui_screen *ui_screen::get_navigation(Directions from)
 	return navigation[(int)from];
 }
 
-void ui_screen::adjust_navigation_range(DRAGABLE axis, int16_t *clamp_delta_low, int16_t *clamp_delta_high)
+void ui_screen::adjust_navigation_range(DRAGGABLE axis, int16_t *clamp_delta_low, int16_t *clamp_delta_high)
 {
-	if (axis == DRAGABLE::DRAG_HORIZONTAL)
+	if (axis == DRAGGABLE::DRAG_HORIZONTAL)
 	{
 		*clamp_delta_low = (navigation[(int)Directions::LEFT] == nullptr ? -20 : -480);
 		*clamp_delta_high = (navigation[(int)Directions::RIGHT] == nullptr ? 20 : 480);
 	}
-	else if (axis == DRAGABLE::DRAG_VERTICAL)
+	else if (axis == DRAGGABLE::DRAG_VERTICAL)
 	{
 		*clamp_delta_low = (navigation[(int)Directions::UP] == nullptr ? -20 : -480);
 		*clamp_delta_high = (navigation[(int)Directions::DOWN] == nullptr ? 20 : 480);
@@ -457,6 +457,21 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 	// Serial.printf(">> SCREEN TOUCH TYPE: %d\n", touch_event.type);
 	if (touch_event.type == SCREEN_DRAG_H || touch_event.type == SCREEN_DRAG_V)
 	{
+		for (int c = 0; c < ui_children.size(); c++)
+		{
+			if (ui_children[c]->is_dragable() != DRAGGABLE::DRAG_NONE)
+			{
+				// if (touch_event.type == SCREEN_DRAG_V && ui_children[c]->is_dragable() == DRAGGABLE::DRAG_VERTICAL)
+				// {
+				if (ui_children[c]->process_touch(touch_event))
+				{
+					return true;
+				}
+				// }
+				// this item is draggable, so let's see if it's drabbale how the user is dragging
+			}
+		}
+
 		if (!is_dragging)
 		{
 			// Serial.println("Setup for new drag");
@@ -466,9 +481,9 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 			// Serial.printf("starting drag @ %u\n", drag_step_timer);
 
 			is_dragging = true;
-			drag_axis = (touch_event.type == SCREEN_DRAG_H ? DRAGABLE::DRAG_HORIZONTAL : DRAGABLE::DRAG_VERTICAL);
+			drag_axis = (touch_event.type == SCREEN_DRAG_H ? DRAGGABLE::DRAG_HORIZONTAL : DRAGGABLE::DRAG_VERTICAL);
 
-			if (drag_axis == DRAGABLE::DRAG_HORIZONTAL)
+			if (drag_axis == DRAGGABLE::DRAG_HORIZONTAL)
 			{
 				drag_neighbours[0] = get_navigation(Directions::LEFT);
 				drag_neighbours[1] = get_navigation(Directions::RIGHT);
@@ -541,7 +556,7 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 
 		// Reset drag and neighbours
 		is_dragging = false;
-		drag_axis = DRAGABLE::DRAG_NONE;
+		drag_axis = DRAGGABLE::DRAG_NONE;
 		return false;
 	}
 
@@ -737,8 +752,12 @@ void ui_screen::finish_drag(Directions direction, int16_t dx, int16_t dy)
 
 	is_dragging = false;
 
+	squixl.current_screen()->about_to_close_screen();
+
 	squixl.set_current_screen(navigation[(int)direction]);
 	squixl.current_screen()->clean_neighbour_sprites();
+
+	squixl.current_screen()->about_to_show_screen();
 
 	squixl.switching_screens = false;
 	squixl.current_screen()->refresh(true, true);
@@ -832,5 +851,21 @@ void ui_screen::setup_draggable_neighbour(bool state)
 	{
 		// not being called anymore
 		clear_buffers();
+	}
+}
+
+void ui_screen::about_to_show_screen()
+{
+	for (int w = 0; w < ui_children.size(); w++)
+	{
+		ui_children[w]->about_to_show_screen();
+	}
+}
+
+void ui_screen::about_to_close_screen()
+{
+	for (int w = 0; w < ui_children.size(); w++)
+	{
+		ui_children[w]->about_to_show_screen();
 	}
 }

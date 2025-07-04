@@ -43,6 +43,7 @@ void StatusCallback(void *cbData, int code, const char *string)
 }
 #endif
 
+// audio.setup(MUX_D3, MUX_D4, MUX_D2, MUX_D1);
 void AudioClass::setup(int8_t pin_data, int8_t pin_bclk, int8_t _pin_lrclk, int8_t _pin_sd_mode)
 {
 

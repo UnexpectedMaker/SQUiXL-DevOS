@@ -7,7 +7,7 @@
 #include "ui/widgets/widget_jokes.h"
 #include "ui/widgets/widget_rss_feeds.h"
 #include "ui/widgets/widget_time.h"
-// #include "ui/widgets/widget_bme280.h"
+#include "ui/widgets/widget_bme280.h"
 #include "ui/widgets/widget_battery.h"
 #include "ui/widgets/widget_wifimanager.h"
 
@@ -456,10 +456,10 @@ void create_ui_elements()
 	/*
 	This widget will only show if a BME280 sensor is found
 	*/
-	// widget_bme280.create(245, 160, 225, 40, TFT_BLACK, 16, 0, "BME280");
-	// widget_bme280.set_refresh_interval(5000); // we only want this to update every 5 seconds
-	// widget_bme280.set_delayed_frst_draw(2000);
-	// screen_main.add_child_ui(&widget_bme280);
+	widget_bme280.create(245, 160, 225, 40, TFT_BLACK, 16, 0, "BME280");
+	widget_bme280.set_refresh_interval(5000); // we only want this to update every 5 seconds
+	widget_bme280.set_delayed_frst_draw(2000);
+	screen_main.add_child_ui(&widget_bme280);
 
 	/*
 	Setup MQTT Screen
@@ -467,12 +467,13 @@ void create_ui_elements()
 
 	screen_mqtt.setup(darken565(0x5AEB, 0.5), true);
 	mqtt_notifications.create(20, 20, 440, 440, "MQTT Messages", TFT_GREY);
-	mqtt_notifications.set_scrollable(false, true);
+	mqtt_notifications.set_draggable(DRAGGABLE::DRAG_VERTICAL);
+	mqtt_notifications.set_refresh_interval(5000);
 
 	// widget_mqtt_sensors.create(10, 120, 460, 240, TFT_BLACK, 12, 0, "MQTT Messages");
 	// widget_mqtt_sensors.set_refresh_interval(1000);
 	screen_mqtt.add_child_ui(&mqtt_notifications);
-	screen_mqtt.set_refresh_interval(0);
+	screen_mqtt.set_refresh_interval(50);
 
 	screen_main.set_navigation(Directions::LEFT, &screen_mqtt, true);
 	screen_main.set_navigation(Directions::DOWN, &screen_settings, true);

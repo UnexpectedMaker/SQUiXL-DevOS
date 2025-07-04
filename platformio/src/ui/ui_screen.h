@@ -15,7 +15,7 @@ class ui_screen : public ui_element
 
 		void set_navigation(Directions from, ui_screen *screen, bool set_reversed = false);
 		ui_screen *get_navigation(Directions from);
-		void adjust_navigation_range(DRAGABLE axis, int16_t *clamp_delta_low, int16_t *clamp_delta_high);
+		void adjust_navigation_range(DRAGGABLE axis, int16_t *clamp_delta_low, int16_t *clamp_delta_high);
 
 		using CallbackFunction = void (*)();
 
@@ -36,6 +36,8 @@ class ui_screen : public ui_element
 
 		// Vitrual Funcs
 		bool redraw(uint8_t fade_amount, int8_t tab_group = -1) override;
+		virtual void about_to_show_screen() override;
+		virtual void about_to_close_screen() override;
 
 		void calc_new_tints();
 		void set_can_cycle_back_color(bool state) { can_cycle_background_color = state; }
@@ -82,8 +84,7 @@ class ui_screen : public ui_element
 
 		unsigned long drag_step_timer = 0;
 
-		bool is_dragging = false;
-		DRAGABLE drag_axis = DRAG_NONE;
+		DRAGGABLE drag_axis = DRAG_NONE;
 		ui_screen *drag_neighbours[2] = {nullptr, nullptr};
 
 		void draw_draggable();

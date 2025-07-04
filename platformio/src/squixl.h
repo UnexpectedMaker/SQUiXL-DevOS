@@ -82,7 +82,7 @@ enum CPU_SPEED
 	CPU_CHANGE_HIGH = 1,
 };
 
-enum DRAGABLE
+enum DRAGGABLE
 {
 	DRAG_NONE = 0,
 	DRAG_VERTICAL = 1,
@@ -288,7 +288,7 @@ class SQUiXL : public SQUiXL_LITE
 
 		uint touchTime = 0;
 		int8_t tab_group_index = -1;
-		DRAGABLE drag_lock = DRAGABLE::DRAG_BOTH;
+		DRAGGABLE drag_lock = DRAGGABLE::DRAG_BOTH;
 		bool last_was_click = false;
 		bool last_was_long = false;
 		bool prevent_long_press = false;

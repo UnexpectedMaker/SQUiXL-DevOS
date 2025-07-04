@@ -39,7 +39,7 @@ void ui_control_slider::set_options_data(SettingsOptionBase *sett)
 	title_len_pixels = _title.length() * char_width_title;
 
 	set_label_sizes();
-	set_draggable(DRAGABLE::DRAG_HORIZONTAL);
+	set_draggable(DRAGGABLE::DRAG_HORIZONTAL);
 }
 
 void ui_control_slider::set_label_sizes()
@@ -168,7 +168,7 @@ void ui_control_slider::set_min_max(float _min, float _max, float _step)
 	value_min = _min;
 	value_max = _max;
 	value_step = _step;
-	set_draggable(DRAGABLE::DRAG_HORIZONTAL);
+	set_draggable(DRAGGABLE::DRAG_HORIZONTAL);
 }
 
 bool ui_control_slider::process_touch(touch_event_t touch_event)

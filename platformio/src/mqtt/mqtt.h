@@ -21,15 +21,15 @@ class ui_gauge;
 
 struct MQTT_Payload
 {
-		std::string owner = "";
-		std::string device_class = "";
-		std::string state_class = "";
-		std::string unit_of_measurement = "";
-		std::string sensor_value = "";
-		std::string value_type = "";
-		std::string min_value = "";
-		std::string max_value = "";
-		std::string description = "";
+		psram_string owner = "";
+		psram_string device_class = "";
+		psram_string state_class = "";
+		psram_string unit_of_measurement = "";
+		psram_string sensor_value = "";
+		psram_string value_type = "";
+		psram_string min_value = "";
+		psram_string max_value = "";
+		psram_string description = "";
 		int timestamp = 0;
 
 		// Non serialised data
@@ -57,7 +57,7 @@ struct MQTT_Payload
 			dash_item = new_dash_item;
 		}
 
-		std::string get_sensor_value()
+		psram_string get_sensor_value()
 		{
 			return (sensor_value + unit_of_measurement);
 		}
@@ -66,7 +66,14 @@ struct MQTT_Payload
 class MQTT_Stuff
 {
 	public:
-		std::map<std::string, std::vector<MQTT_Payload>> mqtt_topic_payloads;
+		// std::map<psram_string, std::vector<MQTT_Payload>, psram_allocator<MQTT_Payload>> mqtt_topic_payloads;
+
+		std::map<
+			psram_string,
+			std::vector<MQTT_Payload, PsramAllocator<MQTT_Payload>>,
+			std::less<psram_string>,
+			PsramAllocator<std::pair<const psram_string, std::vector<MQTT_Payload, PsramAllocator<MQTT_Payload>>>>>
+			mqtt_topic_payloads;
 
 		void mqtt_reconnect();
 		void mqtt_callback(char *topic, byte *message, unsigned int length);

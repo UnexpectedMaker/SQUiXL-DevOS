@@ -31,7 +31,7 @@ bool operator!=(const psram_allocator<T> &, const psram_allocator<U> &) { return
 #include <vector>
 #include <map>
 #include <string>
-#include "utils/json.h"
+#include "utils/json_psram.h"
 #include "utils/json_conversions.h"
 #include "settings/settingsOption.h"
 #include <functional>
@@ -143,7 +143,8 @@ struct Config_widget_battery
 struct Config_expansion
 {
 		// false is 0x77 (secondary), true is 0x76 (primary)
-		bool bme280_address = false; // use primary or secondary I2C address for bme280
+		bool bme280_address = false;   // use primary or secondary I2C address for bme280
+		bool bme280_installed = false; // Enable init, or not for the BME280
 };
 
 struct Config_widget_open_weather
@@ -168,6 +169,11 @@ struct Config_widget_rss_feed
 		bool has_url()
 		{
 			return (feed_url.length() > 1);
+		}
+
+		psram_string get_url()
+		{
+			return (psram_string)feed_url.c_str();
 		}
 };
 
@@ -403,6 +409,7 @@ class Settings
 
 		// Expansion
 		SettingsOptionBool expansion_bme_address{&config.expansion.bme280_address, 9, "I2C Address", "0x77", "0x76"};
+		SettingsOptionBool expansion_bme_installed{&config.expansion.bme280_installed, 9, "Connected", "NO", "YES"};
 
 		// ==== ASYNC SUPPORT ====
 	public:

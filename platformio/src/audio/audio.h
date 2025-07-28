@@ -25,6 +25,7 @@
 #include "audio/voice/voice_unexpectedmaker.h"
 
 #include "audio/sfx/sfx_button.h"
+#include "utils/json_psram.h"
 
 // #include "settings/settings_async.h"
 
@@ -106,9 +107,9 @@ class AudioClass
 		bool is_icys_stream_connected = false;
 		unsigned long streaming_music_update = 0;
 
-		std::vector<std::string> queue;
+		std::vector<psram_string> queue;
 
-		std::map<std::string, SFX> wav_files;
+		std::map<psram_string, SFX> wav_files;
 
 		std::vector<const char *> stations;
 

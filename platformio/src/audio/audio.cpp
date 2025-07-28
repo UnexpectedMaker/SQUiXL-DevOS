@@ -50,10 +50,10 @@ void AudioClass::setup(int8_t pin_data, int8_t pin_bclk, int8_t _pin_lrclk, int8
 	if (wav_files.size() == 0)
 	{
 		wav_files = {
-			{"goodbye", SFX(voice_goodbye, sizeof(voice_goodbye))},
-			{"hello", SFX(voice_hello, sizeof(voice_hello))},
-			{"um", SFX(voice_um, sizeof(voice_um))},
-			{"squixl", SFX(voice_squixl, sizeof(voice_squixl))},
+			{"goodbye", SFX(voice_goodbye, uint16_t(sizeof(voice_goodbye)))},
+			{"hello", SFX(voice_hello, uint16_t(sizeof(voice_hello)))},
+			{"um", SFX(voice_um, uint16_t(sizeof(voice_um)))},
+			{"squixl", SFX(voice_squixl, uint16_t(sizeof(voice_squixl)))},
 		};
 
 		if (false)
@@ -310,11 +310,11 @@ void AudioClass::play_wav(const char *wav_name, bool force)
 	if (file != nullptr)
 		delete file;
 
-	std::string key(wav_name);
+	psram_string key(wav_name);
 
-	if (wav_files.find(key) != wav_files.end())
+	if (wav_files.find(key.c_str()) != wav_files.end())
 	{
-		SFX &snd = wav_files[key];
+		SFX &snd = wav_files[key.c_str()];
 		Serial.printf("Playing wav %s, length %d\n", key.c_str(), snd.size);
 		file = new AudioFileSourcePROGMEM(snd.array, snd.size);
 
@@ -341,12 +341,12 @@ void AudioClass::play_wav_queue(const char *wav_name)
 	}
 	else
 	{
-		std::string key(wav_name);
+		psram_string key(wav_name);
 		Serial.printf("loading wav %s to queue,\n", key.c_str());
 
-		if (wav_files.find(key) != wav_files.end())
+		if (wav_files.find(key.c_str()) != wav_files.end())
 		{
-			SFX &snd = wav_files[key];
+			SFX &snd = wav_files[key.c_str()];
 			file = new AudioFileSourcePROGMEM(snd.array, snd.size);
 			wav->begin(file, mixer_channels[0]);
 		}

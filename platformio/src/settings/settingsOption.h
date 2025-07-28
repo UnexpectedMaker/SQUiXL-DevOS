@@ -2,8 +2,6 @@
 #define SETTINGS_OPTIONS_H
 
 #include "Arduino.h"
-#include "utils/json.h"
-#include "utils/json_conversions.h"
 // #include "utilities/logging.h"
 // #include "themes.h"
 #include <vector>

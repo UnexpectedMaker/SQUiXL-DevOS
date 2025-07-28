@@ -1,8 +1,6 @@
 #pragma once
 
 #include "HTTPClient.h"
-#include "utils/json.h"
-#include "utils/json_conversions.h"
 #include "web/wifi_common.h"
 #include <freertos/queue.h>
 #include <functional>
@@ -70,6 +68,9 @@ class WifiController
 		TaskHandle_t wifi_task_handler;
 		QueueHandle_t wifi_task_queue;
 		QueueHandle_t wifi_callback_queue;
+
+		StackType_t *wifi_stack = nullptr;
+		StaticTask_t *wifi_task_tcb = nullptr;
 
 		std::queue<wifi_task_item *> pending_requests;
 		SemaphoreHandle_t pending_mutex = nullptr;

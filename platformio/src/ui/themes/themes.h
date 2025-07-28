@@ -2,7 +2,7 @@
 
 #include "Arduino.h"
 #include "squixl.h"
-#include "utils/json.h"
+#include "utils/json_psram.h"
 #include "utils/json_conversions.h"
 #include <vector>
 

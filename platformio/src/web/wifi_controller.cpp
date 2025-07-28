@@ -7,6 +7,8 @@
  */
 #include "web/wifi_controller.h"
 #include "settings/settings_async.h"
+#include "utils/json_psram.h"
+#include "utils/json_conversions.h"
 
 using json = nlohmann::json;
 
@@ -39,12 +41,9 @@ WifiController::WifiController()
 	}
 
 	// Start the WiFi task
-	// xTaskCreate(WifiController::wifi_task, "wifi_task", 8192 * 2, this, 2, &wifi_task_handler);
-	xTaskCreatePinnedToCore(WifiController::wifi_task, "wifi_task", 8192 * 3, this, 3, &wifi_task_handler, 0);
+	xTaskCreatePinnedToCore(WifiController::wifi_task, "wifi_task", 8192 * 2, this, 3, &wifi_task_handler, 0);
 
 	wifi_prevent_disconnect = true;
-
-	WiFi.mode(WIFI_OFF);
 }
 
 // Kill the pinned threaded task
@@ -67,10 +66,8 @@ bool WifiController::is_connected() { return (WiFi.status() == WL_CONNECTED); }
 // Connect to the WiFi network
 bool WifiController::connect()
 {
-	// Serial.println("Conecting to wifi");
 	if (WiFi.status() == WL_CONNECTED)
 	{
-		// Serial.println("Already connected to Wifi");
 		wifi_busy = false;
 		return true;
 	}
@@ -79,7 +76,6 @@ bool WifiController::connect()
 
 	if (!settings.has_wifi_creds())
 	{
-		// Serial.println("No credentials?");
 		wifi_busy = false;
 		return false;
 	}
@@ -87,17 +83,7 @@ bool WifiController::connect()
 	{
 		Serial.println("WIFI: Attempting to connect....");
 		wifi_busy = true;
-		// if (WiFi.disconnect(true))
-		// {
-		// 	Serial.println("WIFI: Disconnected before re-connect attempt..");
-		// 	delay(100);
-		// }
-		if (WiFi.mode(WIFI_STA))
-		{
-			Serial.println("WIFI: Mode set to STA");
-			delay(100);
-		}
-		// delay(500);
+
 		uint8_t stations_to_try = settings.config.wifi_options.size();
 		// Serial.printf("Trying wifi index %d - %s %s\n", settings.config.current_wifi_station, settings.config.wifi_options[settings.config.current_wifi_station].ssid, settings.config.wifi_options[settings.config.current_wifi_station].pass);
 		// WiFi.begin(settings.config.wifi_options[settings.config.current_wifi_station].ssid, settings.config.wifi_options[settings.config.current_wifi_station].pass);
@@ -112,12 +98,11 @@ bool WifiController::connect()
 
 			WiFi.begin(settings.config.wifi_options[settings.config.current_wifi_station].ssid.c_str(), settings.config.wifi_options[settings.config.current_wifi_station].pass.c_str());
 
-			// delay(100);
 			unsigned long start_time = millis();
 			// Time out the connection if it takes longer than 45 seconds
-			while ((millis() - start_time < 5000) && WiFi.status() != WL_CONNECTED)
+			while ((millis() - start_time < 10000) && WiFi.status() != WL_CONNECTED)
 			{
-				delay(100);
+				delay(500);
 			}
 
 			if (WiFi.status() != WL_CONNECTED)
@@ -141,7 +126,7 @@ bool WifiController::connect()
 
 	delay(100);
 
-	Serial.printf("wifi status %d\n\n", WiFi.status());
+	// Serial.printf("wifi status %d\n\n", WiFi.status());
 
 	if (WiFi.status() == WL_CONNECTED)
 	{
@@ -192,33 +177,6 @@ void WifiController::disconnect(bool force)
 	}
 	wifi_busy = false;
 }
-
-// Process the task queue - called from the main thread in loop() in squixl.cpp
-// only process every 2 seconds
-// void WifiController::loop()
-// {
-// 	if (millis() - next_wifi_loop > 2000)
-// 	{
-// 		next_wifi_loop = millis();
-// 		wifi_callback_item result;
-// 		if (xQueueReceive(wifi_callback_queue, &result, 0) == pdTRUE)
-// 		{
-// 			result.callback(result.success, *result.response);
-// 			delete result.response;
-// 		}
-
-// 		xSemaphoreTake(pending_mutex, portMAX_DELAY);
-// 		if (!pending_requests.empty())
-// 		{
-// 			wifi_task_item *item = pending_requests.front();
-// 			pending_requests.pop();
-
-// 			perform_wifi_request(item->url, item->callback);
-// 			delete item;
-// 		}
-// 		xSemaphoreGive(pending_mutex);
-// 	}
-// }
 
 void WifiController::loop()
 {
@@ -303,7 +261,7 @@ String WifiController::http_request(std::string url)
 
 	if (http_code != 200)
 	{
-		Serial.println("** Response Code: " + String(http_code));
+		Serial.printf("** Response Code: %s\n", http.errorToString(http_code).c_str());
 		http.end();
 	}
 	else
@@ -343,14 +301,6 @@ void WifiController::perform_wifi_request(std::string url, _CALLBACK callback)
 	{
 		download_error_count++;
 		Serial.printf("WIFI Download Error Count: %d\n", download_error_count);
-
-		log_heap("wifi error");
-
-		if (is_connected() && download_error_count == 5)
-		{
-			download_error_count = 0;
-			disconnect(true);
-		}
 	}
 
 	// Create a wifi_callback_item and enqueue it
@@ -369,6 +319,7 @@ void WifiController::wifi_task(void *pvParameters)
 		{
 			// Connect to WiFi / pass through if already connected
 			if (controller->connect())
+			// if (WiFi.status() == WL_CONNECTED)
 			{
 				controller->wifi_busy = true;
 				// Perform the request
@@ -385,6 +336,9 @@ void WifiController::wifi_task(void *pvParameters)
 				delete item;
 				controller->wifi_busy = false;
 
+				Serial.printf("Stack watermark: %d bytes\n", uxTaskGetStackHighWaterMark(NULL) * sizeof(StackType_t));
+				Serial.printf("Largest allocatable internal block: %u bytes\n", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL));
+
 				vTaskDelay(100);
 			}
 		}
@@ -400,10 +354,6 @@ void WifiController::add_to_queue(std::string url, _CALLBACK callback)
 	item->callback = callback;
 
 	xQueueSend(wifi_task_queue, &item, portMAX_DELAY);
-
-	// Serial.printf("\nHeap Log: WIFI\nHeap Size: %u of %u\n", ESP.getFreeHeap(), ESP.getHeapSize());
-	// Serial.printf("Min Heap Size: %u, Max Alloc Heap Size: %u, ", ESP.getMinFreeHeap(), ESP.getMaxAllocHeap());
-	// Serial.printf("PSRAM Size: %u\n\n", ESP.getFreePsram());
 }
 
 WifiController wifi_controller;

@@ -83,6 +83,8 @@ ui_control_slider slider_rss_refresh;
 ui_control_textbox text_rss_feed_url;
 // Expansion
 ui_control_toggle toggle_bme280_I2C_address;
+ui_control_toggle toggle_bme280_installed;
+
 // MQTT
 ui_control_toggle toggle_mqtt_enable;
 ui_control_textbox text_mqtt_broker_ip;
@@ -363,6 +365,11 @@ void create_ui_elements()
 	toggle_bme280_I2C_address.set_options_data(&settings.expansion_bme_address);
 	settings_tab_group.add_child_ui(&toggle_bme280_I2C_address, 4);
 
+	toggle_bme280_installed.create_on_grid(2, 1, "BME280 Connected");
+	toggle_bme280_installed.set_toggle_text("NO", "YES");
+	toggle_bme280_installed.set_options_data(&settings.expansion_bme_installed);
+	settings_tab_group.add_child_ui(&toggle_bme280_installed, 4);
+
 	// MQTT
 	toggle_mqtt_enable.create_on_grid(2, 1, "MQTT ENABLED");
 	toggle_mqtt_enable.set_toggle_text("NO", "YES");
@@ -443,10 +450,12 @@ void create_ui_elements()
 
 	widget_jokes.create(10, 370, 460, 100, TFT_BLACK, 12, 0, "JOKES");
 	widget_jokes.set_refresh_interval(5000);
+	// widget_jokes.set_delayed_frst_draw(4000);
 	screen_main.add_child_ui(&widget_jokes);
 
 	widget_rss_feeds.create(10, 260, 460, 100, TFT_BLACK, 12, 0, "RSS FEEDS");
 	widget_rss_feeds.set_refresh_interval(5000);
+	// widget_rss_feeds.set_delayed_frst_draw(6000);
 	screen_main.add_child_ui(&widget_rss_feeds);
 
 	widget_ow.create(245, 80, 225, 72, TFT_BLACK, 16, 0, "CURRENT WEATHER");
@@ -498,6 +507,7 @@ void check_wifi_requirements()
 			WiFi.disconnect(true);
 			delay(1000);
 			wifiSetup.start();
+			return;
 		}
 		else if (!settings.has_country_set())
 		{
@@ -506,7 +516,16 @@ void check_wifi_requirements()
 			// Grab the location details, and then use that to get the UTC offset.
 			wifi_controller.add_to_queue("https://ipapi.co/json/", [](bool success, const String &response) { squixl.get_and_update_utc_settings(success, response); });
 		}
+		else if (settings.config.wifi_check_for_updates)
+		{
+			// If the user has opted in to check for firmware update notifications, kick off the check.
+			// This only happens once per boot up right now.
+			// TODO: Look at triggering this any time the user switches it on, if it was off?
+			wifi_controller.add_to_queue("https://squixl.io/latestver", [](bool success, const String &response) { squixl.process_version(success, response); });
+		}
 	}
+	// Setup delayed timer for webserver starting, to alloqw other web traffic to complete first
+	delay_webserver_start = millis() + 5000;
 }
 
 void setup()
@@ -600,19 +619,8 @@ void setup()
 
 	squixl.log_heap("setup");
 
-	if (wifi_controller.connect())
-	{
-		if (settings.config.wifi_check_for_updates)
-		{
-			// If the user has opted in to check for firmware update notifications, kick off the check.
-			// This only happens once per boot up right now.
-			// TODO: Look at triggering this any time the user switches it on, if it was off?
-			wifi_controller.add_to_queue("https://squixl.io/latestver", [](bool success, const String &response) { squixl.process_version(success, response); });
-		}
-	}
-
 	// Serial.printf("\n>>> Setup done in %0.2f ms\n\n", (millis() - timer));
-	check_wifi_requirements();
+
 	// Setup delayed timer for webserver starting, to alloqw other web traffic to complete first
 	delay_webserver_start = millis() + 5000;
 
@@ -622,6 +630,12 @@ void loop()
 {
 	if (squixl.switching_screens)
 		return;
+
+	if (!wifi_requirements_checked)
+	{
+		check_wifi_requirements();
+		return;
+	}
 
 	if (wifi_controller.is_connected() && rtc.requiresNTP && millis() - ntp_time_set > 10000)
 	{

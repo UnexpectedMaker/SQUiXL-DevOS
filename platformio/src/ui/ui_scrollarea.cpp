@@ -99,7 +99,7 @@ bool ui_scrollarea::redraw(uint8_t fade_amount, int8_t tab_group)
 		{
 			for (int s = 0; s < sensor_data.second.size(); s++)
 			{
-				std::string data = sensor_data.second[s].description + " " + sensor_data.second[s].device_class + " " + sensor_data.second[s].sensor_value + sensor_data.second[s].unit_of_measurement;
+				psram_string data = sensor_data.second[s].description + " " + sensor_data.second[s].device_class + " " + sensor_data.second[s].sensor_value + sensor_data.second[s].unit_of_measurement;
 				_sprite_content.setCursor(10, _scroll_y + line_y);
 				_sprite_content.print(data.c_str());
 				line_y += 18;

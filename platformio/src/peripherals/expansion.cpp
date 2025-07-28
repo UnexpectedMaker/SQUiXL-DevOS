@@ -3,23 +3,31 @@
 
 bool Expansion::init_bme280()
 {
-	// if (skip_check)
-	// 	return false;
+	if (!settings.config.expansion.bme280_installed)
+		return false;
 
 	if (bme_status != BME280_OK)
 	{
-		uint8_t i2c_address = settings.config.expansion.bme280_address ? 0x76 : 0x77;
-		bme_status = bme.init_device(i2c_address);
-
-		if (bme280_available())
+		try
 		{
-			Serial.printf("EXPANSION: Found BME280 @ I2C address 0x%02X, Please wait....\n", i2c_address);
-			bme.set_weather_monitoring_configuration();
-			return true;
+			uint8_t i2c_address = settings.config.expansion.bme280_address ? 0x76 : 0x77;
+			bme_status = bme.init_device(i2c_address);
+
+			if (bme280_available())
+			{
+				Serial.printf("EXPANSION: Found BME280 @ I2C address 0x%02X, Please wait....\n", i2c_address);
+				bme.set_weather_monitoring_configuration();
+				return true;
+			}
+		}
+		catch (json::exception &e)
+		{
+			Serial.println("Expansion: BME Exception: ");
+			Serial.println(e.what());
 		}
 	}
 
-	// skip_check = true;
+	settings.config.expansion.bme280_installed = false;
 	return false;
 }
 

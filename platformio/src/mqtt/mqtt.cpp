@@ -27,13 +27,13 @@ void MQTT_Stuff::mqtt_callback(char *topic, byte *message, unsigned int length)
 	if (strstr(topic, "sensor") != NULL)
 	{
 		// Parse the string into a Json structure
-		json json_data = json::parse(messageTemp);
+		psram_json json_data = json::parse(messageTemp);
 		// Convert json to struct
 		MQTT_Payload payload = json_data.get<MQTT_Payload>();
 
 		mqtt_dirty = false;
 
-		if (mqtt_topic_payloads.find(payload.owner) == mqtt_topic_payloads.end())
+		if (mqtt_topic_payloads.find(payload.owner.c_str()) == mqtt_topic_payloads.end())
 		{
 			mqtt_topic_payloads[payload.owner].push_back(payload);
 			Serial.printf("\nMQTT: New Sensor owner: %s\nAdded new %s sensor at %s\n", payload.owner.c_str(), payload.device_class.c_str(), payload.description.c_str());

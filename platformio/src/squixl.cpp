@@ -735,11 +735,11 @@ void SQUiXL::go_to_sleep()
 	// Turn off the IO MUX to save battery (Active LOW)
 	ioex.write(MUX_EN, HIGH);
 
-	for (size_t i = 0; i < pre_ds_callbacks.size(); i++)
-	{
-		if (pre_ds_callbacks[i] != nullptr)
-			pre_ds_callbacks[i]();
-	}
+	// for (size_t i = 0; i < pre_ds_callbacks.size(); i++)
+	// {
+	// 	if (pre_ds_callbacks[i] != nullptr)
+	// 		pre_ds_callbacks[i]();
+	// }
 
 	// Dont call this if the task was not created!
 	wifi_controller.kill_controller_task();

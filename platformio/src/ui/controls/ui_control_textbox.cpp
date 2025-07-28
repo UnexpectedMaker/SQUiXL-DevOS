@@ -63,27 +63,28 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	// Clear the content sprite
 	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
-	uint8_t starting_size = 2;
 
 	// Calculate the string pixel sizes to allow for text centering
 	// uses different font sizes based on string length
 	if (char_width == 0 || string_len_pixels == 0)
 	{
-		// Serial.printf("Starting to calc font size and string for: %s\n", _text.c_str());
+		starting_size = 2;
+
+		Serial.printf("Starting to calc font size and string for: %s\n", _text.c_str());
 		num_vis_chars = -1;
 
 		squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, starting_size, &char_width, &char_height);
 		uint8_t string_len = _text.length();
 		string_len_pixels = string_len * char_width;
 
-		// Serial.printf("start: string_len_pixels: %d, w: %d using font size: %d\n", string_len_pixels, (_w - 10), starting_size);
+		Serial.printf("start: string_len_pixels: %d, w: %d using font size: %d\n", string_len_pixels, (_w - 10), starting_size);
 
 		while (string_len_pixels > _w - 10 && starting_size > 0)
 		{
 			starting_size--;
 			squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, starting_size, &char_width, &char_height);
 			string_len_pixels = string_len * char_width;
-			// Serial.printf("string_len_pixels: %d, w: %d using font size: %d\n", string_len_pixels, (_w - 10), starting_size);
+			Serial.printf("string_len_pixels: %d, w: %d using font size: %d\n", string_len_pixels, (_w - 10), starting_size);
 		}
 
 		// if we are still wider than the sprite, even at font size 0, we need to chop the string up.

@@ -20,5 +20,6 @@ class ui_control_textbox : public ui_control
 		uint8_t cursor_char = 0;
 		int8_t num_vis_chars = -1;
 		bool cursor_flash = false;
+		uint8_t starting_size = 2;
 		SettingsOptionBase::Type data_type = SettingsOptionBase::Type::STRING;
 };

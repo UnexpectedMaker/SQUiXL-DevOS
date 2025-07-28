@@ -4,6 +4,7 @@
 #include "squixl_lite.h"
 
 #include <vector>
+#include <algorithm>
 
 #include <JPEGDisplay.h>
 #include <PNGDisplay.h>
@@ -265,6 +266,62 @@ class SQUiXL : public SQUiXL_LITE
 			}
 		}
 
+		void split_text_into_lines_psram(psram_string &text, int max_chars_per_line, std::vector<psram_string, PsramAllocator<psram_string>> &lines)
+		{
+			psram_string currentLine = "";
+			int pos = 0;
+
+			while (pos < text.length())
+			{
+				// Find the next space starting from pos.
+				int spaceIndex = text.find(' ', pos);
+				psram_string word;
+
+				// If no more spaces, grab the rest of the string.
+				if (spaceIndex == -1)
+				{
+					word = text.substr(pos);
+					pos = text.length();
+				}
+				else
+				{
+					word = text.substr(pos, spaceIndex);
+					pos = spaceIndex + 1; // Move past the space.
+				}
+
+				// If currentLine is empty, start it with the word.
+				if (currentLine.length() == 0)
+				{
+					currentLine = word;
+				}
+				// Otherwise, check if adding the next word (with a space) would exceed the limit.
+				else if (currentLine.length() + 1 + word.length() <= max_chars_per_line)
+				{
+					currentLine += " " + word;
+				}
+				// If it would exceed the limit, push the current line and start a new one.
+				else
+				{
+					std::replace(currentLine.begin(), currentLine.end(), '\n', ' ');
+					std::replace(currentLine.begin(), currentLine.end(), '\r', ' ');
+					// currentLine.replace("\n", " ");
+					// currentLine.replace("\r", " ");
+					lines.push_back(currentLine);
+					currentLine = word;
+				}
+			}
+
+			// Add the last line if not empty.
+			if (currentLine.length() > 0)
+			{
+				std::replace(currentLine.begin(), currentLine.end(), '\n', ' ');
+				std::replace(currentLine.begin(), currentLine.end(), '\r', ' ');
+				// currentLine.replace("\n", " ");
+				// currentLine.replace("\r", " ");
+				lines.push_back(currentLine);
+			}
+		}
+
 	protected:
 		float current_backlight_pwm = 0.0f;
 		unsigned long backlight_dimmer_timer = 0;
@@ -298,8 +355,8 @@ class SQUiXL : public SQUiXL_LITE
 		ui_screen *_main_screen = nullptr;
 
 		// Deep sleep stuff
-		std::vector<_CALLBACK_DS> pre_ds_callbacks;
-		std::vector<_CALLBACK_DS> post_ds_callbacks;
+		// std::vector<_CALLBACK_DS> pre_ds_callbacks;
+		// std::vector<_CALLBACK_DS> post_ds_callbacks;
 
 		// For intro logo
 		BB_SPI_LCD logo_squixl;

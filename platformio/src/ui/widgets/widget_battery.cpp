@@ -175,8 +175,10 @@ bool widgetBattery::process_touch(touch_event_t touch_event)
 
 				if (!wifi_controller.is_connected() && settings.has_wifi_creds())
 				{
+					wifi_controller.disconnect(true);
+					delay(200);
 					message = "Re-connecting...";
-					WiFi.reconnect();
+					wifi_controller.connect();
 				}
 				else
 				{

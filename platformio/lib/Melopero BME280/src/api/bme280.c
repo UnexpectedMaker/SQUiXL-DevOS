@@ -406,7 +406,7 @@ int8_t bme280_init(struct bme280_dev *dev)
     int8_t rslt;
 
     /* chip id read try count */
-    uint8_t try_count = 5;
+    uint8_t try_count = 1;
     uint8_t chip_id = 0;
 
     /* Check for null pointer in the device structure*/

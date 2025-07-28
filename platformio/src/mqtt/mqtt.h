@@ -66,7 +66,7 @@ struct MQTT_Payload
 class MQTT_Stuff
 {
 	public:
-		// std::map<psram_string, std::vector<MQTT_Payload>, psram_allocator<MQTT_Payload>> mqtt_topic_payloads;
+		// std::map<std::string, std::vector<MQTT_Payload>> mqtt_topic_payloads;
 
 		std::map<
 			psram_string,

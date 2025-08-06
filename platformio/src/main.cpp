@@ -51,31 +51,31 @@ ui_screen *screen_settings = nullptr;
 // ui_screen screen_wifi_manager;
 
 // Settings
-ui_control_tabgroup settings_tab_group;
-ui_control_slider slider_backlight_timer_battery;
-ui_control_slider slider_backlight_timer_vbus;
-ui_control_toggle toggle_sleep_vbus;
-ui_control_toggle toggle_sleep_battery;
-ui_control_toggle toggle_wallpaper;
+ui_control_tabgroup *settings_tab_group = nullptr;
+ui_control_slider *slider_backlight_timer_battery;
+ui_control_slider *slider_backlight_timer_vbus;
+ui_control_toggle *toggle_sleep_vbus;
+ui_control_toggle *toggle_sleep_battery;
+ui_control_toggle *toggle_wallpaper;
 // Time
-ui_control_toggle toggle_time_mode;
-ui_control_toggle toggle_date_mode;
-ui_control_slider slider_UTC;
+ui_control_toggle *toggle_time_mode;
+ui_control_toggle *toggle_date_mode;
+ui_control_slider *slider_UTC;
 ui_control_textbox *text_ntpserver = nullptr;
 // WiFi
-ui_control_toggle toggle_OTA_updates;
-ui_control_toggle toggle_Notify_updates;
-ui_control_toggle toggle_verbose_wifi;
-ui_control_toggle toggle_local_dns;
+ui_control_toggle *toggle_OTA_updates;
+ui_control_toggle *toggle_Notify_updates;
+ui_control_toggle *toggle_verbose_wifi;
+ui_control_toggle *toggle_local_dns;
 // Audio
-ui_control_toggle toggle_audio_ui;
-ui_control_toggle toggle_audio_alarm;
-ui_control_slider slider_volume;
+ui_control_toggle *toggle_audio_ui;
+ui_control_toggle *toggle_audio_alarm;
+ui_control_slider *slider_volume;
 // Haptics
-ui_control_toggle toggle_haptics_enable;
+ui_control_toggle *toggle_haptics_enable;
 // Open Weather
-ui_control_toggle toggle_ow_enable;
-ui_control_slider slider_ow_refresh;
+ui_control_toggle *toggle_ow_enable;
+ui_control_slider *slider_ow_refresh;
 ui_control_textbox *text_ow_api_key = nullptr;
 // Location
 ui_control_textbox *text_loc_country = nullptr;
@@ -83,33 +83,33 @@ ui_control_textbox *text_loc_city = nullptr;
 ui_control_textbox *text_loc_state = nullptr;
 ui_control_textbox *text_loc_lon = nullptr;
 ui_control_textbox *text_loc_lat = nullptr;
-ui_control_button button_get_lon_lat;
+ui_control_button *button_get_lon_lat;
 // RSS Feed
-ui_control_toggle toggle_rss_enable;
-ui_control_slider slider_rss_refresh;
+ui_control_toggle *toggle_rss_enable;
+ui_control_slider *slider_rss_refresh;
 ui_control_textbox *text_rss_feed_url = nullptr;
 // Expansion
-ui_control_toggle toggle_bme280_I2C_address;
-ui_control_toggle toggle_bme280_installed;
+ui_control_toggle *toggle_bme280_I2C_address;
+ui_control_toggle *toggle_bme280_installed;
 
 // MQTT
-ui_control_toggle toggle_mqtt_enable;
+ui_control_toggle *toggle_mqtt_enable;
 ui_control_textbox *text_mqtt_broker_ip = nullptr;
 ui_control_textbox *text_mqtt_broker_port = nullptr;
 ui_control_textbox *text_mqtt_broker_username = nullptr;
 ui_control_textbox *text_mqtt_broker_password = nullptr;
 
 // // Screenshot stuff
-// ui_control_toggle toggle_screenshot_enable;
-// ui_control_slider slider_screenshot_wb_temp;
-// ui_control_slider slider_screenshot_wb_tint;
-// ui_control_slider slider_screenshot_lvl_black;
-// ui_control_slider slider_screenshot_lvl_white;
-// ui_control_slider slider_screenshot_lvl_gamma;
-// ui_control_slider slider_screenshot_saturation;
-// ui_control_slider slider_screenshot_contrast;
+// ui_control_toggle *toggle_screenshot_enable;
+// ui_control_slider *slider_screenshot_wb_temp;
+// ui_control_slider *slider_screenshot_wb_tint;
+// ui_control_slider *slider_screenshot_lvl_black;
+// ui_control_slider *slider_screenshot_lvl_white;
+// ui_control_slider *slider_screenshot_lvl_gamma;
+// ui_control_slider *slider_screenshot_saturation;
+// ui_control_slider *slider_screenshot_contrast;
 
-ui_control_button button_dialogbox_test;
+ui_control_button *button_dialogbox_test;
 
 ui_label label_version;
 ui_scrollarea mqtt_notifications;
@@ -217,49 +217,57 @@ void create_ui_elements()
 	// Settings are grouped by tabs, so we setup the tab group here with a screen size
 	// and then pass it a list of strings for each group
 	//
-	settings_tab_group.create(0, 0, 480, 40);
-	settings_tab_group.set_tabs(std::vector<psram_string>{"General", "Location", "WiFi", "Snd/Hap", "Widgets", "MQTT"});
-	screen_settings->set_page_tabgroup(&settings_tab_group);
+	settings_tab_group = new ui_control_tabgroup();
+	settings_tab_group->create(0, 0, 480, 40);
+	settings_tab_group->set_tabs(std::vector<psram_string>{"General", "Location", "WiFi", "Snd/Hap", "Widgets", "MQTT"});
+	screen_settings->set_page_tabgroup(settings_tab_group);
 
 	// grid layout is on a 6 column, 6 row array
 
 	// General
 
-	slider_backlight_timer_battery.create_on_grid(4, 1);
-	slider_backlight_timer_battery.set_value_type(VALUE_TYPE::INT);
-	slider_backlight_timer_battery.set_options_data(&settings.settings_backlight_timer_battery);
-	settings_tab_group.add_child_ui(&slider_backlight_timer_battery, 0);
+	slider_backlight_timer_battery = new ui_control_slider();
+	slider_backlight_timer_battery->create_on_grid(4, 1);
+	slider_backlight_timer_battery->set_value_type(VALUE_TYPE::INT);
+	slider_backlight_timer_battery->set_options_data(&settings.settings_backlight_timer_battery);
+	settings_tab_group->add_child_ui(slider_backlight_timer_battery, 0);
 
-	toggle_sleep_battery.create_on_grid(2, 1, "SLEEP ON BAT");
-	toggle_sleep_battery.set_toggle_text("NO", "YES");
-	toggle_sleep_battery.set_options_data(&settings.setting_sleep_battery);
-	settings_tab_group.add_child_ui(&toggle_sleep_battery, 0);
+	toggle_sleep_battery = new ui_control_toggle();
+	toggle_sleep_battery->create_on_grid(2, 1, "SLEEP ON BAT");
+	toggle_sleep_battery->set_toggle_text("NO", "YES");
+	toggle_sleep_battery->set_options_data(&settings.setting_sleep_battery);
+	settings_tab_group->add_child_ui(toggle_sleep_battery, 0);
 
-	slider_backlight_timer_vbus.create_on_grid(4, 1);
-	slider_backlight_timer_vbus.set_value_type(VALUE_TYPE::INT);
-	slider_backlight_timer_vbus.set_options_data(&settings.settings_backlight_timer_vbus);
-	settings_tab_group.add_child_ui(&slider_backlight_timer_vbus, 0);
+	slider_backlight_timer_vbus = new ui_control_slider();
+	slider_backlight_timer_vbus->create_on_grid(4, 1);
+	slider_backlight_timer_vbus->set_value_type(VALUE_TYPE::INT);
+	slider_backlight_timer_vbus->set_options_data(&settings.settings_backlight_timer_vbus);
+	settings_tab_group->add_child_ui(slider_backlight_timer_vbus, 0);
 
-	toggle_sleep_vbus.create_on_grid(2, 1, "SLEEP ON 5V");
-	toggle_sleep_vbus.set_toggle_text("NO", "YES");
-	toggle_sleep_vbus.set_options_data(&settings.setting_sleep_vbus);
-	settings_tab_group.add_child_ui(&toggle_sleep_vbus, 0);
+	toggle_sleep_vbus = new ui_control_toggle();
+	toggle_sleep_vbus->create_on_grid(2, 1, "SLEEP ON 5V");
+	toggle_sleep_vbus->set_toggle_text("NO", "YES");
+	toggle_sleep_vbus->set_options_data(&settings.setting_sleep_vbus);
+	settings_tab_group->add_child_ui(toggle_sleep_vbus, 0);
 
-	toggle_time_mode.create_on_grid(2, 1, "TIME FORMAT");
-	toggle_time_mode.set_toggle_text("12H", "24H");
-	toggle_time_mode.set_options_data(&settings.setting_time_24hour);
-	settings_tab_group.add_child_ui(&toggle_time_mode, 0);
+	toggle_time_mode = new ui_control_toggle();
+	toggle_time_mode->create_on_grid(2, 1, "TIME FORMAT");
+	toggle_time_mode->set_toggle_text("12H", "24H");
+	toggle_time_mode->set_options_data(&settings.setting_time_24hour);
+	settings_tab_group->add_child_ui(toggle_time_mode, 0);
 
-	toggle_date_mode.create_on_grid(2, 1, "DATE FORMAT");
-	toggle_date_mode.set_toggle_text("D-M-Y", "M-D-Y");
-	toggle_date_mode.set_options_data(&settings.setting_time_dateformat);
-	settings_tab_group.add_child_ui(&toggle_date_mode, 0);
+	toggle_date_mode = new ui_control_toggle();
+	toggle_date_mode->create_on_grid(2, 1, "DATE FORMAT");
+	toggle_date_mode->set_toggle_text("D-M-Y", "M-D-Y");
+	toggle_date_mode->set_options_data(&settings.setting_time_dateformat);
+	settings_tab_group->add_child_ui(toggle_date_mode, 0);
 
-	toggle_wallpaper.create_on_grid(2, 1, "WALLPAPER PREF");
-	toggle_wallpaper.set_toggle_text("SYS", "USER");
-	toggle_wallpaper.set_options_data(&settings.setting_wallpaper);
-	toggle_wallpaper.set_callback(update_wallpaper);
-	settings_tab_group.add_child_ui(&toggle_wallpaper, 0);
+	toggle_wallpaper = new ui_control_toggle();
+	toggle_wallpaper->create_on_grid(2, 1, "WALLPAPER PREF");
+	toggle_wallpaper->set_toggle_text("SYS", "USER");
+	toggle_wallpaper->set_options_data(&settings.setting_wallpaper);
+	toggle_wallpaper->set_callback(update_wallpaper);
+	settings_tab_group->add_child_ui(toggle_wallpaper, 0);
 
 	// Location
 
@@ -267,200 +275,212 @@ void create_ui_elements()
 	text_loc_city = new ui_control_textbox();
 	text_loc_city->create_on_grid(6, 1, "CITY");
 	text_loc_city->set_options_data(&settings.setting_loc_city);
-	settings_tab_group.add_child_ui(text_loc_city, 1);
+	settings_tab_group->add_child_ui(text_loc_city, 1);
 
 	text_loc_state = new ui_control_textbox();
 	text_loc_state->create_on_grid(4, 1, "STATE");
 	text_loc_state->set_options_data(&settings.setting_loc_state);
-	settings_tab_group.add_child_ui(text_loc_state, 1);
+	settings_tab_group->add_child_ui(text_loc_state, 1);
 
 	text_loc_country = new ui_control_textbox();
 	text_loc_country->create_on_grid(2, 1, "COUNTRY CODE");
 	text_loc_country->set_options_data(&settings.setting_loc_country);
-	settings_tab_group.add_child_ui(text_loc_country, 1);
+	settings_tab_group->add_child_ui(text_loc_country, 1);
 
 	text_loc_lon = new ui_control_textbox();
 	text_loc_lon->create_on_grid(3, 1, "LONGITUDE");
 	text_loc_lon->set_options_data(&settings.setting_loc_lon);
-	settings_tab_group.add_child_ui(text_loc_lon, 1);
+	settings_tab_group->add_child_ui(text_loc_lon, 1);
 
 	text_loc_lat = new ui_control_textbox();
 	text_loc_lat->create_on_grid(3, 1, "LATITUDE");
 	text_loc_lat->set_options_data(&settings.setting_loc_lat);
-	settings_tab_group.add_child_ui(text_loc_lat, 1);
+	settings_tab_group->add_child_ui(text_loc_lat, 1);
 
-	button_get_lon_lat.create_on_grid(6, 1, "LOOKUP LONGITUDE & LATITUDE");
-	button_get_lon_lat.set_callback(update_longitude_latitude);
-	settings_tab_group.add_child_ui(&button_get_lon_lat, 1);
+	button_get_lon_lat = new ui_control_button();
+	button_get_lon_lat->create_on_grid(6, 1, "LOOKUP LONGITUDE & LATITUDE");
+	button_get_lon_lat->set_callback(update_longitude_latitude);
+	settings_tab_group->add_child_ui(button_get_lon_lat, 1);
 
-	slider_UTC.create_on_grid(6, 1);
-	slider_UTC.set_value_type(VALUE_TYPE::INT);
-	slider_UTC.set_options_data(&settings.settings_utc_offset);
-	settings_tab_group.add_child_ui(&slider_UTC, 1);
+	slider_UTC = new ui_control_slider();
+	slider_UTC->create_on_grid(6, 1);
+	slider_UTC->set_value_type(VALUE_TYPE::INT);
+	slider_UTC->set_options_data(&settings.settings_utc_offset);
+	settings_tab_group->add_child_ui(slider_UTC, 1);
 
 	// WiFi
-	toggle_OTA_updates.create_on_grid(2, 1, "ENABLE OTA");
-	toggle_OTA_updates.set_toggle_text("NO", "YES");
-	toggle_OTA_updates.set_options_data(&settings.setting_OTA_start);
-	settings_tab_group.add_child_ui(&toggle_OTA_updates, 2);
+	toggle_OTA_updates = new ui_control_toggle();
+	toggle_OTA_updates->create_on_grid(2, 1, "ENABLE OTA");
+	toggle_OTA_updates->set_toggle_text("NO", "YES");
+	toggle_OTA_updates->set_options_data(&settings.setting_OTA_start);
+	settings_tab_group->add_child_ui(toggle_OTA_updates, 2);
 
-	toggle_Notify_updates.create_on_grid(2, 1, "NOTIFY UPDATES");
-	toggle_Notify_updates.set_toggle_text("NO", "YES");
-	toggle_Notify_updates.set_options_data(&settings.setting_wifi_check_updates);
-	settings_tab_group.add_child_ui(&toggle_Notify_updates, 2);
+	toggle_Notify_updates = new ui_control_toggle();
+	toggle_Notify_updates->create_on_grid(2, 1, "NOTIFY UPDATES");
+	toggle_Notify_updates->set_toggle_text("NO", "YES");
+	toggle_Notify_updates->set_options_data(&settings.setting_wifi_check_updates);
+	settings_tab_group->add_child_ui(toggle_Notify_updates, 2);
 
-	toggle_verbose_wifi.create_on_grid(2, 1, "VERBOSE WIFI");
-	toggle_verbose_wifi.set_toggle_text("NO", "YES");
-	toggle_verbose_wifi.set_options_data(&settings.setting_wifi_extra_details);
-	settings_tab_group.add_child_ui(&toggle_verbose_wifi, 2);
+	toggle_verbose_wifi = new ui_control_toggle();
+	toggle_verbose_wifi->create_on_grid(2, 1, "VERBOSE WIFI");
+	toggle_verbose_wifi->set_toggle_text("NO", "YES");
+	toggle_verbose_wifi->set_options_data(&settings.setting_wifi_extra_details);
+	settings_tab_group->add_child_ui(toggle_verbose_wifi, 2);
 
 	text_ntpserver = new ui_control_textbox();
 	text_ntpserver->create_on_grid(4, 1, "NTP SERVER");
 	text_ntpserver->set_options_data(&settings.setting_ntpserver);
-	settings_tab_group.add_child_ui(text_ntpserver, 2);
+	settings_tab_group->add_child_ui(text_ntpserver, 2);
 
-	toggle_local_dns.create_on_grid(2, 1, "USE LOCAL DNS");
-	toggle_local_dns.set_toggle_text("NO", "YES");
-	toggle_local_dns.set_callback(reconnect_wifi);
-	toggle_local_dns.set_options_data(&settings.setting_wifi_local_dns);
-	settings_tab_group.add_child_ui(&toggle_local_dns, 2);
+	toggle_local_dns = new ui_control_toggle();
+	toggle_local_dns->create_on_grid(2, 1, "USE LOCAL DNS");
+	toggle_local_dns->set_toggle_text("NO", "YES");
+	toggle_local_dns->set_callback(reconnect_wifi);
+	toggle_local_dns->set_options_data(&settings.setting_wifi_local_dns);
+	settings_tab_group->add_child_ui(toggle_local_dns, 2);
 
 	// Sound & Haptics
-	toggle_audio_ui.create_on_grid(3, 1, "UI BEEPS");
-	toggle_audio_ui.set_toggle_text("NO", "YES");
-	toggle_audio_ui.set_options_data(&settings.setting_audio_ui);
-	settings_tab_group.add_child_ui(&toggle_audio_ui, 3);
+	toggle_audio_ui = new ui_control_toggle();
+	toggle_audio_ui->create_on_grid(3, 1, "UI BEEPS");
+	toggle_audio_ui->set_toggle_text("NO", "YES");
+	toggle_audio_ui->set_options_data(&settings.setting_audio_ui);
+	settings_tab_group->add_child_ui(toggle_audio_ui, 3);
 
-	toggle_audio_alarm.create_on_grid(3, 1, "ALARMS");
-	toggle_audio_alarm.set_toggle_text("NO", "YES");
-	toggle_audio_alarm.set_options_data(&settings.setting_audio_alarm);
-	settings_tab_group.add_child_ui(&toggle_audio_alarm, 3);
+	toggle_audio_alarm = new ui_control_toggle();
+	toggle_audio_alarm->create_on_grid(3, 1, "ALARMS");
+	toggle_audio_alarm->set_toggle_text("NO", "YES");
+	toggle_audio_alarm->set_options_data(&settings.setting_audio_alarm);
+	settings_tab_group->add_child_ui(toggle_audio_alarm, 3);
 
-	slider_volume.create_on_grid(6, 1);
-	slider_volume.set_value_type(VALUE_TYPE::FLOAT);
-	slider_volume.set_options_data(&settings.setting_audio_volume);
-	settings_tab_group.add_child_ui(&slider_volume, 3);
+	slider_volume = new ui_control_slider();
+	slider_volume->create_on_grid(6, 1);
+	slider_volume->set_value_type(VALUE_TYPE::FLOAT);
+	slider_volume->set_options_data(&settings.setting_audio_volume);
+	settings_tab_group->add_child_ui(slider_volume, 3);
 
-	toggle_haptics_enable.create_on_grid(2, 1, "HAPTICS ENABLED");
-	toggle_haptics_enable.set_toggle_text("NO", "YES");
-	toggle_haptics_enable.set_options_data(&settings.setting_haptics_enabled);
-	settings_tab_group.add_child_ui(&toggle_haptics_enable, 3);
+	toggle_haptics_enable = new ui_control_toggle();
+	toggle_haptics_enable->create_on_grid(2, 1, "HAPTICS ENABLED");
+	toggle_haptics_enable->set_toggle_text("NO", "YES");
+	toggle_haptics_enable->set_options_data(&settings.setting_haptics_enabled);
+	settings_tab_group->add_child_ui(toggle_haptics_enable, 3);
 
 	// Open Weather
 	// Create a Toggle from the widget_ow_enabled sewtting
-	toggle_ow_enable.create_on_grid(2, 1, "OW ENABLE");
-	toggle_ow_enable.set_toggle_text("NO", "YES");
-	toggle_ow_enable.set_options_data(&settings.widget_ow_enabled);
-	settings_tab_group.add_child_ui(&toggle_ow_enable, 4);
+	toggle_ow_enable = new ui_control_toggle();
+	toggle_ow_enable->create_on_grid(2, 1, "OW ENABLE");
+	toggle_ow_enable->set_toggle_text("NO", "YES");
+	toggle_ow_enable->set_options_data(&settings.widget_ow_enabled);
+	settings_tab_group->add_child_ui(toggle_ow_enable, 4);
 
 	// Create an Int Slider from the widget_ow_poll_interval setting
-	slider_ow_refresh.create_on_grid(4, 1);
-	slider_ow_refresh.set_value_type(VALUE_TYPE::INT);
-	slider_ow_refresh.set_options_data(&settings.widget_ow_poll_interval);
-	settings_tab_group.add_child_ui(&slider_ow_refresh, 4);
+	slider_ow_refresh = new ui_control_slider();
+	slider_ow_refresh->create_on_grid(4, 1);
+	slider_ow_refresh->set_value_type(VALUE_TYPE::INT);
+	slider_ow_refresh->set_options_data(&settings.widget_ow_poll_interval);
+	settings_tab_group->add_child_ui(slider_ow_refresh, 4);
 
 	// Create an Text Box the widget_ow_apikey setting
 	text_ow_api_key = new ui_control_textbox();
 	text_ow_api_key->create_on_grid(6, 1, "OPEN WEATHER API KEY");
 	text_ow_api_key->set_options_data(&settings.widget_ow_apikey);
-	settings_tab_group.add_child_ui(text_ow_api_key, 4);
+	settings_tab_group->add_child_ui(text_ow_api_key, 4);
 
 	// RSS Feed
 	// Create a Toggle from the widget_rss_enabled setting
-	toggle_rss_enable.create_on_grid(2, 1, "RSS ENABLE");
-	toggle_rss_enable.set_toggle_text("NO", "YES");
-	toggle_rss_enable.set_options_data(&settings.widget_rss_enabled);
-	settings_tab_group.add_child_ui(&toggle_rss_enable, 4);
+	toggle_rss_enable = new ui_control_toggle();
+	toggle_rss_enable->create_on_grid(2, 1, "RSS ENABLE");
+	toggle_rss_enable->set_toggle_text("NO", "YES");
+	toggle_rss_enable->set_options_data(&settings.widget_rss_enabled);
+	settings_tab_group->add_child_ui(toggle_rss_enable, 4);
 
 	// Create an Int Slider from the widget_ow_poll_interval setting
-	slider_rss_refresh.create_on_grid(4, 1);
-	slider_rss_refresh.set_value_type(VALUE_TYPE::INT);
-	slider_rss_refresh.set_options_data(&settings.widget_rss_poll_interval);
-	settings_tab_group.add_child_ui(&slider_rss_refresh, 4);
+	slider_rss_refresh = new ui_control_slider();
+	slider_rss_refresh->create_on_grid(4, 1);
+	slider_rss_refresh->set_value_type(VALUE_TYPE::INT);
+	slider_rss_refresh->set_options_data(&settings.widget_rss_poll_interval);
+	settings_tab_group->add_child_ui(slider_rss_refresh, 4);
 
 	// Create an Text Box the widget_ow_apikey setting
 	text_rss_feed_url = new ui_control_textbox();
 	text_rss_feed_url->create_on_grid(6, 1, "RSS Feed URL");
 	text_rss_feed_url->set_options_data(&settings.widget_rss_feed_url);
-	settings_tab_group.add_child_ui(text_rss_feed_url, 4);
+	settings_tab_group->add_child_ui(text_rss_feed_url, 4);
 
-	toggle_bme280_I2C_address.create_on_grid(2, 1, "BME280 I2C ADR");
-	toggle_bme280_I2C_address.set_toggle_text("0x77", "0x76");
-	toggle_bme280_I2C_address.set_options_data(&settings.expansion_bme_address);
-	settings_tab_group.add_child_ui(&toggle_bme280_I2C_address, 4);
+	toggle_bme280_I2C_address = new ui_control_toggle();
+	toggle_bme280_I2C_address->create_on_grid(2, 1, "BME280 I2C ADR");
+	toggle_bme280_I2C_address->set_toggle_text("0x77", "0x76");
+	toggle_bme280_I2C_address->set_options_data(&settings.expansion_bme_address);
+	settings_tab_group->add_child_ui(toggle_bme280_I2C_address, 4);
 
-	toggle_bme280_installed.create_on_grid(2, 1, "BME280 Connected");
-	toggle_bme280_installed.set_toggle_text("NO", "YES");
-	toggle_bme280_installed.set_options_data(&settings.expansion_bme_installed);
-	settings_tab_group.add_child_ui(&toggle_bme280_installed, 4);
+	toggle_bme280_installed = new ui_control_toggle();
+	toggle_bme280_installed->create_on_grid(2, 1, "BME280 Connected");
+	toggle_bme280_installed->set_toggle_text("NO", "YES");
+	toggle_bme280_installed->set_options_data(&settings.expansion_bme_installed);
+	settings_tab_group->add_child_ui(toggle_bme280_installed, 4);
 
 	// MQTT
-	toggle_mqtt_enable.create_on_grid(2, 1, "MQTT ENABLED");
-	toggle_mqtt_enable.set_toggle_text("NO", "YES");
-	toggle_mqtt_enable.set_options_data(&settings.mqtt_enabled);
-	settings_tab_group.add_child_ui(&toggle_mqtt_enable, 5);
-
-	toggle_mqtt_enable.create_on_grid(2, 1, "MQTT ENABLED");
-	toggle_mqtt_enable.set_toggle_text("NO", "YES");
-	toggle_mqtt_enable.set_options_data(&settings.mqtt_enabled);
-	settings_tab_group.add_child_ui(&toggle_mqtt_enable, 5);
+	toggle_mqtt_enable = new ui_control_toggle();
+	toggle_mqtt_enable->create_on_grid(2, 1, "MQTT ENABLED");
+	toggle_mqtt_enable->set_toggle_text("NO", "YES");
+	toggle_mqtt_enable->set_options_data(&settings.mqtt_enabled);
+	settings_tab_group->add_child_ui(toggle_mqtt_enable, 5);
 
 	text_mqtt_broker_ip = new ui_control_textbox();
 	text_mqtt_broker_ip->create_on_grid(2, 1, "BROKER IP");
 	text_mqtt_broker_ip->set_options_data(&settings.mqtt_broker_ip);
-	settings_tab_group.add_child_ui(text_mqtt_broker_ip, 5);
+	settings_tab_group->add_child_ui(text_mqtt_broker_ip, 5);
 
 	text_mqtt_broker_port = new ui_control_textbox();
 	text_mqtt_broker_port->create_on_grid(2, 1, "BROKER PORT");
 	text_mqtt_broker_port->set_data_type(SettingsOptionBase::Type::INT);
 	text_mqtt_broker_port->set_options_data(&settings.mqtt_broker_port);
-	settings_tab_group.add_child_ui(text_mqtt_broker_port, 5);
+	settings_tab_group->add_child_ui(text_mqtt_broker_port, 5);
 
 	text_mqtt_broker_username = new ui_control_textbox();
 	text_mqtt_broker_username->create_on_grid(3, 1, "USERNAME");
 	text_mqtt_broker_username->set_options_data(&settings.mqtt_username);
-	settings_tab_group.add_child_ui(text_mqtt_broker_username, 5);
+	settings_tab_group->add_child_ui(text_mqtt_broker_username, 5);
 
 	text_mqtt_broker_password = new ui_control_textbox();
 	text_mqtt_broker_password->create_on_grid(3, 1, "PASSWORD");
 	text_mqtt_broker_password->set_options_data(&settings.mqtt_password);
-	settings_tab_group.add_child_ui(text_mqtt_broker_password, 5);
+	settings_tab_group->add_child_ui(text_mqtt_broker_password, 5);
 
 	// // Screenshot stuff
 	// slider_screenshot_lvl_black.create_on_grid(3, 1);
 	// slider_screenshot_lvl_black.set_value_type(VALUE_TYPE::FLOAT);
 	// slider_screenshot_lvl_black.set_options_data(&settings.screenshot_black);
-	// settings_tab_group.add_child_ui(&slider_screenshot_lvl_black, 5);
+	// settings_tab_group->add_child_ui(&slider_screenshot_lvl_black, 5);
 
 	// slider_screenshot_lvl_white.create_on_grid(3, 1);
 	// slider_screenshot_lvl_white.set_value_type(VALUE_TYPE::FLOAT);
 	// slider_screenshot_lvl_white.set_options_data(&settings.screenshot_white);
-	// settings_tab_group.add_child_ui(&slider_screenshot_lvl_white, 5);
+	// settings_tab_group->add_child_ui(&slider_screenshot_lvl_white, 5);
 
 	// slider_screenshot_lvl_gamma.create_on_grid(6, 1);
 	// slider_screenshot_lvl_gamma.set_value_type(VALUE_TYPE::FLOAT);
 	// slider_screenshot_lvl_gamma.set_options_data(&settings.screenshot_gamma);
-	// settings_tab_group.add_child_ui(&slider_screenshot_lvl_gamma, 5);
+	// settings_tab_group->add_child_ui(&slider_screenshot_lvl_gamma, 5);
 
 	// slider_screenshot_saturation.create_on_grid(3, 1);
 	// slider_screenshot_saturation.set_value_type(VALUE_TYPE::FLOAT);
 	// slider_screenshot_saturation.set_options_data(&settings.screenshot_saturation);
-	// settings_tab_group.add_child_ui(&slider_screenshot_saturation, 5);
+	// settings_tab_group->add_child_ui(&slider_screenshot_saturation, 5);
 
 	// slider_screenshot_contrast.create_on_grid(3, 1);
 	// slider_screenshot_contrast.set_value_type(VALUE_TYPE::FLOAT);
 	// slider_screenshot_contrast.set_options_data(&settings.screenshot_contrast);
-	// settings_tab_group.add_child_ui(&slider_screenshot_contrast, 5);
+	// settings_tab_group->add_child_ui(&slider_screenshot_contrast, 5);
 
 	// slider_screenshot_wb_temp.create_on_grid(3, 1);
 	// slider_screenshot_wb_temp.set_value_type(VALUE_TYPE::FLOAT);
 	// slider_screenshot_wb_temp.set_options_data(&settings.screenshot_wb_temp);
-	// settings_tab_group.add_child_ui(&slider_screenshot_wb_temp, 5);
+	// settings_tab_group->add_child_ui(&slider_screenshot_wb_temp, 5);
 
 	// slider_screenshot_wb_tint.create_on_grid(3, 1);
 	// slider_screenshot_wb_tint.set_value_type(VALUE_TYPE::FLOAT);
 	// slider_screenshot_wb_tint.set_options_data(&settings.screenshot_wb_tint);
-	// settings_tab_group.add_child_ui(&slider_screenshot_wb_tint, 5);
+	// settings_tab_group->add_child_ui(&slider_screenshot_wb_tint, 5);
 
 	label_version.create(240, 460, squixl.get_version().c_str(), TFT_GREY);
 	screen_settings->add_child_ui(&label_version);

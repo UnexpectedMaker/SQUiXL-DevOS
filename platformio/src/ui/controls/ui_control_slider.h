@@ -5,6 +5,14 @@
 class ui_control_slider : public ui_control
 {
 	public:
+		static void *operator new(std::size_t size)
+		{
+			void *ptr = heap_caps_malloc(sizeof(ui_control_slider), MALLOC_CAP_SPIRAM);
+			if (!ptr)
+				throw std::bad_alloc();
+			return ptr;
+		}
+
 		bool redraw(uint8_t fade_amount, int8_t tab_group = -1) override;
 		bool process_touch(touch_event_t touch_event) override;
 		void set_value_text(const char *_text);
@@ -16,7 +24,7 @@ class ui_control_slider : public ui_control
 		// Virtual funcs
 		void set_options_data(SettingsOptionBase *sett) override;
 		void set_label_sizes() override;
-        void update_values();
+		void update_values();
 
 	protected:
 		std::string value_text = "50";

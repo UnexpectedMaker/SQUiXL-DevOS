@@ -22,7 +22,7 @@ class widgetJokes : public ui_window
 		void show_next_joke();
 
 	private:
-		std::string server_path = "https://official-joke-api.appspot.com/jokes/random/5";
+		psram_string server_path = "https://official-joke-api.appspot.com/jokes/random/5";
 		unsigned long next_update = 0;
 		unsigned long next_joke_swap = 0;
 

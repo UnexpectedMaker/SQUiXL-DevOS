@@ -61,7 +61,7 @@ ui_control_toggle toggle_wallpaper;
 ui_control_toggle toggle_time_mode;
 ui_control_toggle toggle_date_mode;
 ui_control_slider slider_UTC;
-ui_control_textbox text_ntpserver;
+ui_control_textbox *text_ntpserver = nullptr;
 // WiFi
 ui_control_toggle toggle_OTA_updates;
 ui_control_toggle toggle_Notify_updates;
@@ -76,28 +76,28 @@ ui_control_toggle toggle_haptics_enable;
 // Open Weather
 ui_control_toggle toggle_ow_enable;
 ui_control_slider slider_ow_refresh;
-ui_control_textbox text_ow_api_key;
+ui_control_textbox *text_ow_api_key = nullptr;
 // Location
-ui_control_textbox text_loc_country;
-ui_control_textbox text_loc_city;
-ui_control_textbox text_loc_state;
-ui_control_textbox text_loc_lon;
-ui_control_textbox text_loc_lat;
+ui_control_textbox *text_loc_country = nullptr;
+ui_control_textbox *text_loc_city = nullptr;
+ui_control_textbox *text_loc_state = nullptr;
+ui_control_textbox *text_loc_lon = nullptr;
+ui_control_textbox *text_loc_lat = nullptr;
 ui_control_button button_get_lon_lat;
 // RSS Feed
 ui_control_toggle toggle_rss_enable;
 ui_control_slider slider_rss_refresh;
-ui_control_textbox text_rss_feed_url;
+ui_control_textbox *text_rss_feed_url = nullptr;
 // Expansion
 ui_control_toggle toggle_bme280_I2C_address;
 ui_control_toggle toggle_bme280_installed;
 
 // MQTT
 ui_control_toggle toggle_mqtt_enable;
-ui_control_textbox text_mqtt_broker_ip;
-ui_control_textbox text_mqtt_broker_port;
-ui_control_textbox text_mqtt_broker_username;
-ui_control_textbox text_mqtt_broker_password;
+ui_control_textbox *text_mqtt_broker_ip = nullptr;
+ui_control_textbox *text_mqtt_broker_port = nullptr;
+ui_control_textbox *text_mqtt_broker_username = nullptr;
+ui_control_textbox *text_mqtt_broker_password = nullptr;
 
 // // Screenshot stuff
 // ui_control_toggle toggle_screenshot_enable;
@@ -194,7 +194,15 @@ void process_longitude_latitude(bool success, const String &response)
 
 void update_longitude_latitude()
 {
-	String url = "http://api.openweathermap.org/geo/1.0/direct?q=" + settings.config.location.city + "," + settings.config.location.state + "," + settings.config.location.country + "&limit=1&appid=" + settings.config.open_weather.api_key;
+	// String url = "http://api.openweathermap.org/geo/1.0/direct?q=" + settings.config.location.city + "," + settings.config.location.state + "," + settings.config.location.country + "&limit=1&appid=" + settings.config.open_weather.api_key;
+
+	psram_string url =
+		"http://api.openweathermap.org/geo/1.0/direct?q=" +
+		psram_string(settings.config.location.city.c_str()) + "," +
+		settings.config.location.state.c_str() + "," +
+		settings.config.location.country.c_str() +
+		"&limit=1&appid=" + settings.config.open_weather.api_key.c_str();
+
 	wifi_controller.add_to_queue(url.c_str(), [](bool success, const String &response) { process_longitude_latitude(success, response); });
 }
 
@@ -256,25 +264,30 @@ void create_ui_elements()
 	// Location
 
 	// Create an Text Box the widget_ow_apikey setting
-	text_loc_city.create_on_grid(6, 1, "CITY");
-	text_loc_city.set_options_data(&settings.setting_loc_city);
-	settings_tab_group.add_child_ui(&text_loc_city, 1);
+	text_loc_city = new ui_control_textbox();
+	text_loc_city->create_on_grid(6, 1, "CITY");
+	text_loc_city->set_options_data(&settings.setting_loc_city);
+	settings_tab_group.add_child_ui(text_loc_city, 1);
 
-	text_loc_state.create_on_grid(4, 1, "STATE");
-	text_loc_state.set_options_data(&settings.setting_loc_state);
-	settings_tab_group.add_child_ui(&text_loc_state, 1);
+	text_loc_state = new ui_control_textbox();
+	text_loc_state->create_on_grid(4, 1, "STATE");
+	text_loc_state->set_options_data(&settings.setting_loc_state);
+	settings_tab_group.add_child_ui(text_loc_state, 1);
 
-	text_loc_country.create_on_grid(2, 1, "COUNTRY CODE");
-	text_loc_country.set_options_data(&settings.setting_loc_country);
-	settings_tab_group.add_child_ui(&text_loc_country, 1);
+	text_loc_country = new ui_control_textbox();
+	text_loc_country->create_on_grid(2, 1, "COUNTRY CODE");
+	text_loc_country->set_options_data(&settings.setting_loc_country);
+	settings_tab_group.add_child_ui(text_loc_country, 1);
 
-	text_loc_lon.create_on_grid(3, 1, "LONGITUDE");
-	text_loc_lon.set_options_data(&settings.setting_loc_lon);
-	settings_tab_group.add_child_ui(&text_loc_lon, 1);
+	text_loc_lon = new ui_control_textbox();
+	text_loc_lon->create_on_grid(3, 1, "LONGITUDE");
+	text_loc_lon->set_options_data(&settings.setting_loc_lon);
+	settings_tab_group.add_child_ui(text_loc_lon, 1);
 
-	text_loc_lat.create_on_grid(3, 1, "LATITUDE");
-	text_loc_lat.set_options_data(&settings.setting_loc_lat);
-	settings_tab_group.add_child_ui(&text_loc_lat, 1);
+	text_loc_lat = new ui_control_textbox();
+	text_loc_lat->create_on_grid(3, 1, "LATITUDE");
+	text_loc_lat->set_options_data(&settings.setting_loc_lat);
+	settings_tab_group.add_child_ui(text_loc_lat, 1);
 
 	button_get_lon_lat.create_on_grid(6, 1, "LOOKUP LONGITUDE & LATITUDE");
 	button_get_lon_lat.set_callback(update_longitude_latitude);
@@ -301,9 +314,10 @@ void create_ui_elements()
 	toggle_verbose_wifi.set_options_data(&settings.setting_wifi_extra_details);
 	settings_tab_group.add_child_ui(&toggle_verbose_wifi, 2);
 
-	text_ntpserver.create_on_grid(4, 1, "NTP SERVER");
-	text_ntpserver.set_options_data(&settings.setting_ntpserver);
-	settings_tab_group.add_child_ui(&text_ntpserver, 2);
+	text_ntpserver = new ui_control_textbox();
+	text_ntpserver->create_on_grid(4, 1, "NTP SERVER");
+	text_ntpserver->set_options_data(&settings.setting_ntpserver);
+	settings_tab_group.add_child_ui(text_ntpserver, 2);
 
 	toggle_local_dns.create_on_grid(2, 1, "USE LOCAL DNS");
 	toggle_local_dns.set_toggle_text("NO", "YES");
@@ -346,9 +360,10 @@ void create_ui_elements()
 	settings_tab_group.add_child_ui(&slider_ow_refresh, 4);
 
 	// Create an Text Box the widget_ow_apikey setting
-	text_ow_api_key.create_on_grid(6, 1, "OPEN WEATHER API KEY");
-	text_ow_api_key.set_options_data(&settings.widget_ow_apikey);
-	settings_tab_group.add_child_ui(&text_ow_api_key, 4);
+	text_ow_api_key = new ui_control_textbox();
+	text_ow_api_key->create_on_grid(6, 1, "OPEN WEATHER API KEY");
+	text_ow_api_key->set_options_data(&settings.widget_ow_apikey);
+	settings_tab_group.add_child_ui(text_ow_api_key, 4);
 
 	// RSS Feed
 	// Create a Toggle from the widget_rss_enabled setting
@@ -364,9 +379,10 @@ void create_ui_elements()
 	settings_tab_group.add_child_ui(&slider_rss_refresh, 4);
 
 	// Create an Text Box the widget_ow_apikey setting
-	text_rss_feed_url.create_on_grid(6, 1, "RSS Feed URL");
-	text_rss_feed_url.set_options_data(&settings.widget_rss_feed_url);
-	settings_tab_group.add_child_ui(&text_rss_feed_url, 4);
+	text_rss_feed_url = new ui_control_textbox();
+	text_rss_feed_url->create_on_grid(6, 1, "RSS Feed URL");
+	text_rss_feed_url->set_options_data(&settings.widget_rss_feed_url);
+	settings_tab_group.add_child_ui(text_rss_feed_url, 4);
 
 	toggle_bme280_I2C_address.create_on_grid(2, 1, "BME280 I2C ADR");
 	toggle_bme280_I2C_address.set_toggle_text("0x77", "0x76");
@@ -384,22 +400,31 @@ void create_ui_elements()
 	toggle_mqtt_enable.set_options_data(&settings.mqtt_enabled);
 	settings_tab_group.add_child_ui(&toggle_mqtt_enable, 5);
 
-	text_mqtt_broker_ip.create_on_grid(2, 1, "BROKER IP");
-	text_mqtt_broker_ip.set_options_data(&settings.mqtt_broker_ip);
-	settings_tab_group.add_child_ui(&text_mqtt_broker_ip, 5);
+	toggle_mqtt_enable.create_on_grid(2, 1, "MQTT ENABLED");
+	toggle_mqtt_enable.set_toggle_text("NO", "YES");
+	toggle_mqtt_enable.set_options_data(&settings.mqtt_enabled);
+	settings_tab_group.add_child_ui(&toggle_mqtt_enable, 5);
 
-	text_mqtt_broker_port.create_on_grid(2, 1, "BROKER PORT");
-	text_mqtt_broker_port.set_data_type(SettingsOptionBase::Type::INT);
-	text_mqtt_broker_port.set_options_data(&settings.mqtt_broker_port);
-	settings_tab_group.add_child_ui(&text_mqtt_broker_port, 5);
+	text_mqtt_broker_ip = new ui_control_textbox();
+	text_mqtt_broker_ip->create_on_grid(2, 1, "BROKER IP");
+	text_mqtt_broker_ip->set_options_data(&settings.mqtt_broker_ip);
+	settings_tab_group.add_child_ui(text_mqtt_broker_ip, 5);
 
-	text_mqtt_broker_username.create_on_grid(3, 1, "USERNAME");
-	text_mqtt_broker_username.set_options_data(&settings.mqtt_username);
-	settings_tab_group.add_child_ui(&text_mqtt_broker_username, 5);
+	text_mqtt_broker_port = new ui_control_textbox();
+	text_mqtt_broker_port->create_on_grid(2, 1, "BROKER PORT");
+	text_mqtt_broker_port->set_data_type(SettingsOptionBase::Type::INT);
+	text_mqtt_broker_port->set_options_data(&settings.mqtt_broker_port);
+	settings_tab_group.add_child_ui(text_mqtt_broker_port, 5);
 
-	text_mqtt_broker_password.create_on_grid(3, 1, "PASSWORD");
-	text_mqtt_broker_password.set_options_data(&settings.mqtt_password);
-	settings_tab_group.add_child_ui(&text_mqtt_broker_password, 5);
+	text_mqtt_broker_username = new ui_control_textbox();
+	text_mqtt_broker_username->create_on_grid(3, 1, "USERNAME");
+	text_mqtt_broker_username->set_options_data(&settings.mqtt_username);
+	settings_tab_group.add_child_ui(text_mqtt_broker_username, 5);
+
+	text_mqtt_broker_password = new ui_control_textbox();
+	text_mqtt_broker_password->create_on_grid(3, 1, "PASSWORD");
+	text_mqtt_broker_password->set_options_data(&settings.mqtt_password);
+	settings_tab_group.add_child_ui(text_mqtt_broker_password, 5);
 
 	// // Screenshot stuff
 	// slider_screenshot_lvl_black.create_on_grid(3, 1);

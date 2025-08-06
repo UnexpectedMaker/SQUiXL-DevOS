@@ -264,12 +264,12 @@ void SQUiXL::get_and_update_utc_settings(bool success, const String &response)
 	{
 		json data = json::parse(response);
 
-		settings.config.location.city = data["city"].get<String>();
-		settings.config.location.country = data["country_code"].get<String>();
+		settings.config.location.city = data["city"];
+		settings.config.location.country = data["country_code"];
 		String utc_offset = data["utc_offset"].get<String>();
 
-		Serial.printf("city: %s\n", settings.config.location.city);
-		Serial.printf("country: %s\n", settings.config.location.country);
+		Serial.printf("city: %s\n", settings.config.location.city.c_str());
+		Serial.printf("country: %s\n", settings.config.location.country.c_str());
 		Serial.printf("utc: %d\n", utc_offset);
 
 		const char *utc_offset_data = utc_offset.c_str();

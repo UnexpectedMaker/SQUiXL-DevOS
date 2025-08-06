@@ -4,7 +4,6 @@
 #include "ui/controls/ui_control_tabgroup.h"
 #include <map>
 #include <vector>
-#include <cstddef>
 #include "WiFi.h"
 
 extern std::vector<ui_screen *> screens;
@@ -12,12 +11,13 @@ extern std::vector<ui_screen *> screens;
 class ui_screen : public ui_element
 {
 	public:
-
-        static void* operator new(std::size_t size)
-        {
-            return heap_caps_malloc(sizeof(ui_screen), MALLOC_CAP_SPIRAM);
-        }
-
+		static void *operator new(std::size_t size)
+		{
+			void *ptr = heap_caps_malloc(sizeof(ui_screen), MALLOC_CAP_SPIRAM);
+			if (!ptr)
+				throw std::bad_alloc();
+			return ptr;
+		}
 
 		void setup(uint16_t back_color, bool add = true);
 

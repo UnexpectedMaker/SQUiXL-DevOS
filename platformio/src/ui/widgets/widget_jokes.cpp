@@ -20,7 +20,7 @@ void widgetJokes::show_next_joke()
 			if (settings.has_wifi_creds() && !server_path.empty() && !wifi_controller.wifi_blocking_access)
 			{
 				is_getting_more_jokes = true;
-				wifi_controller.add_to_queue(server_path, [this](bool success, const String &response) { this->process_joke_data(success, response); });
+				wifi_controller.add_to_queue((std::string)server_path, [this](bool success, const String &response) { this->process_joke_data(success, response); });
 			}
 		}
 	}
@@ -130,7 +130,7 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 		next_joke_swap = millis();
 		if (settings.has_wifi_creds() && !server_path.empty() && !wifi_controller.wifi_blocking_access)
 		{
-			wifi_controller.add_to_queue(server_path, [this](bool success, const String &response) { this->process_joke_data(success, response); });
+			wifi_controller.add_to_queue(server_path.c_str(), [this](bool success, const String &response) { this->process_joke_data(success, response); });
 		}
 
 		return false;

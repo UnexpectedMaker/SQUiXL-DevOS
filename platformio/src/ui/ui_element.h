@@ -2,6 +2,7 @@
 
 #include "squixl.h"
 #include <map>
+#include <cstddef>
 
 class ui_control_tabgroup;
 

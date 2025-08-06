@@ -56,6 +56,7 @@ class SettingsOptionBase
 		void register_option();
 
 		String fieldname = "";
+		String fn = "";
 		int group = -1;
 		bool data_is_vector = false;
 		bool req_full_width = false;

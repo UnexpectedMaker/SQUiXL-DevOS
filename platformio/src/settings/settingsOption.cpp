@@ -61,13 +61,16 @@ String SettingsOptionInt::get_str() { return String(*setting_ref); }
 
 String SettingsOptionInt::generate_html(uint16_t index)
 {
-	String fn = fieldname;
-	fn.replace(" ", "_");
-	fn.toLowerCase();
-	fn.replace("_(sec)", "");
-	fn.replace("_(min)", "");
-	fn.replace("_(%%)", "");
-	fn = String(group) + "," + String(index) + "__" + fn;
+	if (fn.isEmpty())
+	{
+		fn = fieldname;
+		fn.replace(" ", "_");
+		fn.toLowerCase();
+		fn.replace("_(sec)", "");
+		fn.replace("_(min)", "");
+		fn.replace("_(%%)", "");
+		fn = String(group) + "," + String(index) + "__" + fn;
+	}
 
 	String html = "					<div class='input-group input-group-sm'>\n";
 	html += "						<span class='input-group-text' id='inputGroup-sizing-sm'>" + fieldname + "</span>\n";
@@ -101,15 +104,16 @@ uint16_t SettingsOptionColor565::get() { return *setting_ref; }
 
 String SettingsOptionColor565::generate_html(uint16_t index)
 {
-	// return "<div><span>SettingsOptionString for " + fieldname + "</span></div>";
-
-	String fn = fieldname;
-	fn.replace(" ", "_");
-	fn.toLowerCase();
-	fn.replace("_(sec)", "");
-	fn.replace("_(min)", "");
-	fn.replace("_(%%)", "");
-	fn = String(group) + "," + String(index) + "__" + fn;
+	if (fn.isEmpty())
+	{
+		fn = fieldname;
+		fn.replace(" ", "_");
+		fn.toLowerCase();
+		fn.replace("_(sec)", "");
+		fn.replace("_(min)", "");
+		fn.replace("_(%%)", "");
+		fn = String(group) + "," + String(index) + "__" + fn;
+	}
 
 	String html = "					<div class='input-group input-group-sm'>\n";
 	html += "						<span class='input-group-text' id='inputGroup-sizing-sm'>" + fieldname + "</span>\n";
@@ -177,13 +181,16 @@ String SettingsOptionIntRange::get_str() { return String(constrain(*setting_ref,
 
 String SettingsOptionIntRange::generate_html(uint16_t index)
 {
-	String fn = fieldname;
-	fn.replace(" ", "_");
-	fn.toLowerCase();
-	fn.replace("_(sec)", "");
-	fn.replace("_(min)", "");
-	fn.replace("_(%%)", "");
-	fn = String(group) + "," + String(index) + "__" + fn;
+	if (fn.isEmpty())
+	{
+		fn = fieldname;
+		fn.replace(" ", "_");
+		fn.toLowerCase();
+		fn.replace("_(sec)", "");
+		fn.replace("_(min)", "");
+		fn.replace("_(%%)", "");
+		fn = String(group) + "," + String(index) + "__" + fn;
+	}
 
 	String html = "					<div class='input-group input-group-sm flex-nowrap'>\n";
 	html += "						<span class='input-group-text' id='inputGroup-sizing-sm'>" + fieldname + "</span>\n";
@@ -236,19 +243,22 @@ String SettingsOptionFloatRange::get_str() { return String(constrain(*setting_re
 
 String SettingsOptionFloatRange::generate_html(uint16_t index)
 {
-	String fn = fieldname;
-	fn.replace(" ", "_");
-	fn.toLowerCase();
-	fn.replace("_(sec)", "");
-	fn.replace("_(min)", "");
-	fn.replace("_(%%)", "");
-	fn = String(group) + "," + String(index) + "__" + fn;
+	if (fn.isEmpty())
+	{
+		fn = fieldname;
+		fn.replace(" ", "_");
+		fn.toLowerCase();
+		fn.replace("_(sec)", "");
+		fn.replace("_(min)", "");
+		fn.replace("_(%%)", "");
+		fn = String(group) + "," + String(index) + "__" + fn;
+	}
 
-	String html = "					<div class='input-group input-group-sm flex-nowrap'>\n";
-	html += "						<span class='input-group-text' id='inputGroup-sizing-sm'>" + fieldname + "</span>\n";
-	html += "						<input type='range' min='" + String(value_min, 1) + "' max='" + String(value_max, 1) + "' step='" + String(value_step, 1) + "' class='form-range form-range-sm ms-2 me-2 mt-2' id='" + fn + "' name='" + fn + "' value='" + get_str() + "' required oninput='document.getElementById(\"" + fn + "range\").innerHTML = this.value;'>\n";
-	html += "						<span class='input-group-text' id='" + fn + "range'>" + get_str() + "</span>\n";
-	html += "					</div>\n";
+	String html = "\t\t\t\t<div class='input-group input-group-sm flex-nowrap'>\n";
+	html += "\t\t\t\t\t<span class='input-group-text' id='inputGroup-sizing-sm'>" + fieldname + "</span>\n";
+	html += "\t\t\t\t\t<input type='range' min='" + String(value_min, 1) + "' max='" + String(value_max, 1) + "' step='" + String(value_step, 1) + "' class='form-range form-range-sm ms-2 me-2 mt-2' id='" + fn + "' name='" + fn + "' value='" + get_str() + "' required oninput='document.getElementById(\"" + fn + "range\").innerHTML = this.value;'>\n";
+	html += "\t\t\t\t\t<span class='input-group-text' id='" + fn + "range'>" + get_str() + "</span>\n";
+	html += "\t\t\t\t</div>\n";
 
 	return html;
 }
@@ -305,13 +315,16 @@ String SettingsOptionIntVector::get_str(int index) { return String((*setting_ref
 
 String SettingsOptionIntVector::generate_html(uint16_t index)
 {
-	String fn = fieldname;
-	fn.replace(" ", "_");
-	fn.toLowerCase();
-	fn.replace("_(sec)", "");
-	fn.replace("_(min)", "");
-	fn.replace("_(%%)", "");
-	fn = String(group) + "," + String(index) + "__" + fn;
+	if (fn.isEmpty())
+	{
+		fn = fieldname;
+		fn.replace(" ", "_");
+		fn.toLowerCase();
+		fn.replace("_(sec)", "");
+		fn.replace("_(min)", "");
+		fn.replace("_(%%)", "");
+		fn = String(group) + "," + String(index) + "__" + fn;
+	}
 
 	String html = "					<div class='input-group input-group-sm mb-1'>\n";
 	html += "						<div class='row g-2'>\n";
@@ -379,13 +392,16 @@ String SettingsOptionFloat::get_str() { return String(*setting_ref); }
 
 String SettingsOptionFloat::generate_html(uint16_t index)
 {
-	String fn = fieldname;
-	fn.replace(" ", "_");
-	fn.toLowerCase();
-	fn.replace("_(sec)", "");
-	fn.replace("_(min)", "");
-	fn.replace("_(%%)", "");
-	fn = String(group) + "," + String(index) + "__" + fn;
+	if (fn.isEmpty())
+	{
+		fn = fieldname;
+		fn.replace(" ", "_");
+		fn.toLowerCase();
+		fn.replace("_(sec)", "");
+		fn.replace("_(min)", "");
+		fn.replace("_(%%)", "");
+		fn = String(group) + "," + String(index) + "__" + fn;
+	}
 
 	String html = "					<div class='input-group input-group-sm'>\n";
 	html += "						<span class='input-group-text' id='inputGroup-sizing-sm'>" + fieldname + "</span>\n";
@@ -438,13 +454,16 @@ String SettingsOptionBool::get_op2() { return option2; }
 
 String SettingsOptionBool::generate_html(uint16_t index)
 {
-	String fn = fieldname;
-	fn.replace(" ", "_");
-	fn.toLowerCase();
-	fn.replace("_(sec)", "");
-	fn.replace("_(min)", "");
-	fn.replace("_(%%)", "");
-	fn = String(group) + "," + String(index) + "__" + fn;
+	if (fn.isEmpty())
+	{
+		fn = fieldname;
+		fn.replace(" ", "_");
+		fn.toLowerCase();
+		fn.replace("_(sec)", "");
+		fn.replace("_(min)", "");
+		fn.replace("_(%%)", "");
+		fn = String(group) + "," + String(index) + "__" + fn;
+	}
 
 	String html = "					<div class='input-group input-group-sm'>\n";
 	html += "						<span class='input-group-text' id='inputGroup-sizing-sm'>" + fieldname + "</span>\n";
@@ -525,13 +544,16 @@ String SettingsOptionString::generate_html(uint16_t index)
 {
 	// return "<div><span>SettingsOptionString for " + fieldname + "</span></div>";
 
-	String fn = fieldname;
-	fn.replace(" ", "_");
-	fn.toLowerCase();
-	fn.replace("_(sec)", "");
-	fn.replace("_(min)", "");
-	fn.replace("_(%%)", "");
-	fn = String(group) + "," + String(index) + "__" + fn;
+	if (fn.isEmpty())
+	{
+		fn = fieldname;
+		fn.replace(" ", "_");
+		fn.toLowerCase();
+		fn.replace("_(sec)", "");
+		fn.replace("_(min)", "");
+		fn.replace("_(%%)", "");
+		fn = String(group) + "," + String(index) + "__" + fn;
+	}
 
 	String html = "					<div class='input-group input-group-sm'>\n";
 	html += "						<span class='input-group-text' id='inputGroup-sizing-sm'>" + fieldname + "</span>\n";
@@ -585,10 +607,13 @@ void SettingsOptionWiFiStations::add_station(String ssid, String pass)
 
 String SettingsOptionWiFiStations::generate_html(uint16_t index)
 {
-	String fn = fieldname;
-	fn.replace(" ", "_");
-	fn.toLowerCase();
-	fn = String(group) + "," + String(index) + "__" + fn;
+	if (fn.isEmpty())
+	{
+		fn = fieldname;
+		fn.replace(" ", "_");
+		fn.toLowerCase();
+		fn = String(group) + "," + String(index) + "__" + fn;
+	}
 
 	String html = "					<div class='input-group input-group-sm mb-1'>\n";
 	html += "						<div class='row g-2'>\n";
@@ -664,10 +689,13 @@ void SettingsOptionMQTTTopic::add_topic(String _name, String _listen, String _pu
 
 String SettingsOptionMQTTTopic::generate_html(uint16_t index)
 {
-	String fn = fieldname;
-	fn.replace(" ", "_");
-	fn.toLowerCase();
-	fn = String(group) + "," + String(index) + "__" + fn;
+	if (fn.isEmpty())
+	{
+		fn = fieldname;
+		fn.replace(" ", "_");
+		fn.toLowerCase();
+		fn = String(group) + "," + String(index) + "__" + fn;
+	}
 
 	String html = "					<div class='input-group input-group-sm mb-1'>\n";
 	html += "						<div class='row g-2'>\n";

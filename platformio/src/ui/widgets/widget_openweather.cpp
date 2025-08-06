@@ -10,9 +10,15 @@ std::string widgetOpenWeather::build_server_path()
 		return "";
 
 	if (full_server_call == "")
+	{
+		full_server_call.reserve(300);
 		full_server_call = server_path + settings.config.location.city.c_str() + "," + settings.config.location.country.c_str() + "&APPID=" + settings.config.open_weather.api_key.c_str() + "&units=" + (settings.config.open_weather.units_metric ? "metric" : "imperial");
+		// int before = strlen(full_server_call.c_str());
+		full_server_call.shrink_to_fit();
+		// Serial.printf("url len before: %d, after: %d\n", before, full_server_call.length());
+	}
 
-	return full_server_call;
+	return (std::string)full_server_call;
 }
 
 void widgetOpenWeather::load_icon(const String &name)
@@ -366,4 +372,4 @@ bool widgetOpenWeather::process_touch(touch_event_t touch_event)
 	return false;
 }
 
-widgetOpenWeather widget_ow;
+// widgetOpenWeather widget_ow;

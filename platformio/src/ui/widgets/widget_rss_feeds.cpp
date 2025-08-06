@@ -687,4 +687,4 @@ std::string widgetRSSFeeds::format_time_ago(unsigned long seconds_ago)
 	}
 }
 
-widgetRSSFeeds widget_rss_feeds;
+// widgetRSSFeeds widget_rss_feeds;

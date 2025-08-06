@@ -16,4 +16,4 @@ class widgetBME280 : public ui_window
 		bool show_humidity = false;
 };
 
-extern widgetBME280 widget_bme280;
+// extern widgetBME280 widget_bme280;

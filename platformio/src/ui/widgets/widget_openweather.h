@@ -27,9 +27,9 @@ class widgetOpenWeather : public ui_window
 		void process_weather_data(bool success, const String &response);
 
 	private:
-		std::string server_path = "http://api.openweathermap.org/data/2.5/weather?q=";
-		std::string geo_path = "http://api.openweathermap.org/geo/1.0/direct?q="; // example: http://api.openweathermap.org/geo/1.0/direct?q=melbourne,au&limit=1&appid=xxxxx
-		std::string full_server_call = "";
+		psram_string server_path = "http://api.openweathermap.org/data/2.5/weather?q=";
+		psram_string geo_path = "http://api.openweathermap.org/geo/1.0/direct?q="; // example: http://api.openweathermap.org/geo/1.0/direct?q=melbourne,au&limit=1&appid=xxxxx
+		psram_string full_server_call = "";
 		unsigned long next_update = 0;
 
 		bool has_data = false;
@@ -56,4 +56,4 @@ class widgetOpenWeather : public ui_window
 		std::map<String, BB_SPI_LCD> ow_icons;
 };
 
-extern widgetOpenWeather widget_ow;
+// extern widgetOpenWeather widget_ow;

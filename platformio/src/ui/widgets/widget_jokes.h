@@ -49,4 +49,4 @@ class widgetJokes : public ui_window
 		void reset_refresh_timer();
 };
 
-extern widgetJokes widget_jokes;
+// extern widgetJokes widget_jokes;

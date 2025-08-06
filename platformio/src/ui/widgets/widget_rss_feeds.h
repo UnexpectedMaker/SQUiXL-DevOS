@@ -55,4 +55,4 @@ class widgetRSSFeeds : public ui_window
 		std::string format_time_ago(unsigned long seconds_ago);
 };
 
-extern widgetRSSFeeds widget_rss_feeds;
+// extern widgetRSSFeeds widget_rss_feeds;

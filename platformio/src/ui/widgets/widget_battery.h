@@ -22,4 +22,4 @@ class widgetBattery : public ui_element
 		BB_SPI_LCD wifi_icons[5];
 };
 
-extern widgetBattery widget_battery;
+// extern widgetBattery widget_battery;

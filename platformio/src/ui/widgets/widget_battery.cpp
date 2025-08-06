@@ -196,4 +196,4 @@ bool widgetBattery::process_touch(touch_event_t touch_event)
 	return false;
 }
 
-widgetBattery widget_battery;
+// widgetBattery widget_battery;

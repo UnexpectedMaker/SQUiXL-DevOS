@@ -2,7 +2,7 @@
 #include "ui/controls/ui_control_tabgroup.h"
 #include "ui/ui_screen.h"
 
-void ui_control_tabgroup::set_tabs(std::vector<std::string> names)
+void ui_control_tabgroup::set_tabs(std::vector<psram_string> names)
 {
 	for (int i = 0; i < names.size(); i++)
 	{

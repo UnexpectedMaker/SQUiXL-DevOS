@@ -91,7 +91,7 @@ enum DRAGGABLE
 	DRAG_BOTH = 3,
 };
 
-typedef std::function<void(void)> _CALLBACK_DS;
+// typedef std::function<void(void)> _CALLBACK_DS;
 
 class ui_element;
 class ui_screen;
@@ -143,9 +143,7 @@ class SQUiXL : public SQUiXL_LITE
 
 		uint16_t squixl_blue = RGB(0, 133, 255);
 
-		// void loadPNG(int start_x, int start_y, const void *image_data, int image_data_size);
 		void loadPNG_into(BB_SPI_LCD *sprite, int start_x, int start_y, const void *image_data, int image_data_size);
-		// void loadJPEG(int start_x, int start_y, const void *image_data, int image_data_size);
 		void display_logo(bool show);
 		void display_first_boot(bool show);
 
@@ -182,7 +180,8 @@ class SQUiXL : public SQUiXL_LITE
 		{
 			Serial.printf("\nHeap Log: %s\nHeap Size: %u of %u\n", title, ESP.getFreeHeap(), ESP.getHeapSize());
 			Serial.printf("Min Heap Size: %u, Max Alloc Heap Size: %u, ", ESP.getMinFreeHeap(), ESP.getMaxAllocHeap());
-			Serial.printf("PSRAM Free: %u\n", ESP.getFreePsram());
+			Serial.printf("Largest allocatable internal block: %u bytes\n", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL));
+			Serial.printf("PSRAM Free: %u, ", ESP.getFreePsram());
 			Serial.printf("Largest PSRAM Chunk Free %u\n\n", heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
 		}
 

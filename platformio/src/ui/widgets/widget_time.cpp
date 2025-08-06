@@ -151,4 +151,4 @@ bool widgetTime::process_touch(touch_event_t touch_event)
 	return false;
 }
 
-widgetTime widget_time;
+// widgetTime widget_time;

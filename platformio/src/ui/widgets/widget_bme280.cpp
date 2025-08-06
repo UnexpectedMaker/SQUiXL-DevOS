@@ -124,4 +124,4 @@ bool widgetBME280::process_touch(touch_event_t touch_event)
 	return false;
 }
 
-widgetBME280 widget_bme280;
+// widgetBME280 widget_bme280;

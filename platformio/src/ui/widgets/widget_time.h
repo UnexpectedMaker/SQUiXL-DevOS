@@ -45,4 +45,4 @@ class widgetTime : public ui_element
 		BB_SPI_LCD font_check;
 };
 
-extern widgetTime widget_time;
+// extern widgetTime widget_time;

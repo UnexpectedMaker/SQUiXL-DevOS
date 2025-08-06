@@ -269,4 +269,4 @@ void widgetJokes::process_lines()
 	is_aniamted_cached = false;
 }
 
-widgetJokes widget_jokes;
+// widgetJokes widget_jokes;

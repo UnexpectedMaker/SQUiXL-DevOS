@@ -9,6 +9,8 @@
 #ifndef SQUIXL_LITE_H
 #define SQUIXL_LITE_H
 
+#include "esp_heap_caps.h"
+
 #include <vector>
 #include <string>
 #include <map>
@@ -336,8 +338,6 @@ class SQUiXL_LITE
 		void get_cached_char_sizes(FONT_SPEC weight, uint8_t size, uint8_t *width, uint8_t *height);
 
 		void show_error(String error, bool fade = false);
-
-		// std::vector<font_size_t> font_char_sizes;
 
 	protected:
 		bool _mux_initialised = false;

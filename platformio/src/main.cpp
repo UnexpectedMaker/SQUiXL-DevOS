@@ -9,7 +9,7 @@
 #include "ui/widgets/widget_time.h"
 #include "ui/widgets/widget_bme280.h"
 #include "ui/widgets/widget_battery.h"
-#include "ui/widgets/widget_wifimanager.h"
+// #include "ui/widgets/widget_wifimanager.h"
 
 #include "ui/controls/ui_control_button.h"
 #include "ui/controls/ui_control_toggle.h"
@@ -22,7 +22,7 @@
 #include "ui/ui_dialogbox.h"
 
 #include "mqtt/mqtt.h"
-#include "utils/littlefs_cli.h"
+// #include "utils/littlefs_cli.h"
 
 unsigned long next_background_swap = 0;
 unsigned long every_second = 0;
@@ -36,12 +36,19 @@ bool was_asleep = false;
 
 // UI stuff
 
-ui_screen screen_wifi_setup;
-ui_screen screen_main;
-ui_screen screen_mqtt;
-ui_screen screen_settings;
+widgetJokes *widget_jokes = nullptr;
+widgetRSSFeeds *widget_rss_feeds = nullptr;
+widgetBME280 *widget_bme280 = nullptr;
+widgetTime *widget_time = nullptr;
+widgetOpenWeather *widget_ow = nullptr;
+widgetBattery *widget_battery = nullptr;
 
-ui_screen screen_wifi_manager;
+// ui_screen screen_wifi_setup;
+ui_screen *screen_main = nullptr;
+ui_screen *screen_mqtt = nullptr;
+ui_screen *screen_settings = nullptr;
+
+// ui_screen screen_wifi_manager;
 
 // Settings
 ui_control_tabgroup settings_tab_group;
@@ -196,14 +203,15 @@ void create_ui_elements()
 	/*
 	Setup Settings Screen
 	*/
-	screen_settings.setup(darken565(0x5AEB, 0.5), false);
+	screen_settings = new ui_screen(); // Allocates into PSRAM
+	screen_settings->setup(darken565(0x5AEB, 0.5), false);
 
 	// Settings are grouped by tabs, so we setup the tab group here with a screen size
 	// and then pass it a list of strings for each group
 	//
 	settings_tab_group.create(0, 0, 480, 40);
-	settings_tab_group.set_tabs(std::vector<std::string>{"General", "Location", "WiFi", "Snd/Hap", "Widgets", "MQTT"});
-	screen_settings.set_page_tabgroup(&settings_tab_group);
+	settings_tab_group.set_tabs(std::vector<psram_string>{"General", "Location", "WiFi", "Snd/Hap", "Widgets", "MQTT"});
+	screen_settings->set_page_tabgroup(&settings_tab_group);
 
 	// grid layout is on a 6 column, 6 row array
 
@@ -430,62 +438,76 @@ void create_ui_elements()
 	// settings_tab_group.add_child_ui(&slider_screenshot_wb_tint, 5);
 
 	label_version.create(240, 460, squixl.get_version().c_str(), TFT_GREY);
-	screen_settings.add_child_ui(&label_version);
+	screen_settings->add_child_ui(&label_version);
 
-	screen_settings.set_can_cycle_back_color(true);
-	screen_settings.set_refresh_interval(0);
+	screen_settings->set_can_cycle_back_color(true);
+	screen_settings->set_refresh_interval(0);
 
 	/*
 	Setup Main Screen
 	*/
-	screen_main.setup(TFT_BLACK, true);
+	screen_main = new ui_screen(); // Allocates into PSRAM
+	screen_main->setup(TFT_BLACK, true);
 
-	widget_battery.create(10, 0, TFT_WHITE);
-	widget_battery.set_refresh_interval(5000);
-	screen_main.add_child_ui(&widget_battery);
+	widget_battery = (widgetBattery *)heap_caps_malloc(sizeof(widgetBattery), MALLOC_CAP_SPIRAM);
+	widget_battery = new widgetBattery();
+	widget_battery->create(10, 0, TFT_WHITE);
+	widget_battery->set_refresh_interval(5000);
+	screen_main->add_child_ui(widget_battery);
 
-	widget_time.create(470, 10, TFT_WHITE, TEXT_ALIGN::ALIGN_RIGHT);
-	widget_time.set_refresh_interval(1000);
-	screen_main.add_child_ui(&widget_time);
+	widget_time = (widgetTime *)heap_caps_malloc(sizeof(widgetTime), MALLOC_CAP_SPIRAM);
+	widget_time = new widgetTime();
+	widget_time->create(470, 10, TFT_WHITE, TEXT_ALIGN::ALIGN_RIGHT);
+	widget_time->set_refresh_interval(1000);
+	screen_main->add_child_ui(widget_time);
 
-	widget_jokes.create(10, 370, 460, 100, TFT_BLACK, 12, 0, "JOKES");
-	widget_jokes.set_refresh_interval(5000);
-	// widget_jokes.set_delayed_frst_draw(4000);
-	screen_main.add_child_ui(&widget_jokes);
+	widget_jokes = (widgetJokes *)heap_caps_malloc(sizeof(widgetJokes), MALLOC_CAP_SPIRAM);
+	widget_jokes = new widgetJokes();
+	widget_jokes->create(10, 370, 460, 100, TFT_BLACK, 12, 0, "JOKES");
+	widget_jokes->set_refresh_interval(5000);
+	// widget_jokes->set_delayed_frst_draw(4000);
+	screen_main->add_child_ui(widget_jokes);
 
-	widget_rss_feeds.create(10, 260, 460, 100, TFT_BLACK, 12, 0, "RSS FEEDS");
-	widget_rss_feeds.set_refresh_interval(5000);
+	widget_rss_feeds = (widgetRSSFeeds *)heap_caps_malloc(sizeof(widgetRSSFeeds), MALLOC_CAP_SPIRAM);
+	widget_rss_feeds = new widgetRSSFeeds();
+	widget_rss_feeds->create(10, 260, 460, 100, TFT_BLACK, 12, 0, "RSS FEEDS");
+	widget_rss_feeds->set_refresh_interval(5000);
 	// widget_rss_feeds.set_delayed_frst_draw(6000);
-	screen_main.add_child_ui(&widget_rss_feeds);
+	screen_main->add_child_ui(widget_rss_feeds);
 
-	widget_ow.create(245, 80, 225, 72, TFT_BLACK, 16, 0, "CURRENT WEATHER");
-	widget_ow.set_refresh_interval(1000);
-	screen_main.add_child_ui(&widget_ow);
+	widget_ow = (widgetOpenWeather *)heap_caps_malloc(sizeof(widgetOpenWeather), MALLOC_CAP_SPIRAM);
+	widget_ow = new widgetOpenWeather();
+	widget_ow->create(245, 80, 225, 72, TFT_BLACK, 16, 0, "CURRENT WEATHER");
+	widget_ow->set_refresh_interval(1000);
+	screen_main->add_child_ui(widget_ow);
 
 	/*
 	This widget will only show if a BME280 sensor is found
 	*/
-	widget_bme280.create(245, 160, 225, 40, TFT_BLACK, 16, 0, "BME280");
-	widget_bme280.set_refresh_interval(5000); // we only want this to update every 5 seconds
-	widget_bme280.set_delayed_frst_draw(2000);
-	screen_main.add_child_ui(&widget_bme280);
+	widget_bme280 = (widgetBME280 *)heap_caps_malloc(sizeof(widgetBME280), MALLOC_CAP_SPIRAM);
+	widget_bme280 = new widgetBME280();
+	widget_bme280->create(245, 160, 225, 40, TFT_BLACK, 16, 0, "BME280");
+	widget_bme280->set_refresh_interval(5000); // we only want this to update every 5 seconds
+	widget_bme280->set_delayed_frst_draw(2000);
+	screen_main->add_child_ui(widget_bme280);
 
 	/*
 	Setup MQTT Screen
 	*/
 
-	screen_mqtt.setup(darken565(0x5AEB, 0.5), true);
+	screen_mqtt = new ui_screen(); // Allocates into PSRAM
+	screen_mqtt->setup(darken565(0x5AEB, 0.5), true);
 	mqtt_notifications.create(20, 20, 440, 440, "MQTT Messages", TFT_GREY);
 	mqtt_notifications.set_draggable(DRAGGABLE::DRAG_VERTICAL);
 	mqtt_notifications.set_refresh_interval(5000);
 
 	// widget_mqtt_sensors.create(10, 120, 460, 240, TFT_BLACK, 12, 0, "MQTT Messages");
 	// widget_mqtt_sensors.set_refresh_interval(1000);
-	screen_mqtt.add_child_ui(&mqtt_notifications);
-	screen_mqtt.set_refresh_interval(50);
+	screen_mqtt->add_child_ui(&mqtt_notifications);
+	screen_mqtt->set_refresh_interval(50);
 
-	screen_main.set_navigation(Directions::LEFT, &screen_mqtt, true);
-	screen_main.set_navigation(Directions::DOWN, &screen_settings, true);
+	screen_main->set_navigation(Directions::LEFT, screen_mqtt, true);
+	screen_main->set_navigation(Directions::DOWN, screen_settings, true);
 }
 
 bool wifi_requirements_checked = false;
@@ -556,8 +578,6 @@ void setup()
 	}
 	else
 	{
-		// delay(100);
-		littlefs_ready = true;
 		settings.init();
 		settings.load();
 	}
@@ -669,8 +689,8 @@ void loop()
 
 		if (!settings.config.first_time)
 		{
-			squixl.set_current_screen(&screen_main);
-			screen_main.show_user_background_jpg(!was_asleep);
+			squixl.set_current_screen(screen_main);
+			screen_main->show_user_background_jpg(!was_asleep);
 		}
 		else
 		{
@@ -710,9 +730,6 @@ void loop()
 	// don't perocess further to allow the anims to play smoothly
 	// if (animation_manager.active_animations() > 0)
 	// 	return;
-
-	// This allows desktop access to the LittleFS partition on the SQUiXL
-	// littlefs_cli();
 
 	// Touch rate is done with process_touch_full()
 	// If a touch was processed, it returns true, otherwise it returns false
@@ -761,8 +778,8 @@ void loop()
 		else if (squixl.current_screen() == nullptr)
 		{
 			// We were showing the first boot screen, so no current screen is set yet.
-			squixl.set_current_screen(&screen_main);
-			screen_main.show_user_background_jpg(true);
+			squixl.set_current_screen(screen_main);
+			screen_main->show_user_background_jpg(true);
 		}
 
 		if (wifiSetup.is_done())

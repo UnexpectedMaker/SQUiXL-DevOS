@@ -12,7 +12,7 @@ Maybe one day it will turn into something more... maybe a full OS of sorts, but 
 We should remedy that right away... Head over to https://squixl.io and order yourself one.
 
 # License
-All code provided here by Unecpedted Maker falls under the MIT License.
+All code provided here by Unexpected Maker falls under the MIT License.
 
 ## SQUiXL GPIO Table
 

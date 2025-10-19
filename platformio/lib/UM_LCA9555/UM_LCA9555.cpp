@@ -1,6 +1,7 @@
 /*
   Arduino Library for the LCA9555
   Copyright (c) 2025 Unexpected Maker
+	https://squixl.io
 */
 
 #include "UM_LCA9555.h"
@@ -88,7 +89,7 @@ bool LCA9555::pin_mode(uint8_t pin, uint8_t mode, uint8_t value)
 	{
 		cfg &= ~mask;
 		// set output level first
-		digitalWrite(pin, value);
+		write(pin, value);
 	}
 	if (cfg != _reg_cache[reg])
 	{

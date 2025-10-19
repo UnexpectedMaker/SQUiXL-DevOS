@@ -43,6 +43,10 @@ void StatusCallback(void *cbData, int code, const char *string)
 }
 #endif
 
+AudioClass::AudioClass()
+{
+}
+
 // audio.setup(MUX_D3, MUX_D4, MUX_D2, MUX_D1);
 void AudioClass::setup(int8_t pin_data, int8_t pin_bclk, int8_t _pin_lrclk, int8_t _pin_sd_mode)
 {
@@ -105,6 +109,9 @@ void AudioClass::setup(int8_t pin_data, int8_t pin_bclk, int8_t _pin_lrclk, int8
 
 		mixer = new AudioOutputMixer(64, out);
 
+		mp3 = new AudioGeneratorMP3();
+		psram_source = new AudioFileSourceInPSRAM();
+
 		// Local playback channel
 		mixer_channels[0] = mixer->NewInput();
 		mixer_channels[0]->SetGain(1.0);
@@ -124,7 +131,6 @@ void AudioClass::setup(int8_t pin_data, int8_t pin_bclk, int8_t _pin_lrclk, int8
 		// }
 #endif
 		out->SetPinout(pin_bclk, _pin_lrclk, pin_data);
-		// out->SetRate(22050); // 44100
 
 		pinMode(_pin_sd_mode, OUTPUT);
 		digitalWrite(_pin_sd_mode, HIGH);
@@ -141,54 +147,31 @@ void AudioClass::stop()
 {
 	if (state)
 	{
+		if (wav)
+			wav->stop();
+
+		if (mp3)
+			mp3->stop();
+
+		mixer_channels[0]->stop();
+
 		if (out->stop())
 		{
 			state = false;
-			Serial.println("I2S Peripheral is now stopped");
 
 			is_icys_stream_connected = false;
 
-			if (wav)
-				wav->stop();
-
-#ifdef INT_RADIO
-			// if (mp3)
-			// 	mp3->stop();
-
-			// if (acc)
-			// 	acc->stop();
-
-			// if (buff)
-			// 	buff->close();
-
-			// if (icys_stream)
-			// 	icys_stream->close();
-#endif
-
-			mixer_channels[0]->stop();
-			// mixer_channels[1]->stop();
-
-			delete out;
+			delete mp3;
 			delete wav;
 			delete file;
 			delete mixer;
+			delete out;
 
-#ifdef INT_RADIO
-			// delete buff;
-			// delete icys_stream;
-			// delete mp3;
-			// delete acc;
-#endif
 			out = nullptr;
+			mp3 = nullptr;
 			wav = nullptr;
 			file = nullptr;
 			mixer = nullptr;
-#ifdef INT_RADIO
-// buff = nullptr;
-// icys_stream = nullptr;
-// mp3 = nullptr;
-// acc = nullptr;
-#endif
 		}
 	}
 }
@@ -217,7 +200,7 @@ void AudioClass::play_tone(float _hz, float _tm)
 	vol = ((float)current_volume / max_volume) / 6.0;
 	if (!wav->isRunning())
 	{
-		func = new AudioFileSourceFunction(20);
+		func = new AudioFileSourceFunction(_tm);
 		func->addAudioGenerators([this](const float time) { return sine_wave(time); });
 		wav->begin(func, mixer_channels[0]);
 	}
@@ -402,88 +385,51 @@ void AudioClass::play_ip_address()
 	}
 }
 
-void AudioClass::update()
+bool AudioClass::update()
 {
-
-	// if (!is_icys_stream_connected && wifi_controller.is_connected())
-	// {
-	// 	if (millis() - streaming_music_update > 5000)
-	// 	{
-	// 		Serial.println("\nRADIO: Initialising the streaming stuff - maybe?");
-
-	// 		// Internet radio channel
-	// 		mixer_channels[1] = mixer->NewInput();
-	// 		mixer_channels[1]->SetGain(0.5);
-
-	// 		Serial.print("\nRADIO: Opening station: ");
-	// 		Serial.println(stations[settings.config.audio.current_radio_station]);
-
-	// 		icys_stream = new AudioFileSourceICYStream(stations[settings.config.audio.current_radio_station]);
-	// 		icys_stream->RegisterMetadataCB(MDCallback, (void *)"ICY");
-	// 		// icys_stream->RegisterMetadataCB(MDCallback, NULL);
-
-	// 		buff = new AudioFileSourceBuffer(icys_stream, preallocateBuffer, preallocateBufferSize);
-	// 		buff->RegisterStatusCB(StatusCallback, (void *)"buffer");
-	// 		// buff->RegisterStatusCB(StatusCallback, NULL);
-
-	// 		// acc = new AudioGeneratorAAC(preallocateCodec, preallocateCodecSize);
-	// 		// acc->RegisterStatusCB(StatusCallback, (void *)"acc");
-	// 		// acc->begin(buff, mixer_channels[1]);
-
-	// 		mp3 = new AudioGeneratorMP3(preallocateCodec, preallocateCodecSize);
-	// 		mp3->RegisterStatusCB(StatusCallback, (void *)"mp3");
-	// 		mp3->begin(buff, mixer_channels[1]);
-
-	// 		is_icys_stream_connected = true;
-	// 	}
-	// }
-
 	if (out == nullptr || wav == nullptr)
-		return;
+		return false;
 
 	static int lastms = 0;
 
-	// if (is_icys_stream_connected && millis() - streaming_music_update > 1000)
-	// {
-	// 	if (mp3->isRunning())
-	// 	{
-	// 		if (millis() - lastms > 1000)
-	// 		{
-	// 			lastms = millis();
-	// 			Serial.printf("Running for %d ms...\n", lastms);
-	// 			Serial.flush();
-	// 		}
-	// 		if (!mp3->loop())
-	// 		{
-	// 			mp3->stop();
-	// 			// mixer_channels[1]->stop();
-	// 		}
-	// 	}
-	// 	else
-	// 	{
-	// 		// Serial.printf("MP3 done\n");
-	// 		streaming_music_update = millis();
-	// 		// delay(1000);
-	// 	}
-	// }
+	if (mp3 && mp3->isRunning())
+	{
+		if (!mp3->loop())
+		{
+			mp3->stop();
+			return true;
+		}
+		else
+		{
+			if (millis() - last_mp3_report > 1000)
+			{
+				last_mp3_report = millis();
+				uint32_t elapsed = get_seconds_played();
+				uint32_t total = get_total_seconds();
+				float pct = get_progress_percent();
 
-	if (wav->isRunning())
+				Serial.printf("%02lu:%02lu / %02lu:%02lu (%.1f%%)\n", elapsed / 60, elapsed % 60, total / 60, total % 60, pct);
+			}
+		}
+	}
+	if (wav && wav->isRunning())
 	{
 		if (!wav->loop())
 		{
 			wav->stop();
-			// mixer_channels[0]->stop();
 		}
 	}
-	else if (!queue.empty())
+	else if (wav && !queue.empty())
 	{
 		if (current_volume == 0)
-			return;
+			return false;
 
 		Serial.printf("playing %s from queue\n", queue.front().c_str());
 		play_wav(queue.front().c_str());
 		queue.erase(queue.begin());
 	}
+
+	return false;
 }
 
 void AudioClass::wait_for_finish()
@@ -496,6 +442,47 @@ void AudioClass::wait_for_finish()
 		}
 		yield;
 	}
+}
+
+/* MP3 related stuff */
+
+void AudioClass::play_mp3()
+{
+	mixer_channels[0]->SetGain(0.1);
+	mp3->begin(psram_source, mixer_channels[0]);
+}
+
+float AudioClass::get_progress_percent() const
+{
+	if (!mp3 || !mp3->isRunning() || !psram_source)
+		return 0.0f;
+
+	// total bytes of MP3 in PSRAM
+	float total_bytes = psram_source->getSize();
+
+	// we know 96 kbps = 12 kB/s (approx)
+	float bytes_per_second = 96000.0f / 8.0f; // =12000
+
+	// ask the source how many bytes were read so far
+	float pos = psram_source->getPos(); // this one *does* exist
+
+	return (pos / total_bytes) * 100.0f;
+}
+
+uint32_t AudioClass::get_seconds_played() const
+{
+	if (!mp3 || !psram_source)
+		return 0;
+	float bytes_per_second = 96000.0f / 8.0f;
+	return psram_source->getPos() / bytes_per_second;
+}
+
+uint32_t AudioClass::get_total_seconds() const
+{
+	if (!psram_source)
+		return 0;
+	float bytes_per_second = 96000.0f / 8.0f;
+	return psram_source->getSize() / bytes_per_second;
 }
 
 AudioClass audio;

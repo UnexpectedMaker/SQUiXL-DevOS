@@ -388,6 +388,7 @@ bool SQUiXL::process_touch_full()
 
 	if (n > 0)
 	{
+		// Serial.printf("%d Touch at %d,%d\n", n, pts[0][0], pts[0][1]);
 		if (settings.config.first_time)
 		{
 #ifdef AUDIO_AVAILABLE

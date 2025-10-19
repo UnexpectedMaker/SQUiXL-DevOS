@@ -27,6 +27,8 @@ class xGT911
 		// returns number of active points
 		uint8_t readPoints(uint16_t (*points)[4]);
 
+		bool ready = false;
+
 	private:
 		TwoWire *_wire;
 		uint8_t _address;
@@ -39,6 +41,7 @@ class xGT911
 		touchCallback_t _touchCallback;
 
 		void reset();
+		bool waitReady(uint8_t attempts = 20);
 		void writeReg(uint16_t reg, uint8_t val);
 		void writeReg(uint16_t reg, uint16_t val);
 		void updateConfig();

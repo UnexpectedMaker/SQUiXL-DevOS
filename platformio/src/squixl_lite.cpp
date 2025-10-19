@@ -19,7 +19,7 @@ void SQUiXL_LITE::init()
 		ioex.pin_mode(LCD_RST, OUTPUT, HIGH);
 
 		// Screen backlight EN
-		ioex.pin_mode(BL_EN, OUTPUT, LOW);
+		ioex.pin_mode(BL_EN, OUTPUT, HIGH);
 
 		// Screen soft power EN
 		// ioex.pin_mode(SOFT_PWR, OUTPUT, LOW);
@@ -34,10 +34,7 @@ void SQUiXL_LITE::init()
 		// Haptic EN
 		ioex.pin_mode(HAPTICS_EN, OUTPUT, HIGH);
 
-		// Touch RESET
-		ioex.pin_mode(TP_RST, OUTPUT, LOW);
-		delay(100);
-
+		// Start gt911 touch controller
 		xtouch.begin(TP_INT, TP_RST);
 
 		Serial.println("LCA9555 is Good!");
@@ -74,9 +71,9 @@ void SQUiXL_LITE::init()
 	}
 
 	// Set the SPI frequency for the screen to 6.5Mhz to remove contention between PSRAM (frame buffer) and Flash.
-	RGBChangeFreq(6500000);
+	// RGBChangeFreq(6500000);
 	// RGBChangeFreq(7990000);
-	// RGBChangeFreq(6000000);
+	RGBChangeFreq(5500000);
 
 	// ioex.write(BL_EN, HIGH);
 }
@@ -200,6 +197,7 @@ bool SQUiXL_LITE::mux_switch_to(MUX_STATE new_state)
 	if (_current_mux_state == MUX_STATE::MUX_I2S)
 	{
 #ifdef AUDIO_AVAILABLE
+		delay(100);
 		audio.stop();
 #endif
 		Serial.println("Stopped I2S Peripheral");

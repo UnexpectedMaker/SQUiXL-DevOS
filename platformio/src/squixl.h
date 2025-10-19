@@ -160,13 +160,12 @@ class SQUiXL : public SQUiXL_LITE
 		float get_backlight_level() { return current_backlight_pwm; }
 		void process_backlight_dimmer();
 
-		// static void get_public_ip(bool success, const String &response);
 		static void get_and_update_utc_settings(bool success, const String &response);
 
 		bool vbus_changed();
 		void change_cpu_frequency(bool increase);
 
-		const String version_firmware = "Alpha v0.7 Pre-Release";
+		const String version_firmware = "Alpha v0.7";
 		const String version_year = "2025";
 		const uint16_t version_build = 7;
 		uint16_t version_latest = 0;

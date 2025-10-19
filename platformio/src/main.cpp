@@ -7,7 +7,7 @@
 #include "ui/widgets/widget_jokes.h"
 #include "ui/widgets/widget_rss_feeds.h"
 #include "ui/widgets/widget_time.h"
-#include "ui/widgets/widget_bme280.h"
+// #include "ui/widgets/widget_bme280.h"
 #include "ui/widgets/widget_battery.h"
 // #include "ui/widgets/widget_wifimanager.h"
 
@@ -38,7 +38,7 @@ bool was_asleep = false;
 
 widgetJokes *widget_jokes = nullptr;
 widgetRSSFeeds *widget_rss_feeds = nullptr;
-widgetBME280 *widget_bme280 = nullptr;
+// widgetBME280 *widget_bme280 = nullptr;
 widgetTime *widget_time = nullptr;
 widgetOpenWeather *widget_ow = nullptr;
 widgetBattery *widget_battery = nullptr;
@@ -113,6 +113,50 @@ ui_control_button *button_dialogbox_test;
 
 ui_label label_version;
 ui_scrollarea mqtt_notifications;
+
+void scan_I2C()
+{
+	byte error, address;
+	int nDevices;
+
+	Serial.println("Scanning...");
+
+	int scan_count = 0;
+
+	nDevices = 0;
+	for (address = 1; address < 127; address++)
+	{
+		// The i2c_scanner uses the return value of
+		// the Write.endTransmisstion to see if
+		// a device did acknowledge to the address.
+		Wire.beginTransmission(address);
+		error = Wire.endTransmission();
+
+		if (error == 0)
+		{
+			Serial.print("I2C device found at address 0x");
+			if (address < 16)
+				Serial.print("0");
+			Serial.print(address, HEX);
+			Serial.println("  !");
+
+			nDevices++;
+		}
+		else if (error == 4)
+		{
+			Serial.print("Unknown error at address 0x");
+			if (address < 16)
+				Serial.print("0");
+			Serial.println(address, HEX);
+		}
+	}
+	if (nDevices == 0)
+		Serial.println("No I2C devices found\n");
+	else
+		Serial.printf("found %d devices, done!\n", nDevices);
+
+	delay(5000); // wait 5 seconds for next scan
+}
 
 void button_press_ok()
 {
@@ -529,12 +573,12 @@ void create_ui_elements()
 	/*
 	This widget will only show if a BME280 sensor is found
 	*/
-	widget_bme280 = (widgetBME280 *)heap_caps_malloc(sizeof(widgetBME280), MALLOC_CAP_SPIRAM);
-	widget_bme280 = new widgetBME280();
-	widget_bme280->create(245, 160, 225, 40, TFT_BLACK, 16, 0, "BME280");
-	widget_bme280->set_refresh_interval(5000); // we only want this to update every 5 seconds
-	widget_bme280->set_delayed_frst_draw(2000);
-	screen_main->add_child_ui(widget_bme280);
+	// widget_bme280 = (widgetBME280 *)heap_caps_malloc(sizeof(widgetBME280), MALLOC_CAP_SPIRAM);
+	// widget_bme280 = new widgetBME280();
+	// widget_bme280->create(245, 160, 225, 40, TFT_BLACK, 16, 0, "BME280");
+	// widget_bme280->set_refresh_interval(5000); // we only want this to update every 5 seconds
+	// widget_bme280->set_delayed_frst_draw(2000);
+	// screen_main->add_child_ui(widget_bme280);
 
 	/*
 	Setup MQTT Screen
@@ -611,10 +655,10 @@ void setup()
 	// delay(3000);
 	// squixl.log_heap("BOOT");
 
-	if (WiFi.disconnect(true, true, 1000))
-	{
-		Serial.println("WIFI: Hard Disconnected at bootup");
-	}
+	// if (WiFi.disconnect(true, true, 1000))
+	// {
+	// 	Serial.println("WIFI: Hard Disconnected at bootup");
+	// }
 
 	if (!LittleFS.begin(true))
 	{
@@ -625,6 +669,8 @@ void setup()
 	{
 		settings.init();
 		settings.load();
+
+		// Serial.printf("bme flag: %d\n", settings.config.expansion.bme280_installed);
 	}
 
 	Wire.begin(1, 2);		 // UM square
@@ -688,6 +734,8 @@ void setup()
 
 	// Setup delayed timer for webserver starting, to alloqw other web traffic to complete first
 	delay_webserver_start = millis() + 5000;
+
+	// scan_I2C();
 
 } /* setup() */
 

@@ -11,10 +11,11 @@
 #include "AudioFileSourceFunction.h"
 #include "AudioGeneratorWAV.h"
 #include "AudioOutputI2S.h"
+#include "AudioFileSourceInPSRAM.h"
+#include "AudioGeneratorMP3.h"
 #ifdef INT_RADIO
 #include "AudioFileSourceICYStream.h"
 #include "AudioFileSourceBuffer.h"
-#include "AudioGeneratorMP3.h"
 #include "AudioGeneratorAAC.h"
 #endif
 #include "AudioOutputMixer.h"
@@ -43,8 +44,9 @@ struct SFX
 
 class AudioClass
 {
-
 	public:
+		AudioClass();
+
 		static float hz;
 
 		float max_volume = 40.0;
@@ -62,7 +64,7 @@ class AudioClass
 		void play_note(int index, int y, float vol_fade = 1.0, float duration = 20.0);
 		float get_piano_key_freq(uint8_t key);
 		void play_menu_beep(int index, int y);
-		void update();
+		bool update();
 		void set_volume(uint8_t vol);
 		static float sine_wave(const float time);
 
@@ -73,10 +75,22 @@ class AudioClass
 
 		void wait_for_finish();
 
+		/* MP3 related stuff */
+		AudioFileSourceInPSRAM *psram_source = nullptr;
+		AudioGeneratorMP3 *mp3 = nullptr;
+
+		void play_mp3();
+
+		float get_progress_percent() const;
+		uint32_t get_seconds_played() const;
+		uint32_t get_total_seconds() const;
+
 	private:
 		bool state = false;
 
 		float current_volume = 15.0;
+
+		uint32_t last_mp3_report = 0;
 
 		// I2S Audio Out
 		AudioOutputI2S *out = nullptr;

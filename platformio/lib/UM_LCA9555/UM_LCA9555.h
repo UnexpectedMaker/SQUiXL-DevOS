@@ -1,6 +1,7 @@
 /*
   Arduino Library for the LCA9555
   Copyright (c) 2025 Unexpected Maker
+	https://squixl.io
 */
 
 #pragma once

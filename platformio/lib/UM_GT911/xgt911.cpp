@@ -34,9 +34,6 @@ void xGT911::begin(uint8_t rstPin, uint8_t irqPin, bool reverseAxis, uint8_t add
 	_refreshRate = refreshRate;
 	_touchCallback = touchCallback;
 
-	// prepare reset pin via expander or direct
-	ioex.pin_mode(_rstPin, OUTPUT, LOW);
-
 	// perform hardware reset
 	reset();
 
@@ -50,26 +47,27 @@ void xGT911::begin(uint8_t rstPin, uint8_t irqPin, bool reverseAxis, uint8_t add
 	writeReg(REFRESH_RATE_REG, rr);
 	writeReg(CMD_REG, (uint8_t)0x00);
 	updateConfig();
+
+	ready = true;
 }
 
 void xGT911::reset()
 {
-	// drive reset low
-	ioex.write(_rstPin, LOW);
-
-	delay(10);
 
 	// pull IRQ low
 	pinMode(_irqPin, OUTPUT);
-	digitalWrite(_irqPin, LOW);
-	delay(50);
+	digitalWrite(_irqPin, HIGH);
+
+	delay(5);
+
+	ioex.pin_mode(_rstPin, OUTPUT, LOW);
 
 	// release reset
 	ioex.write(_rstPin, HIGH);
 	delay(100);
 
 	// set IRQ as input
-	pinMode(_irqPin, INPUT_PULLUP);
+	pinMode(_irqPin, INPUT);
 }
 
 void xGT911::writeReg(uint16_t reg, uint8_t val)
@@ -136,6 +134,9 @@ bool xGT911::readID(uint8_t *idBuffer)
 
 uint8_t xGT911::readPoints(uint16_t (*points)[4])
 {
+	if (!ready)
+		return 0;
+
 	uint8_t status = readReg(DATA_BUFFER_REG);
 	uint8_t n = status & 0x0F;
 	if (status & 0x80)

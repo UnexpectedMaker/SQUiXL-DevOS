@@ -1,4 +1,6 @@
-# SQUiXL Official Shipping Firmware 
+# SQUiXL Official Shipping Firmware V1
+**NOTE:** This firmware is now superseded by V2 (Main Branch)
+
 <img src="https://d2j6dbq0eux0bg.cloudfront.net/images/90477757/4909595982.jpg" style="float:right; padding:10px; width:33%; height:33%;">
 Hey, congratulations, you got yourself a SQUiXL!
 

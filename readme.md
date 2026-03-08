@@ -1,4 +1,7 @@
-# SQUiXL Official Shipping Firmware 
+# SQUiXL Official Shipping Firmware V2
+
+This is a new firmware revision with breaking API changes from firmware version 1.  [Firmware version 1](https://github.com/UnexpectedMaker/SQUiXL-DevOS/tree/firmware_v1) is still available if you want to keep using that, but if you have forked this project and added custom functionality, please see the firmware upgrade doc in the `/docs` folder.  
+
 <img src="https://d2j6dbq0eux0bg.cloudfront.net/images/90477757/4909595982.jpg" style="float:right; padding:10px; width:33%; height:33%;">
 Hey, congratulations, you got yourself a SQUiXL!
 
@@ -12,7 +15,7 @@ Maybe one day it will turn into something more... maybe a full OS of sorts, but 
 We should remedy that right away... Head over to https://squixl.io and order yourself one.
 
 # License
-All code provided here by Unexpected Maker falls under the MIT License.
+All code provided here by Unecpedted Maker falls under the MIT License.
 
 ## SQUiXL GPIO Table
 

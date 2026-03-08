@@ -28,7 +28,7 @@ void widgetJokes::show_next_joke()
 	if (stored_jokes.size() > 0)
 	{
 		process_lines();
-		fade(0.0, 1.0, 500, false, true, nullptr);
+		fade(0.0, 1.0, 500, true, true, nullptr);
 	}
 
 	is_busy = false;
@@ -45,6 +45,8 @@ void widgetJokes::process_joke_data(bool success, const String &response)
 		if (response == "ERROR")
 		{
 			next_update = 0;
+			// This is required - this is responsible for determining the lifetime of the response String
+			// to ensure it survives until ater it's been used.
 			delete &response;
 			ok = false;
 			return;
@@ -94,6 +96,8 @@ void widgetJokes::process_joke_data(bool success, const String &response)
 		is_getting_more_jokes = false;
 	}
 
+	// This is required - this is responsible for determining the lifetime of the response String
+	// to ensure it survives until ater it's been used.
 	delete &response;
 	is_dirty = ok;
 }
@@ -114,7 +118,7 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 		max_chars_per_line = int((_w - 20) / char_width); // includes padding for margins
 		max_lines = int((_h - 60) / char_height);		  // includes padding for margins ahd top heading
 
-		_sprite_joke.createVirtual(_w, _h, NULL, true);
+		_sprite_joke.create(_w, _h, TFT_MAGENTA);
 
 		// if (settings.has_wifi_creds() && !server_path.empty() && !wifi_controller.wifi_blocking_access)
 		// {
@@ -155,6 +159,7 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 	{
 
 		ui_parent->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_clean.getBuffer());
+		delay(10);
 		ui_parent->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_back.getBuffer());
 		delay(10);
 
@@ -170,7 +175,7 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (!has_had_any_jokes)
 	{
 		_sprite_joke.setFreeFont(UbuntuMono_R[2]);
-		_sprite_joke.setTextColor(TFT_GREY, -1);
+		_sprite_joke.setTextColor(TFT_GREY, TFT_MAGENTA);
 		_sprite_joke.setCursor(10, 38);
 		_sprite_joke.print("WAITING...");
 	}
@@ -184,14 +189,14 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 			// 	// canvas[canvasid].setTextDatum(TR_DATUM);
 			// 	// _sprite_back.setFreeFont(RobotoMono_Regular[13]);
 			_sprite_joke.setFreeFont(UbuntuMono_R[1]);
-			_sprite_joke.setTextColor(TFT_CYAN, -1);
+			_sprite_joke.setTextColor(TFT_CYAN, TFT_MAGENTA);
 
 			for (int l = 0; l < min((uint8_t)lines.size(), max_lines); l++)
 			{
 				if (lines[l] == "*nl*")
 				{
 					start_y += 5;
-					_sprite_joke.setTextColor(TFT_YELLOW, -1);
+					_sprite_joke.setTextColor(TFT_YELLOW, TFT_MAGENTA);
 				}
 				else
 				{
@@ -206,24 +211,15 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 		}
 	}
 
-	if (fade_amount < 32)
-	{
-		squixl.lcd.blendSprite(&_sprite_joke, &_sprite_back, &_sprite_mixed, fade_amount, TFT_MAGENTA);
-		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-	}
-	else
-	{
-		squixl.lcd.blendSprite(&_sprite_joke, &_sprite_back, &_sprite_mixed, 32, TFT_MAGENTA);
-		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-	}
+	squixl.lcd.blendSprite(&_sprite_joke, &_sprite_back, &_sprite_mixed, constrain(fade_amount, 0, 32), TFT_MAGENTA);
+	ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1);
+	next_refresh = millis();
 
 	if (is_dirty && !was_dirty)
 		was_dirty = true;
 
 	is_dirty = false;
 	is_busy = false;
-
-	next_refresh = millis();
 
 	return (fade_amount < 32 || was_dirty);
 }
@@ -268,5 +264,3 @@ void widgetJokes::process_lines()
 	_sprite_joke.fillScreen(TFT_MAGENTA);
 	is_aniamted_cached = false;
 }
-
-// widgetJokes widget_jokes;

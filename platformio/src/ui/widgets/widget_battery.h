@@ -13,13 +13,15 @@ class widgetBattery : public ui_element
 		bool redraw(uint8_t fade_amount, int8_t tab_group = -1) override;
 		void capture_clean_sprite() override;
 		bool process_touch(touch_event_t touch_event) override;
+		bool should_refresh() override;
 
 	private:
 		bool icons_loaded = false;
 		std::string message = "Disconnected";
+		bool last_wifi_connected = false;
 
-		BB_SPI_LCD battery_icons[5];
-		BB_SPI_LCD wifi_icons[5];
+		umgfx::UM_GFX_Canvas battery_icons[5];
+		umgfx::UM_GFX_Canvas wifi_icons[5];
 };
 
 // extern widgetBattery widget_battery;

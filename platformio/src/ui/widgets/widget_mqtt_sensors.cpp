@@ -14,7 +14,7 @@ bool widgetMQTTSensors::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	if (fade_amount == 32 && should_redraw)
 	{
-		// squixl.lcd.drawSprite(_x, _y, &_sprite_clean, 1.0f, -1, DRAW_TO_LCD);
+		// squixl.lcd.drawSprite(_x, _y, &_sprite_clean, 1.0f, -1);
 		is_dirty = true;
 		should_redraw = false;
 	}
@@ -46,8 +46,8 @@ bool widgetMQTTSensors::redraw(uint8_t fade_amount, int8_t tab_group)
 
 		// if (!test_sprite.getBuffer())
 		// {
-		// 	test_sprite.createVirtual(100, 100, NULL, true);
-		// 	test_sprite_back.createVirtual(100, 100, NULL, true);
+		// 	test_sprite.create(100, 100);
+		// 	test_sprite_back.create(100, 100);
 		// 	delay(10);
 		// }
 
@@ -60,7 +60,7 @@ bool widgetMQTTSensors::redraw(uint8_t fade_amount, int8_t tab_group)
 		// test_sprite.print("50%");
 
 		// squixl.lcd.blendSprite(&test_sprite, &test_sprite_back, &test_sprite_back, 8, TFT_MAGENTA);
-		// squixl.lcd.drawSprite(190, 190, &test_sprite_back, 1.0f, -1, DRAW_TO_LCD);
+		// squixl.lcd.drawSprite(190, 190, &test_sprite_back, 1.0f, -1);
 
 		for (auto &sensor_data : mqtt_stuff.mqtt_topic_payloads)
 		{
@@ -98,8 +98,8 @@ bool widgetMQTTSensors::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (fade_amount < 32)
 	{
 		squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, fade_amount);
-		// squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, 0x0, DRAW_TO_LCD);
-		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+		// squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, 0x0);
+		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1);
 	}
 	else if (is_dirty)
 	{
@@ -112,17 +112,17 @@ bool widgetMQTTSensors::redraw(uint8_t fade_amount, int8_t tab_group)
 		// }
 
 		squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, 32);
-		// squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, 0x0, DRAW_TO_LCD);
-		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+		// squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, 0x0);
+		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1);
 		// if (fade_amount < 32)
 		// {
 		// 	squixl.lcd.blendSprite(&_sprite_joke, &_sprite_back, &_sprite_mixed, fade_amount, TFT_MAGENTA);
-		// 	squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+		// 	squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1);
 		// }
 		// else
 		// {
 		// 	squixl.lcd.blendSprite(&_sprite_joke, &_sprite_back, &_sprite_mixed, 32, TFT_MAGENTA);
-		// 	squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+		// 	squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1);
 
 		// 	Serial.println("Tick jokes");
 		// }

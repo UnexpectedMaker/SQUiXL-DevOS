@@ -11,6 +11,8 @@
 #include "AudioFileSourceFunction.h"
 #include "AudioGeneratorWAV.h"
 #include "AudioOutputI2S.h"
+#include "AudioFileSourceInPSRAM.h"
+#include "AudioGeneratorMP3.h"
 #ifdef INT_RADIO
 #include "AudioFileSourceICYStream.h"
 #include "AudioFileSourceBuffer.h"
@@ -72,6 +74,16 @@ class AudioClass
 		}
 
 		void wait_for_finish();
+
+		/* MP3 related stuff */
+		AudioFileSourceInPSRAM *psram_source = nullptr;
+		AudioGeneratorMP3 *mp3 = nullptr;
+
+		void play_mp3();
+
+		float get_progress_percent() const;
+		uint32_t get_seconds_played() const;
+		uint32_t get_total_seconds() const;
 
 	private:
 		bool state = false;

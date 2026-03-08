@@ -1,4 +1,6 @@
 .pio
 .vscode
 .DS_Store
+.claude
 /raw
+/dev_docs

@@ -42,7 +42,7 @@ class widgetTime : public ui_element
 		bool should_redraw = false;
 		bool is_setup = false;
 
-		BB_SPI_LCD font_check;
+		umgfx::UM_GFX_Canvas font_check;
 };
 
 // extern widgetTime widget_time;

@@ -29,11 +29,11 @@ bool ui_gauge_bme280::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (!is_aniamted_cached)
 	{
 		// Add the tinted background
-		_sprite_content.fillRoundRect(0, 0, _w, _h, 9, TFT_WHITE, DRAW_TO_RAM);
+		_sprite_content.fillRoundRect(0, 0, _w, _h, 9, TFT_WHITE);
 		squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_back, 16);
 
-		// _sprite_back.drawSprite(0, 0, &_graphic_back, 1.0, 0x0, DRAW_TO_RAM);
-		// _sprite_back.drawSprite(0, 0, &_graphic_front, 1.0, 0x0, DRAW_TO_RAM);
+		// _sprite_back.drawSprite(0, 0, &_graphic_back, 1.0, 0x0);
+		// _sprite_back.drawSprite(0, 0, &_graphic_front, 1.0, 0x0);
 
 		int text_w;
 		int text_h;
@@ -68,12 +68,12 @@ bool ui_gauge_bme280::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (fade_amount < 32)
 	{
 		squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, fade_amount);
-		squixl.lcd.drawSprite(ui_parent->pos_x() + _x, ui_parent->pos_y() + _y, &_sprite_mixed, 1.0f, 0x0, DRAW_TO_LCD);
+		squixl.lcd.drawSprite(ui_parent->pos_x() + _x, ui_parent->pos_y() + _y, &_sprite_mixed, 1.0f, 0x0);
 	}
 	else
 	{
 		squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, 32);
-		squixl.lcd.drawSprite(ui_parent->pos_x() + _x, ui_parent->pos_y() + _y, &_sprite_mixed, 1.0f, 0x0, DRAW_TO_LCD);
+		squixl.lcd.drawSprite(ui_parent->pos_x() + _x, ui_parent->pos_y() + _y, &_sprite_mixed, 1.0f, 0x0);
 		next_refresh = millis();
 	}
 

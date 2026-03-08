@@ -23,6 +23,6 @@ class ui_gauge : public ui_element
 		int cached_desc_text_w = 0;
 		int cached_desc_text_h = 0;
 
-		BB_SPI_LCD _graphic_back;
-		BB_SPI_LCD _graphic_front;
+		umgfx::UM_GFX_Canvas _graphic_back;
+		umgfx::UM_GFX_Canvas _graphic_front;
 };

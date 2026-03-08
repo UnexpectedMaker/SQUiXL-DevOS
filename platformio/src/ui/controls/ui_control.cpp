@@ -12,9 +12,9 @@ void ui_control::create(uint16_t _pos_x, uint16_t _pos_y, uint16_t _width, uint1
 
 	_title = title;
 
-	// _sprite_content.createVirtual(_w, _h, NULL, true);
-	// _sprite_clean.createVirtual(_w, _h, NULL, true);
-	// _sprite_mixed.createVirtual(_w, _h, NULL, true);
+	// _sprite_content.create(_w, _h);
+	// _sprite_clean.create(_w, _h);
+	// _sprite_mixed.create(_w, _h);
 
 	// Serial.printf("created control %d, %d, %d, %d\n", _x, _y, _w, _h);
 
@@ -69,7 +69,7 @@ void ui_control::create_on_grid(uint8_t _span_c, uint8_t _span_r, const char *ti
 void ui_control::clear_sprites()
 {
 	if (_sprite_content.getBuffer())
-		_sprite_content.freeVirtual();
+		_sprite_content.release();
 }
 
 void ui_control::set_label_sizes()
@@ -80,7 +80,7 @@ void ui_control::set_label_sizes()
 
 void ui_control::set_control_icon(const void *image_data, int image_data_size)
 {
-	_control_icon.createVirtual(48, 48, NULL, true);
+	_control_icon.create(48, 48);
 	squixl.loadPNG_into(&_control_icon, 0, 0, image_data, image_data_size);
 }
 

@@ -77,6 +77,7 @@ class ui_screen : public ui_element
 		uint16_t back_color = 0;
 		bool can_cycle_background_color = false;
 
+		bool is_drag_blended = false;
 		bool blend_transparency = true;
 		uint8_t overlay_alpha = 0;
 		bool switching_screens = false;
@@ -97,11 +98,11 @@ class ui_screen : public ui_element
 
 		void draw_draggable();
 		void setup_draggable_neighbour(bool state);
-		void draw_draggable_neighbour(BB_SPI_LCD *sprite, int16_t dx, int16_t dy);
+		void draw_draggable_neighbour(umgfx::UM_GFX_Canvas *sprite, int16_t dx, int16_t dy);
 
 		void clean_neighbour_sprites();
 
-		BB_SPI_LCD _sprite_drag;
+		umgfx::UM_GFX_Canvas _sprite_drag;
 
 		int8_t current_tab_group = -1;
 

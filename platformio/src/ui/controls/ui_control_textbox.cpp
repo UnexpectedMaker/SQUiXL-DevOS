@@ -35,34 +35,42 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 		return false;
 	}
 
+	if (parent_screen == nullptr)
+	{
+		parent_screen = static_cast<ui_screen *>(get_ui_parent());
+	}
+
 	is_busy = true;
 
 	if (!_sprite_content.getBuffer())
 	{
-		_sprite_content.createVirtual(_w, _h, NULL, true);
+		_sprite_content.create(_w, _h, TFT_MAGENTA);
 		char_width = 0;
 		string_len_pixels = 0;
 	}
 
 	// Always get the latest value to ensure changes done externally (like web server) are reflected
-	if (data_type == SettingsOptionBase::Type::FLOAT)
+	if (setting_option != nullptr)
 	{
-		auto *opt = static_cast<SettingsOptionFloat *>(setting_option);
-		_text = String(opt->get()).c_str();
-	}
-	else if (data_type == SettingsOptionBase::Type::INT)
-	{
-		auto *opt = static_cast<SettingsOptionInt *>(setting_option);
-		_text = String(opt->get()).c_str();
-	}
-	else
-	{
-		auto *opt = static_cast<SettingsOptionString *>(setting_option);
-		_text = opt->get().c_str();
+		if (data_type == SettingsOptionBase::Type::FLOAT)
+		{
+			auto *opt = static_cast<SettingsOptionFloat *>(setting_option);
+			_text = String(opt->get()).c_str();
+		}
+		else if (data_type == SettingsOptionBase::Type::INT)
+		{
+			auto *opt = static_cast<SettingsOptionInt *>(setting_option);
+			_text = String(opt->get()).c_str();
+		}
+		else
+		{
+			auto *opt = static_cast<SettingsOptionString *>(setting_option);
+			_text = opt->get().c_str();
+		}
 	}
 
 	// Clear the content sprite
-	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
+	// _sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 
 	// Calculate the string pixel sizes to allow for text centering
 	// uses different font sizes based on string length
@@ -98,8 +106,8 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 		}
 	}
 
-	_sprite_content.fillRoundRect(0, 0, _w, _h, 8, static_cast<ui_screen *>(get_ui_parent())->dark_tint[1], DRAW_TO_RAM);
-	_sprite_content.fillRoundRect(5, 20, _w - 10, 35, 6, static_cast<ui_screen *>(get_ui_parent())->dark_tint[3], DRAW_TO_RAM);
+	_sprite_content.fillRoundRect(0, 0, _w, _h, 8, parent_screen->dark_tint[1]);
+	_sprite_content.fillRoundRect(5, 20, _w - 10, 35, 6, parent_screen->dark_tint[3]);
 
 	_sprite_content.setTextColor(TFT_WHITE, -1);
 
@@ -124,11 +132,11 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 		}
 		_sprite_content.setFreeFont(UbuntuMono_R[0]);
 		_sprite_content.setCursor((_w / 2) - (title_len_pixels / 2), char_height_title + 2);
-		_sprite_content.setTextColor(static_cast<ui_screen *>(get_ui_parent())->light_tint[5], -1);
+		_sprite_content.setTextColor(parent_screen->light_tint[5], -1);
 		_sprite_content.print(_title.c_str());
 	}
 
-	get_ui_parent()->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+	get_ui_parent()->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1);
 
 	next_refresh = millis();
 
@@ -142,7 +150,7 @@ bool ui_control_textbox::redraw(uint8_t fade_amount, int8_t tab_group)
 void ui_control_textbox::set_text(const char *text)
 {
 	_text = text;
-	if (setting_option)
+	if (setting_option != nullptr)
 	{
 		if (data_type == SettingsOptionBase::Type::FLOAT)
 		{

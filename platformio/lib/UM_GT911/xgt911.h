@@ -27,6 +27,8 @@ class xGT911
 		// returns number of active points
 		uint8_t readPoints(uint16_t (*points)[4]);
 
+		bool ready = false;
+
 	private:
 		TwoWire *_wire;
 		uint8_t _address;

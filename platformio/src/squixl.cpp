@@ -5,7 +5,6 @@
 #include "ui/controls/ui_control_textbox.h"
 #include "ui/ui_keyboard.h"
 #include "ui/ui_dialogbox.h"
-#include "PNGDisplay.inl"
 // #include "screenie.h"
 
 TaskHandle_t anim_task_handler;
@@ -27,32 +26,15 @@ void SQUiXL::display_logo(bool show)
 {
 	if (show)
 	{
-		if (!logo_squixl.createVirtual(280, 60, NULL, true))
-		{
-			Serial.println("Failed to create buffer: logo_squixl");
-		}
-		if (!logo_black.createVirtual(280, 60, NULL, true))
-		{
-			Serial.println("Failed to create buffer: logo_black");
-		}
+		logo_squixl.create(280, 60);
 		squixl.loadPNG_into(&logo_squixl, 0, 0, squixl_logo_blue, sizeof(squixl_logo_blue));
-		logo_black.fillScreen(TFT_BLACK);
 
-		if (!by_um.createVirtual(200, 20, NULL, true))
-		{
-			Serial.println("Failed to create buffer: by_um");
-		}
-		if (!by_um_black.createVirtual(200, 20, NULL, true))
-		{
-			Serial.println("Failed to create buffer: by_um_black");
-		}
+		by_um.create(200, 20);
 		squixl.loadPNG_into(&by_um, 0, 0, by_um_white, sizeof(by_um_white));
-		by_um_black.fillScreen(TFT_BLACK);
 
 		for (uint8_t alpha = 0; alpha < 32; alpha++)
 		{
-			squixl.lcd.blendSprite(&logo_squixl, &logo_black, &logo_black, alpha);
-			squixl.lcd.drawSprite(100, 200, &logo_black, 1.0, -1);
+			squixl.lcd.blendSpriteAt(&logo_squixl, &squixl.lcd, 100, 200, alpha);
 			delay(25);
 		}
 #ifdef AUDIO_AVAILABLE
@@ -63,8 +45,7 @@ void SQUiXL::display_logo(bool show)
 		delay(500);
 		for (uint8_t alpha = 0; alpha < 32; alpha++)
 		{
-			squixl.lcd.blendSprite(&by_um, &by_um_black, &by_um_black, alpha);
-			squixl.lcd.drawSprite(140, 270, &by_um_black, 1.0, -1);
+			squixl.lcd.blendSpriteAt(&by_um, &squixl.lcd, 140, 270, alpha);
 			delay(25);
 		}
 		haptics.play_trigger(Triggers::STARTUP);
@@ -75,16 +56,13 @@ void SQUiXL::display_logo(bool show)
 		logo_squixl.fillScreen(TFT_BLACK);
 		for (uint8_t alpha = 0; alpha < 32; alpha++)
 		{
-			squixl.lcd.blendSprite(&by_um, &by_um_black, &by_um_black, alpha);
-			squixl.lcd.blendSprite(&logo_squixl, &logo_black, &logo_black, alpha);
-			squixl.lcd.drawSprite(100, 200, &logo_black, 1.0, -1);
-			squixl.lcd.drawSprite(140, 270, &by_um_black, 1.0, -1);
+			squixl.lcd.blendSpriteAt(&logo_squixl, &squixl.lcd, 100, 200, alpha);
+			squixl.lcd.blendSpriteAt(&by_um, &squixl.lcd, 140, 270, alpha);
 			delay(25);
 		}
 
-		logo_black.freeVirtual();
-		by_um.freeVirtual();
-		by_um_black.freeVirtual();
+		by_um.release();
+		logo_squixl.release();
 	}
 }
 
@@ -92,17 +70,17 @@ void SQUiXL::display_first_boot(bool show)
 {
 	if (show)
 	{
-		logo_squixl.createVirtual(280, 60, NULL, true);
+		logo_squixl.create(280, 60);
 		squixl.loadPNG_into(&logo_squixl, 0, 0, squixl_logo_blue, sizeof(squixl_logo_blue));
 
-		wifi_icon.createVirtual(32, 32, NULL, true);
+		wifi_icon.create(32, 32);
 		squixl.loadPNG_into(&wifi_icon, 0, 0, wifi_images[4], wifi_image_sizes[4]);
 		squixl.loadPNG_into(&logo_squixl, 0, 0, squixl_logo_blue, sizeof(squixl_logo_blue));
 
-		wifi_manager_content.createVirtual(480, 480, NULL, true);
-		wifi_manager_content.fillScreen(darken565(0x5AEB, 0.7));
+		wifi_manager_content.create(480, 480, darken565(0x5AEB, 0.7));
+		// wifi_manager_content.fillScreen(darken565(0x5AEB, 0.7));
 
-		wifi_manager_content.drawSprite(170, 20, &logo_squixl, 0.5, 0x0, DRAW_TO_RAM);
+		wifi_manager_content.drawSprite(170, 20, &logo_squixl, 0.5, 0x0);
 
 		wifi_manager_content.setFreeFont(UbuntuMono_R[2]);
 		wifi_manager_content.setTextColor(darken565(TFT_WHITE, 0.1), -1);
@@ -128,7 +106,7 @@ void SQUiXL::display_first_boot(bool show)
 		wifi_manager_content.setTextColor(TFT_WHITE, -1);
 		wifi_manager_content.println("  You can skip this now by tapping the screen.\n");
 
-		wifi_manager_content.drawSprite(20, 420, &wifi_icon, 1.0f, 0x0, DRAW_TO_RAM);
+		wifi_manager_content.drawSprite(20, 420, &wifi_icon, 1.0f, 0x0);
 		wifi_manager_content.setFreeFont(UbuntuMono_R[1]);
 		wifi_manager_content.setTextColor(darken565(TFT_WHITE, 0.3), -1);
 		wifi_manager_content.setCursor(470 - get_version().length() * UbuntuMono_R_Char_Sizes[1][0], 470);
@@ -146,9 +124,9 @@ void SQUiXL::display_first_boot(bool show)
 	}
 	else
 	{
-		logo_squixl.freeVirtual();
-		wifi_manager_content.freeVirtual();
-		wifi_icon.freeVirtual();
+		logo_squixl.release();
+		wifi_manager_content.release();
+		wifi_icon.release();
 	}
 }
 
@@ -207,18 +185,28 @@ void SQUiXL::set_wallpaper_index(uint8_t index)
 }
 
 // helper function that loads a PNG header file into a sprite
-void SQUiXL::loadPNG_into(BB_SPI_LCD *sprite, int start_x, int start_y, const void *image_data, int image_data_size)
+void SQUiXL::loadPNG_into(umgfx::UM_GFX_Canvas *sprite, int start_x, int start_y, const void *image_data, int image_data_size)
 {
 	int w, h, bpp;
+	// Serial.printf("PNG load start (%d bytes) at %d,%d\n", image_data_size, start_x, start_y);
 	if (pd.getPNGInfo(&w, &h, &bpp, image_data, image_data_size))
 	{
-		// Serial.printf("PNG info: w %d, h %d, bpp %d\n", w, h, bpp);
-		pd.loadPNG(sprite, start_x, start_y, image_data, image_data_size, 0);
-		delay(25);
+		// Serial.printf("PNG info resolved: %dx%d @ %d bpp\n", w, h, bpp);
+		if (pd.loadPNG(sprite, start_x, start_y, image_data, image_data_size, 0))
+		{
+			// Serial.println("PNG loaded");
+			delay(55);
+		}
+		else
+		{
+			Serial.printf("PNG failed to load into sprite :( (size %d, error %d)\n", image_data_size, pd.getLastError());
+		}
+
+		// Serial.println("PNG loaded");
 	}
 	else
 	{
-		Serial.println("PNG not loaded :(");
+		Serial.printf("PNG not loaded :( (size %d)\n", image_data_size);
 	}
 }
 
@@ -309,6 +297,8 @@ void SQUiXL::get_and_update_utc_settings(bool success, const String &response)
 
 	wifi_controller.wifi_blocking_access = false;
 
+	// This is required - this is responsible for determining the lifetime of the response String
+	// to ensure it survives until ater it's been used.
 	delete &response;
 }
 
@@ -319,7 +309,7 @@ bool SQUiXL::process_touch_full()
 
 	next_touch = millis();
 
-	uint8_t move_margin_for_drag = 5;
+	uint8_t move_margin_for_drag = 10;
 
 	uint16_t pts[5][4];
 	uint8_t n = xtouch.readPoints(pts);
@@ -364,6 +354,9 @@ bool SQUiXL::process_touch_full()
 		touch_rate = 100;
 		if (n > 0)
 		{
+			backlight_dimmer_timer = millis();
+			// change_cpu_frequency(true);
+
 			if (dialogbox.check_button_hit(pts[0][0], pts[0][1]))
 			{
 				next_touch = millis() + 500;
@@ -659,8 +652,9 @@ void SQUiXL::set_current_screen(ui_screen *screen)
 	if (_current_screen != nullptr)
 		_current_screen->clear_buffers();
 
-	_current_screen = screen;
-	_current_screen->create_buffers();
+	screen->create_buffers();
+
+	// _current_screen->create_buffers();
 
 	if (_main_screen == nullptr)
 	{
@@ -668,6 +662,8 @@ void SQUiXL::set_current_screen(ui_screen *screen)
 		_main_screen = screen;
 		// Serial.printf("Set main screen - is same as current? %d\n", (_main_screen == _current_screen));
 	}
+
+	_current_screen = screen;
 }
 
 ui_screen *SQUiXL::current_screen()
@@ -783,6 +779,8 @@ void SQUiXL::process_version(bool success, const String &response)
 		}
 	}
 
+	// This is required - this is responsible for determining the lifetime of the response String
+	// to ensure it survives until ater it's been used.
 	delete &response;
 }
 

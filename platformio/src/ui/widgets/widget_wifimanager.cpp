@@ -15,13 +15,13 @@ void widgetWiFiManager::create()
 
 void widgetWiFiManager::load_icons()
 {
-	_sprite_content.createVirtual(_w, _h, NULL, true);
-	_sprite_clean.createVirtual(_w, _h, NULL, true);
-	_sprite_mixed.createVirtual(_w, _h, NULL, true);
+	_sprite_content.create(_w, _h);
+	_sprite_clean.create(_w, _h);
+	_sprite_mixed.create(_w, _h);
 
 	for (int i = 0; i < wifi_images_count; i++)
 	{
-		wifi_icons[i].createVirtual(32, 32, NULL, true);
+		wifi_icons[i].create(32, 32);
 		squixl.loadPNG_into(&wifi_icons[i], 0, 0, wifi_images[i], wifi_image_sizes[i]);
 	}
 
@@ -72,24 +72,24 @@ bool widgetWiFiManager::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	if (wifi_controller.is_connected())
 	{
-		_sprite_content.drawSprite(0, 0, &wifi_icons[4], 1.0f, 0x0, DRAW_TO_RAM);
+		_sprite_content.drawSprite(0, 0, &wifi_icons[4], 1.0f, 0x0);
 		_sprite_content.print(WiFi.localIP());
 	}
 	else
 	{
-		_sprite_content.drawSprite(0, 0, &wifi_icons[0], 1.0f, 0x0, DRAW_TO_RAM);
+		_sprite_content.drawSprite(0, 0, &wifi_icons[0], 1.0f, 0x0);
 		_sprite_content.print("Setup SQUiXL WiFi");
 	}
 
 	if (fade_amount < 32)
 	{
 		squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
-		squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+		squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1);
 	}
 	else
 	{
 		squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, 32);
-		squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+		squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1);
 		next_refresh = millis();
 	}
 

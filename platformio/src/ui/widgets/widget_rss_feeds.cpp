@@ -95,8 +95,9 @@ void widgetRSSFeeds::process_article_data(bool success, const String &response)
 		next_update = 0;
 		is_getting_more_articles = false;
 		is_dirty = false;
+		// This is required - this is responsible for determining the lifetime of the response String
+		// to ensure it survives until ater it's been used.
 		delete &response;
-
 		DEBUG_PRINTLN("DEBUG: Set next_update to 0, is_getting_more_articles to false, is_dirty to false");
 		return;
 	}
@@ -321,7 +322,8 @@ void widgetRSSFeeds::process_article_data(bool success, const String &response)
 
 	is_dirty = ok;
 	DEBUG_PRINTF("DEBUG: Set is_dirty to %d\n", is_dirty);
-
+	// This is required - this is responsible for determining the lifetime of the response String
+	// to ensure it survives until ater it's been used.
 	delete &response;
 }
 
@@ -354,7 +356,8 @@ bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)
 		max_lines = (_h - 60) / char_height;
 		DEBUG_PRINTF("DEBUG: max_chars_per_line=%d, max_lines=%d\n", max_chars_per_line, max_lines);
 
-		_sprite_article.createVirtual(_w, _h, NULL, true);
+		_sprite_article.create(_w, _h, TFT_MAGENTA);
+
 		DEBUG_PRINTF("DEBUG: Created virtual sprite, width=%d, height=%d\n", _w, _h);
 
 		feed_url = settings.config.rss_feed.feed_url.c_str();
@@ -387,6 +390,7 @@ bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)
 	{
 		DEBUG_PRINTLN("DEBUG: is_dirty_hard is true, updating background");
 		ui_parent->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_clean.getBuffer());
+		delay(10);
 		ui_parent->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_back.getBuffer());
 		delay(10);
 
@@ -407,9 +411,10 @@ bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)
 		DEBUG_PRINTF("DEBUG: is_aniamted_cached is false, lines size: %zu\n", lines.size());
 		if (lines.size() > 0)
 		{
+			_sprite_article.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 			int16_t start_y = 42;
 			_sprite_article.setFreeFont(UbuntuMono_R[1]);
-			_sprite_article.setTextColor(TFT_CYAN, -1);
+			_sprite_article.setTextColor(TFT_CYAN, TFT_MAGENTA);
 			DEBUG_PRINTLN("DEBUG: Set font and text color for drawing lines");
 
 			for (size_t l = 0; l < std::min(lines.size(), (size_t)max_lines); l++)
@@ -417,7 +422,7 @@ bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)
 				if (lines[l] == "*nl*")
 				{
 					start_y += 5;
-					_sprite_article.setTextColor(TFT_YELLOW, -1);
+					_sprite_article.setTextColor(TFT_YELLOW, TFT_MAGENTA);
 					DEBUG_PRINTLN("DEBUG: Encountered *nl*, changed text color to yellow");
 				}
 				else
@@ -436,7 +441,7 @@ bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)
 		else if (!settings.config.rss_feed.enabled)
 		{
 			_sprite_article.setFreeFont(UbuntuMono_R[2]);
-			_sprite_article.setTextColor(TFT_RED - 1);
+			_sprite_article.setTextColor(TFT_RED, TFT_MAGENTA);
 			_sprite_article.setCursor(10, 38);
 			_sprite_article.print("NOT ENABLED!");
 			DEBUG_PRINTLN("DEBUG: Displayed 'NOT ENABLED!'");
@@ -444,7 +449,7 @@ bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)
 		else if (!settings.config.rss_feed.has_url())
 		{
 			_sprite_article.setFreeFont(UbuntuMono_R[2]);
-			_sprite_article.setTextColor(TFT_RED - 1);
+			_sprite_article.setTextColor(TFT_RED, TFT_MAGENTA);
 			_sprite_article.setCursor(10, 38);
 			_sprite_article.print("NO RSS FEED URL");
 			DEBUG_PRINTLN("DEBUG: Displayed 'NO RSS FEED URL'");
@@ -452,25 +457,16 @@ bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)
 		else
 		{
 			_sprite_article.setFreeFont(UbuntuMono_R[2]);
-			_sprite_article.setTextColor(TFT_GREY, -1);
+			_sprite_article.setTextColor(TFT_GREY, TFT_MAGENTA);
 			_sprite_article.setCursor(10, 38);
 			_sprite_article.print("WAITING...");
 			DEBUG_PRINTLN("DEBUG: Displayed 'WAITING...'");
 		}
 	}
 
-	if (fade_amount < 32)
-	{
-		squixl.lcd.blendSprite(&_sprite_article, &_sprite_back, &_sprite_mixed, fade_amount, TFT_MAGENTA);
-		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-		DEBUG_PRINTF("DEBUG: Blended sprite with fade_amount=%d\n", fade_amount);
-	}
-	else
-	{
-		squixl.lcd.blendSprite(&_sprite_article, &_sprite_back, &_sprite_mixed, 32, TFT_MAGENTA);
-		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-		DEBUG_PRINTLN("DEBUG: Blended sprite with max fade_amount");
-	}
+	squixl.lcd.blendSprite(&_sprite_article, &_sprite_back, &_sprite_mixed, constrain(fade_amount, 0, 32), TFT_MAGENTA);
+	ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1);
+	next_refresh = millis();
 
 	if (is_dirty && !was_dirty)
 		was_dirty = true;
@@ -479,9 +475,6 @@ bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)
 	is_dirty = false;
 	is_busy = false;
 	DEBUG_PRINTLN("DEBUG: Set is_dirty to false, is_busy to false");
-
-	next_refresh = millis();
-	DEBUG_PRINTF("DEBUG: next_refresh set to %lu\n", next_refresh);
 
 	return (fade_amount < 32 || was_dirty);
 }
@@ -686,5 +679,3 @@ std::string widgetRSSFeeds::format_time_ago(unsigned long seconds_ago)
 		return std::to_string(weeks) + (weeks == 1 ? " week ago" : " weeks ago");
 	}
 }
-
-// widgetRSSFeeds widget_rss_feeds;

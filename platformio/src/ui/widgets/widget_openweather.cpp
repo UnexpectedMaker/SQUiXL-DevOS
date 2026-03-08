@@ -26,57 +26,57 @@ void widgetOpenWeather::load_icon(const String &name)
 	// Day Icons
 	if (name == "01d")
 	{
-		ow_icons["01d"].createVirtual(64, 64, NULL, true);
+		ow_icons["01d"].create(64, 64);
 		squixl.loadPNG_into(&ow_icons["01d"], 0, 0, um_ow_01d, sizeof(um_ow_01d));
 	}
 	else if (name == "01n")
 	{
-		ow_icons["01n"].createVirtual(64, 64, NULL, true);
+		ow_icons["01n"].create(64, 64);
 		squixl.loadPNG_into(&ow_icons["01n"], 0, 0, um_ow_01n, sizeof(um_ow_01n));
 	}
 	else if (name == "02d")
 	{
-		ow_icons["02d"].createVirtual(64, 64, NULL, true);
+		ow_icons["02d"].create(64, 64);
 		squixl.loadPNG_into(&ow_icons["02d"], 0, 0, um_ow_02d, sizeof(um_ow_02d));
 	}
 	else if (name == "02n")
 	{
-		ow_icons["02n"].createVirtual(64, 64, NULL, true);
+		ow_icons["02n"].create(64, 64);
 		squixl.loadPNG_into(&ow_icons["02n"], 0, 0, um_ow_02n, sizeof(um_ow_02n));
 	}
 	else if (name == "03")
 	{
-		ow_icons["03"].createVirtual(64, 64, NULL, true);
+		ow_icons["03"].create(64, 64);
 		squixl.loadPNG_into(&ow_icons["03"], 0, 0, um_ow_03d, sizeof(um_ow_03d));
 	}
 	else if (name == "04")
 	{
-		ow_icons["04"].createVirtual(64, 64, NULL, true);
+		ow_icons["04"].create(64, 64);
 		squixl.loadPNG_into(&ow_icons["04"], 0, 0, um_ow_04d, sizeof(um_ow_04d));
 	}
 	else if (name == "09")
 	{
-		ow_icons["09"].createVirtual(64, 64, NULL, true);
+		ow_icons["09"].create(64, 64);
 		squixl.loadPNG_into(&ow_icons["09"], 0, 0, um_ow_09d, sizeof(um_ow_09d));
 	}
 	else if (name == "10")
 	{
-		ow_icons["10"].createVirtual(64, 64, NULL, true);
+		ow_icons["10"].create(64, 64);
 		squixl.loadPNG_into(&ow_icons["10"], 0, 0, um_ow_10d, sizeof(um_ow_10d));
 	}
 	else if (name == "11")
 	{
-		ow_icons["11"].createVirtual(64, 64, NULL, true);
+		ow_icons["11"].create(64, 64);
 		squixl.loadPNG_into(&ow_icons["11"], 0, 0, um_ow_11d, sizeof(um_ow_11d));
 	}
 	else if (name == "13")
 	{
-		ow_icons["13"].createVirtual(64, 64, NULL, true);
+		ow_icons["13"].create(64, 64);
 		squixl.loadPNG_into(&ow_icons["13"], 0, 0, um_ow_13d, sizeof(um_ow_13d));
 	}
 	else if (name == "50")
 	{
-		ow_icons["50"].createVirtual(64, 64, NULL, true);
+		ow_icons["50"].create(64, 64);
 		squixl.loadPNG_into(&ow_icons["50"], 0, 0, um_ow_50d, sizeof(um_ow_50d));
 	}
 }
@@ -213,6 +213,8 @@ void widgetOpenWeather::process_weather_data(bool success, const String &respons
 	has_data = ok;
 	should_redraw = true;
 
+	// This is required - this is responsible for determining the lifetime of the response String
+	// to ensure it survives until ater it's been used.
 	delete &response;
 }
 
@@ -240,9 +242,9 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	if (fade_amount == 32 && should_redraw)
 	{
-		// squixl.lcd.drawSprite(_x, _y, &_sprite_clean, 1.0f, -1, DRAW_TO_LCD);
+		// squixl.lcd.drawSprite(_x, _y, &_sprite_clean, 1.0f, -1);
 		// _sprite_content.fillScreen(TFT_MAGENTA);
-		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1);
 
 		// Serial.printf("should_redraw? %d, fade_amount %d\n", should_redraw, fade_amount);
 		should_redraw = false;
@@ -256,12 +258,12 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 		delay(10);
 		// _sprite_clean.fillScreen(TFT_MAGENTA);
 		_sprite_clean.fillRect(0, 0, _w, _h, TFT_MAGENTA);
-		_sprite_clean.fillRoundRect(0, 0, _w, _h, 7, _c, DRAW_TO_RAM); // white will be our mask
+		_sprite_clean.fillRoundRect(0, 0, _w, _h, 7, _c); // white will be our mask
 		squixl.lcd.blendSprite(&_sprite_clean, &_sprite_back, &_sprite_back, _t, TFT_MAGENTA);
 
 		_sprite_back.setTextColor(TFT_WHITE, -1);
 		_sprite_back.setFreeFont(UbuntuMono_R[1]);
-		_sprite_back.setCursor(padding.left, _text_height + 6);
+		_sprite_back.setCursor(padding.left, _text_height + 12);
 		// Serial.printf("redraw() title: %s ||\n", _title.c_str());
 		_sprite_back.print(_title.c_str());
 
@@ -300,7 +302,7 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 
 			if (ow_icons.count(_icon_name) > 0)
 			{
-				_sprite_back.drawSprite((_w - 68), 4, &ow_icons[_icon_name], 1.0, 0x0, DRAW_TO_RAM);
+				_sprite_back.drawSprite((_w - 68), 4, &ow_icons[_icon_name], 1.0, 0x0);
 			}
 
 			// We've shown first data, so let's slow down the interval
@@ -326,20 +328,9 @@ bool widgetOpenWeather::redraw(uint8_t fade_amount, int8_t tab_group)
 		}
 	}
 
-	if (fade_amount < 32)
-	{
-		squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, fade_amount);
-		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-	}
-	else
-	{
-		squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, 32);
-		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-
-		// Serial.println("Tick weather");
-
-		next_refresh = millis();
-	}
+	squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, constrain(fade_amount, 0, 32));
+	ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1);
+	next_refresh = millis();
 
 	if (is_dirty && !was_dirty)
 		was_dirty = true;
@@ -371,5 +362,3 @@ bool widgetOpenWeather::process_touch(touch_event_t touch_event)
 
 	return false;
 }
-
-// widgetOpenWeather widget_ow;

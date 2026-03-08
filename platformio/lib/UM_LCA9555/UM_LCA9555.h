@@ -15,11 +15,23 @@
 #define LCA9555_DEF_ADDRESS 0x20
 
 // Pin modes
+#ifdef INPUT
+#undef INPUT
+#endif
 #define INPUT 1
+#ifdef OUTPUT
+#undef OUTPUT
+#endif
 #define OUTPUT 0
 
 // Pin states
+#ifdef LOW
+#undef LOW
+#endif
 #define LOW 0
+#ifdef HIGH
+#undef HIGH
+#endif
 #define HIGH 1
 
 // Error codes

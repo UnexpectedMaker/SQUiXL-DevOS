@@ -17,14 +17,14 @@ void ui_window::create(int16_t pos_x, int16_t pos_y, int16_t width, int16_t heig
 
 	_font = UbuntuMono_R[1];
 
-	_sprite_back.createVirtual(_w, _h, NULL, true);
-	_sprite_content.createVirtual(_w, _h, NULL, true);
-	_sprite_mixed.createVirtual(_w, _h, NULL, true);
+	_sprite_back.create(_w, _h);
+	_sprite_content.create(_w, _h);
+	_sprite_mixed.create(_w, _h);
 
 	// Create the sprite to hold the clean background of the window
 	// read whatever is on the screen alrady at x,y,w,h and store it in the sprite
 	// we will draw over that with whatever is on the screen
-	_sprite_clean.createVirtual(_w, _h, NULL, true);
+	_sprite_clean.create(_w, _h);
 	squixl.lcd.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_clean.getBuffer());
 
 	calculate_text_size(true);
@@ -39,16 +39,16 @@ void ui_window::draw_window_heading()
 {
 	// Draw the window background and title bar
 	_sprite_content.fillScreen(TFT_MAGENTA);
-	_sprite_content.fillRoundRect(0, 0, _w, _h, 7, _c, DRAW_TO_RAM); // white will be our mask
+	_sprite_content.fillRoundRect(0, 0, _w, _h, 7, _c); // white will be our mask
 	squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_back, _t, TFT_MAGENTA);
 	_sprite_content.fillScreen(TFT_MAGENTA);
-	_sprite_content.fillRoundRect(0, 0, _w, 24, 7, _c, DRAW_TO_RAM); // white will be our mask
+	_sprite_content.fillRoundRect(0, 0, _w, 24, 7, _c); // white will be our mask
 	squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_back, min(_t * 2, 16), TFT_MAGENTA);
 
 	// Draw the window title left jusified
 	_sprite_back.setTextColor(TFT_WHITE, -1);
 	_sprite_back.setFreeFont(UbuntuMono_R[1]);
-	_sprite_back.setCursor(padding.left, _text_height + 7);
+	_sprite_back.setCursor(padding.left, 27 - ((24 - _text_height) / 2));
 	_sprite_back.print(_title.c_str());
 }
 
@@ -67,8 +67,8 @@ bool ui_window::redraw(uint8_t fade_amount, int8_t tab_group)
 
 		squixl.lcd.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_clean.getBuffer());
 
-		// _sprite_content.fillScreen(TFT_BLACK, DRAW_TO_RAM);
-		_sprite_content.fillRoundRect(0, 0, _w, _h, 7, _c, DRAW_TO_RAM); // white will be our mask
+		// _sprite_content.fillScreen(TFT_BLACK);
+		_sprite_content.fillRoundRect(0, 0, _w, _h, 7, _c); // white will be our mask
 
 		squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_back, _t);
 
@@ -88,12 +88,12 @@ bool ui_window::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (fade_amount < 32)
 	{
 		squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, fade_amount);
-		squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, 0x0, DRAW_TO_LCD);
+		squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, 0x0);
 	}
 	else
 	{
 		// squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, 32);
-		squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, 0x0, DRAW_TO_LCD);
+		squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, 0x0);
 		next_refresh = millis() + refresh_interval;
 	}
 

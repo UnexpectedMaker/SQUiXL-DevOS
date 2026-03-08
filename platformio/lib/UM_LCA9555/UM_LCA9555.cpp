@@ -88,7 +88,7 @@ bool LCA9555::pin_mode(uint8_t pin, uint8_t mode, uint8_t value)
 	{
 		cfg &= ~mask;
 		// set output level first
-		digitalWrite(pin, value);
+		write(pin, value);
 	}
 	if (cfg != _reg_cache[reg])
 	{

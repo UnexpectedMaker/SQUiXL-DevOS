@@ -17,18 +17,18 @@ void widgetBattery::create(int16_t x, int16_t y, uint16_t color)
 void widgetBattery::load_icons()
 {
 	// Create the required sprites
-	_sprite_content.createVirtual(_w, _h, NULL, true);
+	_sprite_content.create(_w, _h);
 
 	// Load icons
 	for (int i = 0; i < battery_images_count; i++)
 	{
-		battery_icons[i].createVirtual(32, 32, NULL, true);
+		battery_icons[i].create(32, 32);
 		squixl.loadPNG_into(&battery_icons[i], 0, 0, battery_images[i], battery_image_sizes[i]);
 	}
 
 	for (int i = 0; i < wifi_images_count; i++)
 	{
-		wifi_icons[i].createVirtual(32, 32, NULL, true);
+		wifi_icons[i].create(32, 32);
 		squixl.loadPNG_into(&wifi_icons[i], 0, 0, wifi_images[i], wifi_image_sizes[i]);
 	}
 
@@ -77,13 +77,13 @@ bool widgetBattery::redraw(uint8_t fade_amount, int8_t tab_group)
 	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 
 	_sprite_content.setFreeFont(UbuntuMono_R[1]);
-	_sprite_content.setTextColor(TFT_WHITE, -1);
+	_sprite_content.setTextColor(TFT_WHITE, TFT_MAGENTA);
 
 	_sprite_content.setCursor(40, (settings.config.show_extra_wifi_details ? 15 : 20));
 
 	if (wifi_controller.is_connected())
 	{
-		_sprite_content.drawSprite(0, 0, &wifi_icons[4], 1.0f, 0x0, DRAW_TO_RAM);
+		_sprite_content.drawSprite(0, 0, &wifi_icons[4], 1.0f, 0x0);
 		_sprite_content.print(WiFi.localIP());
 		if (settings.config.show_extra_wifi_details)
 		{
@@ -103,28 +103,28 @@ bool widgetBattery::redraw(uint8_t fade_amount, int8_t tab_group)
 		if (squixl.update_available())
 		{
 			_sprite_content.setCursor(40, (settings.config.show_extra_wifi_details ? 29 : 34));
-			_sprite_content.setTextColor(TFT_GREEN, -1);
+			_sprite_content.setTextColor(TFT_GREEN, TFT_MAGENTA);
 			_sprite_content.print("NEW FW @ https://squixl.io/up/");
-			_sprite_content.setTextColor(TFT_WHITE, -1);
+			_sprite_content.setTextColor(TFT_WHITE, TFT_MAGENTA);
 		}
 	}
 	else if (settings.has_wifi_creds())
 	{
-		_sprite_content.drawSprite(0, 0, &wifi_icons[0], 1.0f, 0x0, DRAW_TO_RAM);
+		_sprite_content.drawSprite(0, 0, &wifi_icons[0], 1.0f, 0x0);
 		_sprite_content.print(message.c_str());
 	}
 
 	else
 	{
-		_sprite_content.drawSprite(0, 0, &wifi_icons[0], 1.0f, 0x0, DRAW_TO_RAM);
+		_sprite_content.drawSprite(0, 0, &wifi_icons[0], 1.0f, 0x0);
 		_sprite_content.print("WiFi not configured");
 	}
 
 	_sprite_content.setCursor(40, 52);
 	if (squixl.vbus_present())
 	{
-		// _sprite_content.drawSprite(0, 0, &wifi_icons[wifi_controller.is_connected() ? 4 : 0], 1.0f, 0x0, DRAW_TO_RAM);
-		_sprite_content.drawSprite(0, 32, &battery_icons[0], 1.0f, 0x0, DRAW_TO_RAM);
+		// _sprite_content.drawSprite(0, 0, &wifi_icons[wifi_controller.is_connected() ? 4 : 0], 1.0f, 0x0);
+		_sprite_content.drawSprite(0, 32, &battery_icons[0], 1.0f, 0x0);
 		_sprite_content.print((int)battery.get_percent());
 		_sprite_content.print("% ");
 	}
@@ -134,7 +134,7 @@ bool widgetBattery::redraw(uint8_t fade_amount, int8_t tab_group)
 		float vbat_mapped = mapFloat(max(vbat, 3.0f), 2.9f, 4.0f, 1.0f, 4.0f);
 		uint8_t bat_icon_index = (int)vbat_mapped;
 
-		_sprite_content.drawSprite(0, 32, &battery_icons[bat_icon_index], 1.0f, 0x0, DRAW_TO_RAM);
+		_sprite_content.drawSprite(0, 32, &battery_icons[bat_icon_index], 1.0f, 0x0);
 
 		_sprite_content.printf("%0.1f", vbat);
 		_sprite_content.print("V ");
@@ -144,21 +144,11 @@ bool widgetBattery::redraw(uint8_t fade_amount, int8_t tab_group)
 		_sprite_content.print("MHz");
 	}
 
-	// if (fade_amount < 32)
-	// {
-	// 	squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
-	// 	ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-	// }
-	// else
-	// {
-	// squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, 32);
-	ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+	ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1);
 	next_refresh = millis();
-	// }
 
 	is_dirty = false;
 	is_busy = false;
-	next_refresh = millis();
 
 	return false;
 }
@@ -194,6 +184,19 @@ bool widgetBattery::process_touch(touch_event_t touch_event)
 	}
 
 	return false;
+}
+
+bool widgetBattery::should_refresh()
+{
+	bool current_wifi_connected = wifi_controller.is_connected();
+	if (current_wifi_connected != last_wifi_connected)
+	{
+		last_wifi_connected = current_wifi_connected;
+		is_dirty = true;
+		return true;
+	}
+
+	return ui_element::should_refresh();
 }
 
 // widgetBattery widget_battery;

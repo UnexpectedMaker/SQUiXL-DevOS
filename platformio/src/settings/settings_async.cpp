@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "settings_async.h"
 #include <LittleFS.h>
-#include "bb_spi_lcd.h"
+#include "UM_GFX.h"
 
 using json = nlohmann::json;
 

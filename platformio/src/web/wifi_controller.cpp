@@ -183,6 +183,7 @@ void WifiController::loop()
 	if (millis() - next_wifi_loop > 2000)
 	{
 		next_wifi_loop = millis();
+		update_scan_state();
 		wifi_callback_item result;
 		while (xQueueReceive(wifi_callback_queue, &result, 0) == pdTRUE)
 		{
@@ -271,6 +272,76 @@ String WifiController::http_request(std::string url)
 	}
 
 	return payload;
+}
+
+void WifiController::start_async_scan()
+{
+	if (scan_in_progress)
+		return;
+
+	int16_t current_status = WiFi.scanComplete();
+	if (current_status == WIFI_SCAN_RUNNING)
+	{
+		scan_in_progress = true;
+		return;
+	}
+
+	WiFi.scanDelete();
+
+	int16_t start_status = WiFi.scanNetworks(true);
+	if (start_status == WIFI_SCAN_FAILED)
+	{
+		scan_entries.clear();
+		scan_in_progress = false;
+		return;
+	}
+
+	scan_in_progress = true;
+}
+
+void WifiController::clear_scan_results()
+{
+	scan_entries.clear();
+}
+
+void WifiController::update_scan_state()
+{
+	if (!scan_in_progress)
+		return;
+
+	int16_t status = WiFi.scanComplete();
+
+	if (status == WIFI_SCAN_RUNNING)
+		return;
+
+	if (status == WIFI_SCAN_FAILED)
+	{
+		WiFi.scanDelete();
+		scan_entries.clear();
+		scan_in_progress = false;
+		return;
+	}
+
+	scan_entries.clear();
+	scan_entries.reserve(status > 0 ? status : 0);
+
+	for (int16_t i = 0; i < status; ++i)
+	{
+		wifi_network_entry entry;
+		entry.name = WiFi.SSID(i).c_str();
+		entry.rssi = WiFi.RSSI(i);
+		entry.encryption = WiFi.encryptionType(i);
+		scan_entries.push_back(std::move(entry));
+	}
+
+	// Serial.printf("WiFi scan complete: %d network(s) found\n", status);
+	// for (const auto &entry : scan_entries)
+	// {
+	// 	Serial.printf("  SSID: %s, RSSI: %d dBm, Encryption: %d\n", entry.name.c_str(), entry.rssi, static_cast<int>(entry.encryption));
+	// }
+
+	WiFi.scanDelete();
+	scan_in_progress = false;
 }
 
 std::string WifiController::extract_domain(const std::string &url)

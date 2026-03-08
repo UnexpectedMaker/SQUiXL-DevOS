@@ -25,7 +25,7 @@ class ui_dialogbox
 	private:
 		void calc_button_positions();
 
-		BB_SPI_LCD sprite_dialog_content, sprite_dialog_clean;
+		umgfx::UM_GFX_Canvas sprite_dialog_content, sprite_dialog_clean;
 
 		bool is_open = false;
 

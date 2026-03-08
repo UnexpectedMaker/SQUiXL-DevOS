@@ -2,7 +2,6 @@
 #include "ui/ui_keyboard.h"
 #include "ui/ui_dialogbox.h"
 #include "settings/settings_async.h"
-#include "JPEGDisplay.inl"
 
 uint16_t background_colors[6] = {0x5AEB, darken565(0x5AEB, 0.5), 0x001f, 0xf800, darken565(0x07e0, 0.5), 0xbbc0};
 
@@ -51,15 +50,15 @@ void ui_screen::create_buffers()
 {
 	if (!_sprite_back.getBuffer())
 	{
-		_sprite_back.createVirtual(480, 480, NULL, true);
+		_sprite_back.create(480, 480, back_color);
 		// _sprite_back.fillScreen(back_color);
-		_sprite_back.fillRect(0, 0, 480, 480, back_color);
+		// _sprite_back.fillRect(0, 0, 480, 480, back_color);
 	}
 
 	if (!_sprite_content.getBuffer())
 	{
-		_sprite_content.createVirtual(480, 480, NULL, true);
-		_sprite_content.fillRect(0, 0, 480, 480, TFT_MAGENTA);
+		_sprite_content.create(480, 480, TFT_MAGENTA);
+		// _sprite_content.fillRect(0, 0, 480, 480, TFT_MAGENTA);
 		// _sprite_content.fillScreen(TFT_MAGENTA);
 	}
 }
@@ -67,16 +66,16 @@ void ui_screen::create_buffers()
 void ui_screen::clear_buffers()
 {
 	if (!dont_destroy_back_sprite && _sprite_back.getBuffer())
-		_sprite_back.freeVirtual();
+		_sprite_back.release();
 
 	if (_sprite_content.getBuffer())
-		_sprite_content.freeVirtual();
+		_sprite_content.release();
 
 	if (_sprite_drag.getBuffer())
-		_sprite_drag.freeVirtual();
+		_sprite_drag.release();
 
 	if (_sprite_mixed.getBuffer())
-		_sprite_mixed.freeVirtual();
+		_sprite_mixed.release();
 
 	is_dragging = false;
 }
@@ -174,14 +173,14 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 	if (squixl.main_screen() != squixl.current_screen())
 	{
 		squixl.set_current_screen(squixl.main_screen());
-		// squixl.current_screen()->refresh(true, true);
+		// squixl.current_screen()->refresh(true);
 	}
 
 	is_busy = true;
 
 	int w, h, bpp;
 
-	// _sprite_clean.createVirtual(480, 480, NULL, true);
+	// _sprite_clean.create(480, 480);
 
 	// bool has_content = false;
 	// if (background_size == 0)
@@ -212,7 +211,7 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 			// {
 			// 	// we only need this sprite temporarly if we are blending content
 			// 	if (!_sprite_mixed.getBuffer())
-			// 		_sprite_mixed.createVirtual(480, 480, NULL, true);
+			// 		_sprite_mixed.create(480, 480);
 			// }
 
 			for (uint8_t u8Alpha = 0; u8Alpha < 32; u8Alpha += 4)
@@ -222,11 +221,11 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 			squixl.lcd.blendSprite(&_sprite_back, &squixl.lcd, &squixl.lcd, 32);
 
 			// if (_sprite_mixed.getBuffer())
-			// 	_sprite_mixed.freeVirtual();
+			// 	_sprite_mixed.release();
 		}
 		else
 		{
-			// squixl.lcd.drawSprite(0, 0, &_sprite_back, 1.0f, -1, DRAW_TO_LCD);
+			// squixl.lcd.drawSprite(0, 0, &_sprite_back, 1.0f, -1);
 			squixl.lcd.blendSprite(&_sprite_back, &squixl.lcd, &squixl.lcd, 32);
 		}
 
@@ -239,20 +238,20 @@ void ui_screen::show_background_jpg(const void *jpg, int jpg_size, bool fade_in)
 		Serial.printf("JPG not loaded - size was %d :(\n", jpg_size);
 	}
 
-	// _sprite_clean.freeVirtual();
+	// _sprite_clean.release();
 	clear_content();
 
 	/*
 	TODO: Need to add tab group support to this?
 	*/
-	for (int w = 0; w < ui_children.size(); w++)
-	{
-		if (ui_children[w] != nullptr)
-		{
-			ui_children[w]->set_dirty_hard(true);
-			ui_children[w]->redraw(32);
-		}
-	}
+	// for (int w = 0; w < ui_children.size(); w++)
+	// {
+	// 	if (ui_children[w] != nullptr)
+	// 	{
+	// 		ui_children[w]->set_dirty_hard(true);
+	// 		ui_children[w]->redraw(32);
+	// 	}
+	// }
 
 	if (fade_in)
 	{
@@ -481,6 +480,7 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 			// Serial.printf("starting drag @ %u\n", drag_step_timer);
 
 			is_dragging = true;
+			is_drag_blended = false;
 			drag_axis = (touch_event.type == SCREEN_DRAG_H ? DRAGGABLE::DRAG_HORIZONTAL : DRAGGABLE::DRAG_VERTICAL);
 
 			if (drag_axis == DRAGGABLE::DRAG_HORIZONTAL)
@@ -504,7 +504,7 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 			// we only need this sprite temporarly if we are blending content
 			if (!_sprite_drag.getBuffer())
 			{
-				if (!_sprite_drag.createVirtual(480, 480, NULL, true))
+				if (!_sprite_drag.create(480, 480))
 				{
 					squixl.log_heap("_sprite_drag");
 				}
@@ -545,8 +545,6 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 
 			drag_neighbours[0] = nullptr;
 			drag_neighbours[1] = nullptr;
-
-			// squixl.log_heap("finshed drag");
 		}
 		else
 		{
@@ -556,6 +554,7 @@ bool ui_screen::process_touch(touch_event_t touch_event)
 
 		// Reset drag and neighbours
 		is_dragging = false;
+		is_drag_blended = false;
 		drag_axis = DRAGGABLE::DRAG_NONE;
 		return false;
 	}
@@ -660,7 +659,7 @@ bool ui_screen::redraw(uint8_t fade_amount, int8_t tab_group)
 	{
 		if (squixl.switching_screens)
 		{
-			squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+			squixl.lcd.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1);
 		}
 		else
 		{
@@ -714,7 +713,7 @@ void ui_screen::cancel_drag()
 	}
 
 	if (_sprite_drag.getBuffer())
-		_sprite_drag.freeVirtual();
+		_sprite_drag.release();
 
 	clean_neighbour_sprites();
 }
@@ -760,7 +759,7 @@ void ui_screen::finish_drag(Directions direction, int16_t dx, int16_t dy)
 	squixl.current_screen()->about_to_show_screen();
 
 	squixl.switching_screens = false;
-	squixl.current_screen()->refresh(true, true);
+	squixl.current_screen()->refresh(true);
 }
 
 void ui_screen::clean_neighbour_sprites()
@@ -779,22 +778,26 @@ void ui_screen::draw_draggable()
 {
 	if (_sprite_drag.getBuffer())
 	{
-		squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_content, 32, TFT_MAGENTA);
-		_sprite_drag.drawSprite(drag_x, drag_y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+		if (!is_drag_blended)
+		{
+			squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_content, 32, TFT_MAGENTA);
+			is_drag_blended = true;
+		}
+		_sprite_drag.drawSprite(drag_x, drag_y, &_sprite_content, 1.0f, -1);
 
 		if (drag_x != 0)
 		{
 			if (drag_x > 0)
 			{
 				if (drag_neighbours[1] == nullptr)
-					_sprite_drag.fillRect(0, 0, drag_x, 480, 0, DRAW_TO_RAM);
+					_sprite_drag.fillRect(0, 0, drag_x, 480, 0);
 				else
 					drag_neighbours[1]->draw_draggable_neighbour(&_sprite_drag, drag_x - 480, 0);
 			}
 			else
 			{
 				if (drag_neighbours[0] == nullptr)
-					_sprite_drag.fillRect(480 - abs(drag_x), 0, abs(drag_x), 480, 0, DRAW_TO_RAM);
+					_sprite_drag.fillRect(480 - abs(drag_x), 0, abs(drag_x), 480, 0);
 				else
 					drag_neighbours[0]->draw_draggable_neighbour(&_sprite_drag, drag_x + 480, 0);
 			}
@@ -804,21 +807,21 @@ void ui_screen::draw_draggable()
 			if (drag_y > 0)
 			{
 				if (drag_neighbours[1] == nullptr)
-					_sprite_drag.fillRect(0, 0, 480, drag_y, 0, DRAW_TO_RAM);
+					_sprite_drag.fillRect(0, 0, 480, drag_y, 0);
 				else
 					drag_neighbours[1]->draw_draggable_neighbour(&_sprite_drag, 0, drag_y - 480);
 			}
 			else
 			{
 				if (drag_neighbours[0] == nullptr)
-					_sprite_drag.fillRect(0, 480 - abs(drag_y), 480, abs(drag_y), 0, DRAW_TO_RAM);
+					_sprite_drag.fillRect(0, 480 - abs(drag_y), 480, abs(drag_y), 0);
 				else
 					drag_neighbours[0]->draw_draggable_neighbour(&_sprite_drag, 0, drag_y + 480);
 			}
 		}
 
 		squixl.lcd.blendSprite(&_sprite_drag, &squixl.lcd, &squixl.lcd, 32);
-		// squixl.lcd.drawSprite(0, 0, &_sprite_drag, 1.0f, -1, DRAW_TO_RAM);
+		// squixl.lcd.drawSprite(0, 0, &_sprite_drag, 1.0f, -1);
 	}
 	else
 	{
@@ -828,12 +831,12 @@ void ui_screen::draw_draggable()
 	// Serial.printf("refresh time (draw borders): %u ms\n", (millis() - start_time));
 }
 
-void ui_screen::draw_draggable_neighbour(BB_SPI_LCD *sprite, int16_t dx, int16_t dy)
+void ui_screen::draw_draggable_neighbour(umgfx::UM_GFX_Canvas *sprite, int16_t dx, int16_t dy)
 {
 	if (_sprite_content.getBuffer() && _sprite_back.getBuffer())
 	{
 		sprite->blendSprite(&_sprite_content, &_sprite_back, &_sprite_content, 32, TFT_MAGENTA);
-		sprite->drawSprite(dx, dy, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+		sprite->drawSprite(dx, dy, &_sprite_content, 1.0f, -1);
 	}
 }
 
@@ -866,6 +869,6 @@ void ui_screen::about_to_close_screen()
 {
 	for (int w = 0; w < ui_children.size(); w++)
 	{
-		ui_children[w]->about_to_show_screen();
+		ui_children[w]->about_to_close_screen();
 	}
 }

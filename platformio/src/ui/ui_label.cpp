@@ -21,8 +21,8 @@ void ui_label::create(int16_t x, int16_t y, const char *title, uint16_t color, T
 	// Serial.printf("\n*** Creaeted label with %d,%d \n", _w, _h);
 
 	// We need the font set before we can calculate the size
-	_sprite_back.createVirtual(_w, _h, NULL, true);
-	_sprite_content.createVirtual(_w, _h, NULL, true);
+	_sprite_back.create(_w, _h);
+	_sprite_content.create(_w, _h);
 
 	_sprite_content.setFreeFont(UbuntuMono_R[1]);
 	_sprite_content.setTextColor(_c, -1);
@@ -49,12 +49,12 @@ bool ui_label::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (fade_amount < 32)
 	{
 		squixl.lcd.blendSprite(&_sprite_content, &_sprite_back, &_sprite_back, fade_amount);
-		get_ui_parent()->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_back, 1.0f, -1, DRAW_TO_RAM);
+		get_ui_parent()->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_back, 1.0f, -1);
 	}
 	else
 	{
 		// Serial.printf("drawing %s at %d,%d - element_tab_group: %d\n", get_title(), _adj_x, _adj_y, element_tab_group);
-		ui_parent->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+		ui_parent->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_content, 1.0f, -1);
 		next_refresh = millis() + refresh_interval;
 	}
 
@@ -79,16 +79,16 @@ void ui_label::update(const char *title)
 	_title = title;
 
 	_sprite_content.fillScreen(TFT_MAGENTA);
-	squixl.current_screen()->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+	squixl.current_screen()->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_content, 1.0f, -1);
 
 	if (changed_length)
 	{
 		_w = _title.length() * UbuntuMono_R_Char_Sizes[1][0];
 		calculate_alignment();
-		_sprite_back.freeVirtual();
-		_sprite_back.createVirtual(_w, _h, NULL, true);
-		_sprite_content.freeVirtual();
-		_sprite_content.createVirtual(_w, _h, NULL, true);
+		_sprite_back.release();
+		_sprite_back.create(_w, _h);
+		_sprite_content.release();
+		_sprite_content.create(_w, _h);
 		_sprite_content.setFreeFont(UbuntuMono_R[1]);
 	}
 

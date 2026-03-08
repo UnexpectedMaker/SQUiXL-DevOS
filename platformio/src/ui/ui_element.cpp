@@ -133,8 +133,8 @@ uint16_t ui_element::calc_text_size(const char *text, const GFXfont *font, int *
 	uint16_t tempw;
 	uint16_t temph;
 
-	BB_SPI_LCD text_test;
-	text_test.createVirtual(100, 100, NULL, true);
+	umgfx::UM_GFX_Canvas text_test;
+	text_test.create(100, 100);
 	text_test.setFreeFont(font);
 	text_test.getTextBounds(text, 0, 0, &tempx, &tempy, &tempw, &temph);
 
@@ -143,7 +143,7 @@ uint16_t ui_element::calc_text_size(const char *text, const GFXfont *font, int *
 
 	// Serial.printf("calc_text_size: %s - New Width: %u, Height: %u\n", String(text), *_text_w, *_text_h);
 
-	text_test.freeVirtual();
+	text_test.release();
 
 	return tempw;
 }

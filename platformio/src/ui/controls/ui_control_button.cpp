@@ -12,12 +12,12 @@ bool ui_control_button::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	if (!_sprite_content.getBuffer())
 	{
-		_sprite_content.createVirtual(_w, _h, NULL, true);
+		_sprite_content.create(_w, _h, TFT_MAGENTA);
 	}
 
 	is_busy = true;
 
-	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
+	// _sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 
 	// Calculate the string pixel sizes to allow for text centering
 	// This is only needed once
@@ -29,24 +29,29 @@ bool ui_control_button::redraw(uint8_t fade_amount, int8_t tab_group)
 		// Serial.printf("string len %d, pixels %d, x %d, w %d, pos %d\n", string_len, string_len_pixels, _x, _w, (_w / 2) - (string_len_pixels / 2));
 	}
 
+	if (parent_screen == nullptr)
+	{
+		parent_screen = static_cast<ui_screen *>(get_ui_parent());
+	}
+
 	_sprite_content.setFreeFont(UbuntuMono_R[2]);
-	_sprite_content.setTextColor(TFT_WHITE, -1);
+	_sprite_content.setTextColor(TFT_WHITE, TFT_MAGENTA);
 	_sprite_content.setCursor((_w / 2) - (string_len_pixels / 2), _h / 2 + char_height / 2);
 
 	if (flash)
 	{
-		_sprite_content.fillRoundRect(0, 0, _w, _h, 9, TFT_WHITE, DRAW_TO_RAM);
-		_sprite_content.setTextColor(static_cast<ui_screen *>(get_ui_parent())->background_color(), -1);
+		_sprite_content.fillRoundRect(0, 0, _w, _h, 9, TFT_WHITE);
+		_sprite_content.setTextColor(parent_screen->background_color(), TFT_MAGENTA);
 	}
 	else
 	{
-		_sprite_content.fillRoundRect(0, 0, _w, _h, 9, static_cast<ui_screen *>(get_ui_parent())->dark_tint[1], DRAW_TO_RAM);
-		_sprite_content.drawRoundRect(0, 0, _w, _h, 9, static_cast<ui_screen *>(get_ui_parent())->light_tint[3], DRAW_TO_RAM);
-		_sprite_content.setTextColor(TFT_WHITE, -1);
+		_sprite_content.fillRoundRect(0, 0, _w, _h, 9, parent_screen->dark_tint[1]);
+		_sprite_content.drawRoundRect(0, 0, _w, _h, 9, parent_screen->light_tint[3]);
+		_sprite_content.setTextColor(TFT_WHITE, parent_screen->dark_tint[1]);
 	}
 	_sprite_content.print(_title.c_str());
 
-	get_ui_parent()->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+	get_ui_parent()->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1);
 
 	next_refresh = millis();
 
@@ -70,14 +75,14 @@ bool ui_control_button::process_touch(touch_event_t touch_event)
 		{
 			flash = true;
 			redraw(32);
-			static_cast<ui_screen *>(get_ui_parent())->refresh(true);
+			parent_screen->refresh(true);
 
 			audio.play_tone(500, 1);
 
 			delay(10);
 			flash = false;
 			redraw(32);
-			static_cast<ui_screen *>(get_ui_parent())->refresh(true);
+			parent_screen->refresh(true);
 
 			if (callbackFunction != nullptr)
 				callbackFunction();

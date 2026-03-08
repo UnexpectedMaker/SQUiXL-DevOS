@@ -34,10 +34,7 @@ void SQUiXL_LITE::init()
 		// Haptic EN
 		ioex.pin_mode(HAPTICS_EN, OUTPUT, HIGH);
 
-		// Touch RESET
-		ioex.pin_mode(TP_RST, OUTPUT, LOW);
-		delay(100);
-
+		// Start gt911 touch controller
 		xtouch.begin(TP_INT, TP_RST);
 
 		Serial.println("LCA9555 is Good!");
@@ -53,30 +50,12 @@ void SQUiXL_LITE::init()
 	screen_init_spi_bitbanged(st7701s_init_commands);
 
 	// Now we can init the display via the ESP32-S3 RGB Peripheral
-	lcd.begin(DISPLAY_UM_480x480); // initialize the display
-	int buf_error = lcd.allocBuffer();
+	lcd.begin(PANEL_CONFIG_UM_480x480); // initialize the display
 
-	if (buf_error == -2)
-	{
-		// unable to allocate a buffer
-		Serial.println("allocBuffer() already alloc!!");
-	}
-	else if (buf_error == -1)
-	{
-		Serial.println("allocBuffer() failed!");
-		while (1)
-		{
-		}; // stop
-	}
-	else
-	{
-		Serial.println("Display buffer allocated successfully!");
-	}
-
-	// Set the SPI frequency for the screen to 6.5Mhz to remove contention between PSRAM (frame buffer) and Flash.
-	RGBChangeFreq(6500000);
-	// RGBChangeFreq(7990000);
-	// RGBChangeFreq(6000000);
+	// Set the pixel clock for the screen to 6.5Mhz to remove contention between PSRAM (frame buffer) and Flash.
+	lcd.changePixelClock(6500000);
+	// lcd.changePixelClock(7990000);
+	// lcd.changePixelClock(6000000);
 
 	// ioex.write(BL_EN, HIGH);
 }
@@ -309,7 +288,7 @@ void SQUiXL_LITE::cache_text_sizes()
 	uint16_t tempw;
 	uint16_t temph;
 
-	BB_SPI_LCD _font_checker;
+	umgfx::UM_GFX_Canvas _font_checker;
 
 	int count = 0;
 
@@ -372,8 +351,8 @@ void SQUiXL_LITE::get_cached_char_sizes(FONT_SPEC weight, uint8_t size, uint8_t 
 
 void SQUiXL_LITE::show_error(String error, bool fade)
 {
-	BB_SPI_LCD sprite;
-	sprite.createVirtual(480, 480, NULL, true);
+	umgfx::UM_GFX_Canvas sprite;
+	sprite.create(480, 480, TFT_RED);
 
 	// Cach the font sizes (if required) so we can easily source any sized character wisth and height
 	cache_text_sizes();
@@ -382,7 +361,7 @@ void SQUiXL_LITE::show_error(String error, bool fade)
 	// uint8_t char_height = 0;
 	// Load char_width & char_height with the cached sized for Regular sized 3
 	// get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 3, &char_width, &char_height);
-	sprite.fillScreen(TFT_RED);
+	// sprite.fillScreen(TFT_RED);
 	sprite.setFreeFont(UbuntuMono_R[3]);
 	sprite.setTextColor(TFT_WHITE, -1);
 
@@ -403,7 +382,7 @@ void SQUiXL_LITE::show_error(String error, bool fade)
 	{
 		squixl_lite.lcd.drawSprite(0, 0, &sprite, 1.0, -1);
 	}
-	sprite.freeVirtual();
+	sprite.release();
 }
 
 bool SQUiXL_LITE::process_touch_lite(uint16_t *x, uint16_t *y)

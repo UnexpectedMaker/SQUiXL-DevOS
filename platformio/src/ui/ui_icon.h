@@ -20,5 +20,5 @@ class ui_icon : public ui_element
 		uint8_t current_fade = 0;
 		bool fade_dir = true;
 
-		BB_SPI_LCD _icon;
+		umgfx::UM_GFX_Canvas _icon;
 };

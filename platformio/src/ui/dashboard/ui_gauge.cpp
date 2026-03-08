@@ -7,10 +7,10 @@ void ui_gauge::create(int16_t x, int16_t y, int16_t w, int16_t h)
 	_w = w;
 	_h = h;
 
-	_sprite_clean.createVirtual(_w, _h, NULL, true);
-	_sprite_back.createVirtual(_w, _h, NULL, true);
-	_sprite_content.createVirtual(_w, _h, NULL, true);
-	_sprite_mixed.createVirtual(_w, _h, NULL, true);
+	_sprite_clean.create(_w, _h);
+	_sprite_back.create(_w, _h);
+	_sprite_content.create(_w, _h);
+	_sprite_mixed.create(_w, _h);
 
 	// is_dirty = true;
 	is_busy = false;
@@ -31,19 +31,19 @@ void ui_gauge::load_graphics(const char *device)
 {
 	if (std::string(device) == "temperature")
 	{
-		// loadPNG_into(BB_SPI_LCD *sprite, int start_x, int start_y, const void *image_data, int image_data_size)
-		_graphic_back.createVirtual(_w, _h, NULL, true);
+		// loadPNG_into(umgfx::UM_GFX_Canvas *sprite, int start_x, int start_y, const void *image_data, int image_data_size)
+		_graphic_back.create(_w, _h);
 		squixl.loadPNG_into(&_graphic_back, 0, 0, temp_guage_arc, sizeof(temp_guage_arc));
-		_graphic_front.createVirtual(_w, _h, NULL, true);
+		_graphic_front.create(_w, _h);
 		squixl.loadPNG_into(&_graphic_front, 0, 0, temp_guage_dial, sizeof(temp_guage_dial));
 		// Serial.println("Loaded PNG Graphics");
 	}
 	else if (std::string(device) == "humidity")
 	{
-		// loadPNG_into(BB_SPI_LCD *sprite, int start_x, int start_y, const void *image_data, int image_data_size)
-		_graphic_back.createVirtual(_w, _h, NULL, true);
+		// loadPNG_into(umgfx::UM_GFX_Canvas *sprite, int start_x, int start_y, const void *image_data, int image_data_size)
+		_graphic_back.create(_w, _h);
 		squixl.loadPNG_into(&_graphic_back, 0, 0, humidity_guage_arc, sizeof(humidity_guage_arc));
-		_graphic_front.createVirtual(_w, _h, NULL, true);
+		_graphic_front.create(_w, _h);
 		squixl.loadPNG_into(&_graphic_front, 0, 0, humidity_guage_dial, sizeof(humidity_guage_dial));
 		// Serial.println("Loaded PNG Graphics");
 	}

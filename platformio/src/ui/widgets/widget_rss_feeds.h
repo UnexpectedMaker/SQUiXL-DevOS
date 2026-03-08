@@ -46,7 +46,7 @@ class widgetRSSFeeds : public ui_window
 
 		std::vector<ARTICLE, psram_allocator<ARTICLE>> stored_articles;
 
-		BB_SPI_LCD _sprite_article;
+		umgfx::UM_GFX_Canvas _sprite_article;
 
 		void process_lines();
 		void reset_refresh_timer();
@@ -54,5 +54,3 @@ class widgetRSSFeeds : public ui_window
 		unsigned long parse_date(const std::string &date_str);
 		std::string format_time_ago(unsigned long seconds_ago);
 };
-
-// extern widgetRSSFeeds widget_rss_feeds;

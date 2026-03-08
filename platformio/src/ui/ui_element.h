@@ -45,7 +45,7 @@ class ui_element
 		void set_callback(CallbackFunction callback);
 		void set_refresh_interval(uint16_t interval = 0);
 
-		bool should_refresh();
+		virtual bool should_refresh();
 
 		void add_child_ui(ui_element *child, int8_t tab_group = -1);
 		ui_element *get_ui_parent();
@@ -88,10 +88,10 @@ class ui_element
 
 		uint8_t touch_padding = 0;
 
-		BB_SPI_LCD _sprite_content;
-		BB_SPI_LCD _sprite_clean;
-		BB_SPI_LCD _sprite_back;
-		BB_SPI_LCD _sprite_mixed;
+		umgfx::UM_GFX_Canvas _sprite_content;
+		umgfx::UM_GFX_Canvas _sprite_clean;
+		umgfx::UM_GFX_Canvas _sprite_back;
+		umgfx::UM_GFX_Canvas _sprite_mixed;
 
 		// My direct UI parent that I am a child of
 		ui_element *ui_parent = nullptr;

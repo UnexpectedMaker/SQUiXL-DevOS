@@ -24,8 +24,8 @@ class widgetMQTTSensors : public ui_window
 
 		std::vector<ui_gauge> dashboard_items;
 
-		BB_SPI_LCD test_sprite;
-		BB_SPI_LCD test_sprite_back;
+		umgfx::UM_GFX_Canvas test_sprite;
+		umgfx::UM_GFX_Canvas test_sprite_back;
 };
 
 extern widgetMQTTSensors widget_mqtt_sensors;

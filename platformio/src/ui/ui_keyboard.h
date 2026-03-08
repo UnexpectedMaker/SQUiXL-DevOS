@@ -52,7 +52,7 @@ class Keyboard
 		const Key *find_key_at(int tx, int ty) const;
 
 	private:
-		BB_SPI_LCD _sprite_keyboard, _sprite_background, _sprite_mixdown;
+		umgfx::UM_GFX_Canvas _sprite_keyboard, _sprite_background, _sprite_mixdown;
 
 		int16_t _x = 0;	  // X position
 		int16_t _y = 0;	  // Y position

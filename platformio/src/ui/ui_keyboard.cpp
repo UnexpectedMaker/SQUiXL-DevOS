@@ -1,7 +1,7 @@
 #include "ui/ui_keyboard.h"
 #include "ui/ui_screen.h"
-#include "ui/images/kboards/kb_empty.h"
-#include "ui/images/kboards/kb_numeric.h"
+#include "ui/images/kboards/kb_empty2.h"
+#include "ui/images/kboards/kb_numeric2.h"
 #include "squixl.h"
 
 void Keyboard::init_keymap()
@@ -170,22 +170,15 @@ const Keyboard::Key *Keyboard::find_key_at(int tx, int ty) const
 
 void Keyboard::show(bool state, ui_control_textbox *target)
 {
-
 	if (state && !_sprite_keyboard.getBuffer())
 	{
-		_sprite_keyboard.createVirtual(480, 300, NULL, true);
-		_sprite_background.createVirtual(480, 480, NULL, true);
-		_sprite_mixdown.createVirtual(480, 480, NULL, true);
+		_sprite_keyboard.create(480, 300);
+		_sprite_background.create(480, 480);
+		_sprite_mixdown.create(480, 480);
 		squixl.lcd.readImage(0, 0, 480, 480, (uint16_t *)_sprite_background.getBuffer());
 		delay(5);
-		_sprite_mixdown.fillScreen(0);
 
 		squixl.lcd.blendSprite(&_sprite_mixdown, &_sprite_background, &_sprite_mixdown, 12);
-
-		// squixl.lcd.readImage(0, 0, 480, 300, (uint16_t *)_sprite_mixdown.getBuffer());
-
-		// squixl.loadPNG_into(&_sprite_keyboard, 0, 0, kb_empty, sizeof(kb_empty));
-
 		_sprite_keyboard.setFreeFont(UbuntuMono_R[2]);
 
 		if (!cached_char_sizes)
@@ -210,6 +203,8 @@ void Keyboard::show(bool state, ui_control_textbox *target)
 		showing = true;
 		redraw_kayboard();
 		can_flash = true;
+
+		// squixl.log_heap("open KB");
 	}
 	else
 	{
@@ -227,9 +222,9 @@ void Keyboard::show(bool state, ui_control_textbox *target)
 
 		if (_sprite_keyboard.getBuffer())
 		{
-			_sprite_keyboard.freeVirtual();
-			_sprite_background.freeVirtual();
-			_sprite_mixdown.freeVirtual();
+			_sprite_keyboard.release();
+			_sprite_background.release();
+			_sprite_mixdown.release();
 		}
 
 		// squixl.log_heap("close KB");
@@ -387,10 +382,11 @@ void Keyboard::update(touch_event_t t)
 void Keyboard::redraw_kayboard()
 {
 	// Load the correct KB layout
+	_sprite_keyboard.fillScreen(TFT_MAGENTA);
 	if (_target->get_data_type() == SettingsOptionBase::Type::STRING)
-		squixl.loadPNG_into(&_sprite_keyboard, 0, 0, kb_empty, sizeof(kb_empty));
+		squixl.loadPNG_into(&_sprite_keyboard, 0, 0, kb_empty2, sizeof(kb_empty2));
 	else
-		squixl.loadPNG_into(&_sprite_keyboard, 0, 0, kb_numeric, sizeof(kb_numeric));
+		squixl.loadPNG_into(&_sprite_keyboard, 0, 0, kb_numeric2, sizeof(kb_numeric2));
 
 	// set title
 	std::string title = _target->get_title();
@@ -406,8 +402,6 @@ void Keyboard::redraw_kayboard()
 
 	for (int r = 1; r < ROWS; ++r)
 	{
-		// auto &row = is_numeric ? _keys_by_row_numeric[r] : _keys_by_row[r];
-
 		auto &row = (_target->get_data_type() != SettingsOptionBase::Type::STRING)
 						? _keys_by_row_numeric_only[r]
 						: (is_numeric ? _keys_by_row_numeric[r] : _keys_by_row[r]);
@@ -419,14 +413,12 @@ void Keyboard::redraw_kayboard()
 				continue;
 
 			std::string label = k.label[is_upper ? 1 : 0];
-			// uint16_t pos_x = k.x;
-			uint16_t pos_y = k.y + 20; // new offset for UI_control title
+			uint16_t pos_y = k.y + 20; // Offset for UI_control title
 
 			uint8_t str_len = label.length();
 			uint16_t pxls = str_len * keychar_width;
 
 			_sprite_keyboard.setCursor(k.x + (k.w / 2) - (pxls / 2), pos_y + (k.h / 2) + (keychar_height / 2));
-			// Serial.printf("adding key %s to KB\n", label.c_str());
 			_sprite_keyboard.print(label.c_str());
 		}
 	}
@@ -487,6 +479,7 @@ void Keyboard::update_cursor()
 	int x = 240 - (string_len_pixels / 2) + cursor_pos_x - 1;
 	x = cursor_pos_x - 1;
 	squixl.lcd.drawRect(x, 200 + 12, 2, 30, cursor_visible ? TFT_BLUE : RGB(60, 60, 59));
+	squixl.lcd.force_cache_write();
 }
 
 void Keyboard::flash_cursor()

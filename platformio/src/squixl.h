@@ -6,9 +6,6 @@
 #include <vector>
 #include <algorithm>
 
-#include <JPEGDisplay.h>
-#include <PNGDisplay.h>
-
 #include "ui/wallpaper/wallpaper_01.h"
 #include "ui/wallpaper/wallpaper_02.h"
 #include "ui/wallpaper/wallpaper_03.h"
@@ -137,13 +134,13 @@ struct touch_event_t
 class SQUiXL : public SQUiXL_LITE
 {
 	public:
-		BB_SPI_LCD sprite;
+		umgfx::UM_GFX_Canvas sprite;
 		PNGDisplay pd;
 		JPEGDisplay jd;
 
 		uint16_t squixl_blue = RGB(0, 133, 255);
 
-		void loadPNG_into(BB_SPI_LCD *sprite, int start_x, int start_y, const void *image_data, int image_data_size);
+		void loadPNG_into(umgfx::UM_GFX_Canvas *sprite, int start_x, int start_y, const void *image_data, int image_data_size);
 		void display_logo(bool show);
 		void display_first_boot(bool show);
 
@@ -166,9 +163,9 @@ class SQUiXL : public SQUiXL_LITE
 		bool vbus_changed();
 		void change_cpu_frequency(bool increase);
 
-		const String version_firmware = "Alpha v0.7 Pre-Release";
-		const String version_year = "2025";
-		const uint16_t version_build = 7;
+		const String version_firmware = "V2 Alpha v0.1";
+		const String version_year = "2026";
+		const uint16_t version_build = 21;
 		uint16_t version_latest = 0;
 
 		const String get_version() { return (version_firmware + " build " + version_build); }
@@ -358,14 +355,14 @@ class SQUiXL : public SQUiXL_LITE
 		// std::vector<_CALLBACK_DS> post_ds_callbacks;
 
 		// For intro logo
-		BB_SPI_LCD logo_squixl;
-		BB_SPI_LCD logo_black;
-		BB_SPI_LCD by_um;
-		BB_SPI_LCD by_um_black;
+		umgfx::UM_GFX_Canvas logo_squixl;
+		// umgfx::UM_GFX_Canvas logo_black;
+		umgfx::UM_GFX_Canvas by_um;
+		// umgfx::UM_GFX_Canvas by_um_black;
 
 		// First boot
-		BB_SPI_LCD wifi_manager_content;
-		BB_SPI_LCD wifi_icon;
+		umgfx::UM_GFX_Canvas wifi_manager_content;
+		umgfx::UM_GFX_Canvas wifi_icon;
 };
 
 extern SQUiXL squixl;

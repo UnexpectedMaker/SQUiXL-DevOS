@@ -40,24 +40,13 @@ bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	if (is_dirty_hard)
 	{
-		// if (!_sprite_content.getBuffer())
-		// {
-		// 	_sprite_content.createVirtual(_w, _h, NULL, true);
-		// 	_sprite_mixed.createVirtual(_w, _h, NULL, true);
-		// 	_sprite_clean.createVirtual(_w, _h, NULL, true);
-		// 	// delay(10);
-		// }
-		// // _sprite_content.fillScreen(TFT_MAGENTA);
-		// _sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
-		// // _sprite_clean.fillScreen(TFT_MAGENTA);
-		// _sprite_clean.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 		is_dirty_hard = false;
 	}
 
 	if (rtc.did_time_change() || !is_setup)
 	{
-		_time_string = rtc.get_time_string_seconds(true, true).c_str();
-		_date_string = rtc.get_date_string(true, false).c_str();
+		_time_string = rtc.get_time_string_seconds(true, settings.config.time_24hour).c_str();
+		_date_string = rtc.get_date_string(true, settings.config.time_dateformat).c_str();
 
 		bool changed = false;
 		if (_time_string_len != _time_string.length())
@@ -104,10 +93,10 @@ bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 
 			if (_sprite_content.getBuffer())
 			{
-				_sprite_content.freeVirtual();
+				_sprite_content.release();
 			}
 
-			_sprite_content.createVirtual(_w, _h, NULL, true);
+			_sprite_content.create(_w, _h);
 
 			is_setup = true;
 		}
@@ -120,7 +109,7 @@ bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 
 		_sprite_content.setFreeFont(UbuntuMono_R[5]);
 		_sprite_content.setTextColor(_c, TFT_MAGENTA);
-		_sprite_content.setCursor(offset_x_time, _h - dateh - 7);
+		_sprite_content.setCursor(offset_x_time, _h - dateh - 10);
 		_sprite_content.print(_time_string.c_str());
 
 		_sprite_content.setFreeFont(UbuntuMono_R[1]);
@@ -131,11 +120,11 @@ bool widgetTime::redraw(uint8_t fade_amount, int8_t tab_group)
 	// if (fade_amount < 32)
 	// {
 	// 	squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
-	// 	ui_parent->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+	// 	ui_parent->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_mixed, 1.0f, -1);
 	// }
 	// else
 	// {
-	ui_parent->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+	ui_parent->_sprite_content.drawSprite(_adj_x, _adj_y, &_sprite_content, 1.0f, -1);
 	next_refresh = millis();
 	// }
 

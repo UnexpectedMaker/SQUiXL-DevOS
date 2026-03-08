@@ -9,8 +9,18 @@
 #include <queue>
 #include <map>
 #include <freertos/semphr.h>
+#include <vector>
+
+#include <esp_wifi_types.h>
 
 typedef std::function<void(bool, const String &)> _CALLBACK;
+
+struct wifi_network_entry
+{
+		std::string name;
+		int32_t rssi;
+		wifi_auth_mode_t encryption;
+};
 
 class WifiController
 {
@@ -29,6 +39,11 @@ class WifiController
 		void loop();
 
 		String http_request(std::string url);
+
+		void start_async_scan();
+		bool is_scan_in_progress() const { return scan_in_progress; }
+		const std::vector<wifi_network_entry> &scan_results() const { return scan_entries; }
+		void clear_scan_results();
 
 		bool wifi_blocking_access = false;
 		bool wifi_prevent_disconnect = false;
@@ -79,6 +94,10 @@ class WifiController
 
 		std::map<std::string, request_dns> dns_cache;
 		std::string extract_domain(const std::string &url);
+
+		bool scan_in_progress = false;
+		std::vector<wifi_network_entry> scan_entries;
+		void update_scan_state();
 };
 
 extern WifiController wifi_controller;

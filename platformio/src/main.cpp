@@ -9,20 +9,20 @@
 #include "ui/widgets/widget_time.h"
 #include "ui/widgets/widget_bme280.h"
 #include "ui/widgets/widget_battery.h"
-// #include "ui/widgets/widget_wifimanager.h"
+// #include "ui/widgets/widget_fps.h"
 
 #include "ui/controls/ui_control_button.h"
 #include "ui/controls/ui_control_toggle.h"
 #include "ui/controls/ui_control_slider.h"
 #include "ui/controls/ui_control_textbox.h"
 #include "ui/ui_label.h"
-#include "ui/ui_scrollarea.h"
+#include "ui/ui_scrollarea_mqtt.h"
+#include "ui/ui_scrollarea_wifimanager.h"
 
 #include "ui/controls/ui_control_tabgroup.h"
 #include "ui/ui_dialogbox.h"
 
 #include "mqtt/mqtt.h"
-// #include "utils/littlefs_cli.h"
 
 unsigned long next_background_swap = 0;
 unsigned long every_second = 0;
@@ -42,11 +42,13 @@ widgetBME280 *widget_bme280 = nullptr;
 widgetTime *widget_time = nullptr;
 widgetOpenWeather *widget_ow = nullptr;
 widgetBattery *widget_battery = nullptr;
+// widgetFPS *widget_fps = nullptr;
 
 // ui_screen screen_wifi_setup;
 ui_screen *screen_main = nullptr;
 ui_screen *screen_mqtt = nullptr;
 ui_screen *screen_settings = nullptr;
+ui_screen *screen_wifimanager = nullptr;
 
 // ui_screen screen_wifi_manager;
 
@@ -112,7 +114,16 @@ ui_control_textbox *text_mqtt_broker_password = nullptr;
 ui_control_button *button_dialogbox_test;
 
 ui_label label_version;
-ui_scrollarea mqtt_notifications;
+ui_scrollarea_mqtt mqtt_notifications;
+
+// Wifi Manager Stuff
+
+ui_control_textbox *text_wifimanager_ssid = nullptr;
+ui_control_textbox *text_wifimanager_pass = nullptr;
+ui_control_button *button_wifimanager_join = nullptr;
+ui_control_button *button_wifimanager_rescan = nullptr;
+
+ui_scrollarea_wifimanager wifimanager_scan_results;
 
 void button_press_ok()
 {
@@ -122,13 +133,6 @@ void button_press_ok()
 void button_press_cancelled()
 {
 	Serial.println("\n\nPressed CANCEL!\n\n");
-}
-
-void dialogbox_example()
-{
-	dialogbox.set_button_ok("OK", button_press_ok);
-	dialogbox.set_button_cancel("CANCEL!", button_press_cancelled);
-	dialogbox.show("Example Dialog Box", "Being careful not to overflow the heap and then get rubbbish on sceen - or spelling mistakes!");
 }
 
 void update_wallpaper()
@@ -189,6 +193,8 @@ void process_longitude_latitude(bool success, const String &response)
 		Serial.printf("Response was: %s\n", response.c_str());
 	}
 
+	// This is required - this is responsible for determining the lifetime of the response String
+	// to ensure it survives until ater it's been used.
 	delete &response;
 }
 
@@ -506,6 +512,11 @@ void create_ui_elements()
 	widget_time->set_refresh_interval(1000);
 	screen_main->add_child_ui(widget_time);
 
+	// widget_fps = new widgetFPS();
+	// widget_fps->create(10, 68, TFT_WHITE);
+	// widget_fps->set_refresh_interval(1000);
+	// screen_main->add_child_ui(widget_fps);
+
 	widget_jokes = (widgetJokes *)heap_caps_malloc(sizeof(widgetJokes), MALLOC_CAP_SPIRAM);
 	widget_jokes = new widgetJokes();
 	widget_jokes->create(10, 370, 460, 100, TFT_BLACK, 12, 0, "JOKES");
@@ -537,6 +548,116 @@ void create_ui_elements()
 	screen_main->add_child_ui(widget_bme280);
 
 	/*
+Setup WiFi Manager Screen
+*/
+
+	screen_wifimanager = new ui_screen(); // Allocates into PSRAM
+	screen_wifimanager->setup(darken565(0x5AEB, 0.5), true);
+	wifimanager_scan_results.create(20, 20, 440, 295, "WiFi Manager", TFT_GREY);
+	wifimanager_scan_results.set_draggable(DRAGGABLE::DRAG_VERTICAL);
+	wifimanager_scan_results.set_refresh_interval(50);
+
+	screen_wifimanager->add_child_ui(&wifimanager_scan_results);
+	screen_wifimanager->set_refresh_interval(20);
+
+	text_wifimanager_ssid = new ui_control_textbox();
+	text_wifimanager_ssid->create(20, 325, 300, 65, "SSID");
+	screen_wifimanager->add_child_ui(text_wifimanager_ssid);
+
+	text_wifimanager_pass = new ui_control_textbox();
+	text_wifimanager_pass->create(20, 400, 300, 65, "PASSWORD");
+	screen_wifimanager->add_child_ui(text_wifimanager_pass);
+
+	button_wifimanager_rescan = new ui_control_button();
+	button_wifimanager_rescan->create(340, 343, 120, 40, "RESCAN");
+	button_wifimanager_rescan->set_callback([]() { wifimanager_scan_results.start_rescan(); });
+	screen_wifimanager->add_child_ui(button_wifimanager_rescan);
+
+	button_wifimanager_join = new ui_control_button();
+	button_wifimanager_join->create(340, 418, 120, 40, "JOIN");
+	button_wifimanager_join->set_callback([]() {
+		String ssid = text_wifimanager_ssid->get_text().c_str();
+		String pass = text_wifimanager_pass->get_text().c_str();
+
+		if (ssid.isEmpty())
+		{
+			audio.play_tone(300, 5);
+			return;
+		}
+
+		// Check if SSID and password already exist in saved stations
+		for (const auto &station : settings.config.wifi_options)
+		{
+			if (station.ssid == ssid.c_str() && station.pass == pass.c_str())
+			{
+				audio.play_tone(300, 5);
+				dialogbox.set_button_ok("OK", []() {});
+				dialogbox.show("Already Saved", "This SSID/password combination is already saved", 300, 140);
+				dialogbox.draw();
+				squixl.current_screen()->redraw(32);
+				return;
+			}
+		}
+
+		// Show connecting dialog
+		dialogbox.set_button_ok("", nullptr);
+		dialogbox.set_button_cancel("", nullptr);
+		dialogbox.show("Connecting...", ("Testing: " + ssid).c_str(), 280, 120);
+		dialogbox.draw();
+		squixl.current_screen()->redraw(32);
+
+		// Disconnect current WiFi if connected
+		WiFi.disconnect(true);
+		delay(100);
+
+		// Try to connect with provided credentials
+		WiFi.begin(ssid.c_str(), pass.c_str());
+
+		unsigned long start_time = millis();
+		bool connected = false;
+
+		while (millis() - start_time < 10000)
+		{
+			if (WiFi.status() == WL_CONNECTED)
+			{
+				connected = true;
+				break;
+			}
+			delay(250);
+		}
+
+		dialogbox.close();
+
+		if (connected)
+		{
+			// Success - save credentials
+			settings.update_wifi_credentials(ssid, pass);
+			audio.play_tone(1000, 5);
+
+			// Show success dialog
+			dialogbox.set_button_ok("OK", []() {});
+			dialogbox.show("Success!", "WiFi credentials saved", 240, 140);
+			dialogbox.draw();
+			squixl.current_screen()->redraw(32);
+		}
+		else
+		{
+			// Failed - disconnect and show error
+			WiFi.disconnect(true);
+			audio.play_tone(300, 10);
+
+			dialogbox.set_button_ok("OK", []() {
+				// Reconnect to previous WiFi
+				wifi_controller.connect();
+			});
+			dialogbox.show("Failed", "Could not connect to network", 280, 140);
+			dialogbox.draw();
+			squixl.current_screen()->redraw(32);
+		}
+	});
+	screen_wifimanager->add_child_ui(button_wifimanager_join);
+
+	/*
 	Setup MQTT Screen
 	*/
 
@@ -551,6 +672,7 @@ void create_ui_elements()
 	screen_mqtt->add_child_ui(&mqtt_notifications);
 	screen_mqtt->set_refresh_interval(50);
 
+	screen_main->set_navigation(Directions::RIGHT, screen_wifimanager, true);
 	screen_main->set_navigation(Directions::LEFT, screen_mqtt, true);
 	screen_main->set_navigation(Directions::DOWN, screen_settings, true);
 }
@@ -605,8 +727,8 @@ void setup()
 	ledcWrite(BL_PWM, 4090);
 
 	Serial.begin(115200);
-	Serial.setDebugOutput(true); // sends all log_e(), log_i() messages to USB HW CDC
-	Serial.setTxTimeoutMs(0);	 // sets no timeout when trying to write to USB HW CDC
+	// Serial.setDebugOutput(true); // sends all log_e(), log_i() messages to USB HW CDC
+	// Serial.setTxTimeoutMs(0);	 // sets no timeout when trying to write to USB HW CDC
 
 	// delay(3000);
 	// squixl.log_heap("BOOT");
@@ -639,7 +761,7 @@ void setup()
 	was_asleep = squixl.was_sleeping();
 
 	squixl.lcd.fillScreen(TFT_BLACK);
-	squixl.lcd.setFont(FONT_12x16);
+	// squixl.lcd.setFont(FONT_12x16);
 
 	squixl.mux_switch_to(MUX_STATE::MUX_I2S); // set to I2S
 	audio.set_volume(settings.config.volume);
@@ -693,6 +815,9 @@ void setup()
 
 void loop()
 {
+	// if (widget_fps != nullptr)
+	// 	widget_fps->tick();
+
 	if (squixl.switching_screens)
 		return;
 

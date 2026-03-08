@@ -53,7 +53,5 @@ class widgetOpenWeather : public ui_window
 		std::string _sunrise = "";
 		std::string _sunset = "";
 
-		std::map<String, BB_SPI_LCD> ow_icons;
+		std::map<String, umgfx::UM_GFX_Canvas> ow_icons;
 };
-
-// extern widgetOpenWeather widget_ow;

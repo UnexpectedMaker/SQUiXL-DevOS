@@ -21,7 +21,7 @@ bool widgetBME280::redraw(uint8_t fade_amount, int8_t tab_group)
 		{
 			Serial.println("EXPANSION: BME280 Lost....");
 			_sprite_back.fillScreen(TFT_MAGENTA);
-			ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_back, 1.0f, -1, DRAW_TO_RAM);
+			ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_back, 1.0f, -1);
 			is_setup = false;
 		}
 
@@ -36,7 +36,7 @@ bool widgetBME280::redraw(uint8_t fade_amount, int8_t tab_group)
 	ui_parent->_sprite_back.readImage(_x, _y, _w, _h, (uint16_t *)_sprite_back.getBuffer());
 	delay(10);
 	_sprite_clean.fillScreen(TFT_MAGENTA);
-	_sprite_clean.fillRoundRect(0, 0, _w, _h, 7, _c, DRAW_TO_RAM); // white will be our mask
+	_sprite_clean.fillRoundRect(0, 0, _w, _h, 7, _c); // white will be our mask
 	squixl.lcd.blendSprite(&_sprite_clean, &_sprite_back, &_sprite_back, _t, TFT_MAGENTA);
 
 	_sprite_back.setTextColor(TFT_WHITE, -1);
@@ -78,20 +78,9 @@ bool widgetBME280::redraw(uint8_t fade_amount, int8_t tab_group)
 		is_setup = false;
 	}
 
-	if (fade_amount < 32)
-	{
-		Serial.printf(">>>>>>> bme280 fade: %d\n", fade_amount);
-
-		squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, fade_amount);
-		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-	}
-	else
-	{
-		squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, 32);
-		ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
-
-		next_refresh = millis();
-	}
+	squixl.lcd.blendSprite(&_sprite_back, &_sprite_clean, &_sprite_mixed, constrain(fade_amount, 0, 32));
+	ui_parent->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1);
+	next_refresh = millis();
 
 	if (is_dirty && !was_dirty)
 		was_dirty = true;

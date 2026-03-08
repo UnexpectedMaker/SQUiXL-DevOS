@@ -34,7 +34,7 @@ class ui_control : public ui_element
 
 		// std::string _title = "";
 		CallbackFunction callbackFunction;
-		BB_SPI_LCD _control_icon;
+		umgfx::UM_GFX_Canvas _control_icon;
 
 		SettingsOptionBase *setting_option = nullptr;
 
@@ -51,6 +51,7 @@ class ui_control : public ui_element
 
 		// uint16_t y_tab_group_offset = 40;
 
-	private:
+	protected:
+		ui_screen *parent_screen = nullptr;
 		//
 };

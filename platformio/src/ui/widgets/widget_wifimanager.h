@@ -17,7 +17,7 @@ class widgetWiFiManager : public ui_element
 
 	private:
 		bool icons_loaded = false;
-		BB_SPI_LCD wifi_icons[5];
+		umgfx::UM_GFX_Canvas wifi_icons[5];
 
 		ui_screen *back_screen = nullptr;
 };

@@ -10,10 +10,10 @@ void ui_icon::create(int16_t x, int16_t y, int16_t target_w, int16_t target_h, c
 	_target_w = target_w;
 	_target_h = target_h;
 
-	_icon.createVirtual(_target_w, _target_h, NULL, true);
-	_sprite_content.createVirtual(_target_w, _target_h, NULL, true);
-	_sprite_mixed.createVirtual(_target_w, _target_h, NULL, true);
-	_sprite_clean.createVirtual(_target_w, _target_h, NULL, true);
+	_icon.create(_target_w, _target_h);
+	_sprite_content.create(_target_w, _target_h);
+	_sprite_mixed.create(_target_w, _target_h);
+	_sprite_clean.create(_target_w, _target_h);
 	delay(10);
 
 	squixl.loadPNG_into(&_icon, 0, 0, ui_bolt, sizeof(ui_bolt));
@@ -32,7 +32,7 @@ bool ui_icon::redraw(uint8_t fade_amount, int8_t tab_group)
 	{
 		_sprite_content.fillScreen(TFT_MAGENTA);
 		_sprite_clean.fillScreen(TFT_MAGENTA);
-		_sprite_content.drawSprite(0, 0, &_icon, 1.0f, 0x0, DRAW_TO_RAM);
+		_sprite_content.drawSprite(0, 0, &_icon, 1.0f, 0x0);
 
 		delay(10);
 		is_dirty_hard = false;
@@ -41,12 +41,12 @@ bool ui_icon::redraw(uint8_t fade_amount, int8_t tab_group)
 	if (fade_amount < 32)
 	{
 		squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, fade_amount);
-		squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+		squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1);
 	}
 	else
 	{
 		squixl.lcd.blendSprite(&_sprite_content, &_sprite_clean, &_sprite_mixed, 32);
-		squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1, DRAW_TO_RAM);
+		squixl.current_screen()->_sprite_content.drawSprite(_x, _y, &_sprite_mixed, 1.0f, -1);
 		next_refresh = millis();
 	}
 

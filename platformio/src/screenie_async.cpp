@@ -116,7 +116,7 @@ void apply_affinity_style_white_balance(uint8_t &r, uint8_t &g, uint8_t &b, floa
 
 // ---- MAIN CHUNKED LOGIC ----
 
-bool screenie_start(BB_SPI_LCD *lcd, ScreenieCallback cb, uint32_t rows_per_step)
+bool screenie_start(umgfx::UM_GFX_Canvas *lcd, ScreenieCallback cb, uint32_t rows_per_step)
 {
 	if (screenie.running)
 		return false;

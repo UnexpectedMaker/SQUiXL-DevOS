@@ -18,12 +18,12 @@ void ui_dialogbox::show(const char *title, const char *message, uint16_t width, 
 	_t_col = text_color;
 
 	// // take a backup of whats on the screen before we show the dialog
-	sprite_dialog_clean.createVirtual(_w, _h, NULL, true);
+	sprite_dialog_clean.create(_w, _h);
 	squixl.lcd.readImage(240 - _w / 2, 240 - _h / 2, _w, _h, (uint16_t *)sprite_dialog_clean.getBuffer());
 	// Out dialog content sprite
-	sprite_dialog_content.createVirtual(_w, _h, NULL, true);
-	sprite_dialog_content.fillScreen(TFT_MAGENTA);
-	sprite_dialog_content.fillRoundRect(0, 0, _w, _h, 7, _b_col, DRAW_TO_RAM); // white will be our mask
+	sprite_dialog_content.create(_w, _h, TFT_MAGENTA);
+	// sprite_dialog_content.fillScreen(TFT_MAGENTA);
+	sprite_dialog_content.fillRoundRect(0, 0, _w, _h, 7, _b_col); // white will be our mask
 
 	// Title and button text uses size 1 font
 	squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 1, &char_width, &char_height);
@@ -74,8 +74,8 @@ void ui_dialogbox::show(const char *title, const char *message, uint16_t width, 
 	// If we have an OK button, show it
 	if (_button_ok != "")
 	{
-		sprite_dialog_content.fillRoundRect(button_x_ok, button_y, button_w, button_h, 6, lighten565(_b_col, 0.2f), DRAW_TO_RAM);
-		sprite_dialog_content.drawRoundRect(button_x_ok, button_y, button_w, button_h, 6, lighten565(_b_col, 0.5f), DRAW_TO_RAM);
+		sprite_dialog_content.fillRoundRect(button_x_ok, button_y, button_w, button_h, 6, lighten565(_b_col, 0.2f));
+		sprite_dialog_content.drawRoundRect(button_x_ok, button_y, button_w, button_h, 6, lighten565(_b_col, 0.5f));
 		sprite_dialog_content.setCursor(button_cursor_x_ok, button_cursor_y);
 		sprite_dialog_content.print(_button_ok.c_str());
 	}
@@ -83,15 +83,13 @@ void ui_dialogbox::show(const char *title, const char *message, uint16_t width, 
 	// If we have a CANCEL button, show it
 	if (_button_cancel != "")
 	{
-		sprite_dialog_content.fillRoundRect(button_x_cancel, button_y, button_w, button_h, 6, lighten565(_b_col, 0.2f), DRAW_TO_RAM);
-		sprite_dialog_content.drawRoundRect(button_x_cancel, button_y, button_w, button_h, 6, lighten565(_b_col, 0.5f), DRAW_TO_RAM);
+		sprite_dialog_content.fillRoundRect(button_x_cancel, button_y, button_w, button_h, 6, lighten565(_b_col, 0.2f));
+		sprite_dialog_content.drawRoundRect(button_x_cancel, button_y, button_w, button_h, 6, lighten565(_b_col, 0.5f));
 		sprite_dialog_content.setCursor(button_cursor_x_cancel, button_cursor_y);
 		sprite_dialog_content.print(_button_cancel.c_str());
 	}
 
 	audio.play_tone(500, 1);
-
-	// squixl.lcd.blendSprite(&sprite_dialog_content, &squixl.lcd, &squixl.lcd, 32, TFT_MAGENTA);
 }
 
 void ui_dialogbox::set_button_ok(const char *button_title_ok, CallbackFunction callback_ok)
@@ -148,12 +146,12 @@ void ui_dialogbox::close()
 	is_open = false;
 
 	// Refresh the current screen to force cleanup of the dialogbox
-	squixl.current_screen()->_sprite_content.drawSprite(240 - _w / 2, 240 - _h / 2, &sprite_dialog_clean, 1.0f, -1, DRAW_TO_RAM);
+	squixl.current_screen()->_sprite_content.drawSprite(240 - _w / 2, 240 - _h / 2, &sprite_dialog_clean, 1.0f, -1);
 
 	squixl.current_screen()->refresh(true);
 
-	sprite_dialog_content.freeVirtual();
-	sprite_dialog_clean.freeVirtual();
+	sprite_dialog_content.release();
+	sprite_dialog_clean.release();
 
 	_button_cancel = "";
 	_button_ok = "";
@@ -161,7 +159,7 @@ void ui_dialogbox::close()
 
 void ui_dialogbox::draw()
 {
-	squixl.current_screen()->_sprite_content.drawSprite(240 - _w / 2, 240 - _h / 2, &sprite_dialog_content, 1.0f, TFT_MAGENTA, DRAW_TO_RAM);
+	squixl.current_screen()->_sprite_content.drawSprite(240 - _w / 2, 240 - _h / 2, &sprite_dialog_content, 1.0f, TFT_MAGENTA);
 }
 
 bool ui_dialogbox::check_button_hit(uint16_t x, uint16_t y)

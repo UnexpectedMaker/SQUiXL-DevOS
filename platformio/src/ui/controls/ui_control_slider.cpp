@@ -70,15 +70,20 @@ bool ui_control_slider::redraw(uint8_t fade_amount, int8_t tab_group)
 		return false;
 	}
 
+	if (parent_screen == nullptr)
+	{
+		parent_screen = static_cast<ui_screen *>(get_ui_parent());
+	}
+
 	is_busy = true;
 
 	if (!_sprite_content.getBuffer())
 	{
-		_sprite_content.createVirtual(_w, _h, NULL, true);
+		_sprite_content.create(_w, _h, TFT_MAGENTA);
 	}
 
 	// Clear the content sprite
-	_sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
+	// _sprite_content.fillRect(0, 0, _w, _h, TFT_MAGENTA);
 
 	update_values();
 
@@ -112,21 +117,21 @@ bool ui_control_slider::redraw(uint8_t fade_amount, int8_t tab_group)
 	}
 
 	// Control background
-	_sprite_content.fillRoundRect(0, 0, _w, _h, 9, static_cast<ui_screen *>(get_ui_parent())->dark_tint[1], DRAW_TO_RAM);
+	_sprite_content.fillRoundRect(0, 0, _w, _h, 9, parent_screen->dark_tint[1]);
 
 	// If the control has a title, show it at the bottom center
 	if (_title.length() > 0)
 	{
 		_sprite_content.setFreeFont(UbuntuMono_R[0]);
 		_sprite_content.setCursor((_w / 2) - (title_len_pixels / 2), _h - 6);
-		_sprite_content.setTextColor(static_cast<ui_screen *>(get_ui_parent())->light_tint[5], -1);
+		_sprite_content.setTextColor(parent_screen->light_tint[5], parent_screen->dark_tint[1]);
 		_sprite_content.print(_title.c_str());
 		// _sprite_content.setCursor((_w / 2) + 8, _h - 6);
 	}
 
 	// Control main value
 	_sprite_content.setFreeFont(UbuntuMono_R[2]);
-	_sprite_content.setTextColor(TFT_WHITE, -1);
+	_sprite_content.setTextColor(TFT_WHITE, parent_screen->dark_tint[1]);
 	_sprite_content.setCursor((_w / 2) - (value_len_pixels / 2), char_height + 5);
 	_sprite_content.print(value_text.c_str());
 
@@ -134,20 +139,20 @@ bool ui_control_slider::redraw(uint8_t fade_amount, int8_t tab_group)
 
 	if (suffix == "%")
 	{
-		_sprite_content.drawRect(10, _h / 2 + 5, _w - 20, 2, static_cast<ui_screen *>(get_ui_parent())->dark_tint[3]);
+		_sprite_content.drawRect(10, _h / 2 + 5, _w - 20, 2, parent_screen->dark_tint[3]);
 		_sprite_content.drawRect(10, _h / 2 + 5, (x_pos_center - 1), 2, TFT_WHITE);
 	}
 	else
 		_sprite_content.drawRect(10, _h / 2 + 5, _w - 20, 2, TFT_WHITE);
 
-	_sprite_content.setTextColor(static_cast<ui_screen *>(get_ui_parent())->light_tint[3], -1);
+	_sprite_content.setTextColor(parent_screen->light_tint[3], parent_screen->dark_tint[1]);
 	_sprite_content.setCursor(10, char_height + 5);
 	_sprite_content.print(value_min_text.c_str());
 	_sprite_content.setCursor(_w - 10 - value_max_len_pixels, char_height + 5);
 	_sprite_content.print(value_max_text.c_str());
-	_sprite_content.fillCircle(x_pos_center, (_h / 2) + 5, 8, TFT_WHITE, DRAW_TO_RAM);
+	_sprite_content.fillCircle(x_pos_center, (_h / 2) + 5, 8, TFT_WHITE);
 
-	get_ui_parent()->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1, DRAW_TO_RAM);
+	get_ui_parent()->_sprite_content.drawSprite(_x, _y, &_sprite_content, 1.0f, -1);
 
 	next_refresh = millis();
 
@@ -197,7 +202,7 @@ bool ui_control_slider::process_touch(touch_event_t touch_event)
 			value_changed = true;
 
 			redraw(32);
-			static_cast<ui_screen *>(get_ui_parent())->refresh(true);
+			parent_screen->refresh(true);
 
 			return false;
 		}

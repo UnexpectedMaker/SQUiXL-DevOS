@@ -43,10 +43,22 @@ class ui_scrollarea : public ui_element
 		uint8_t char_width = 0;
 		uint8_t char_height = 0;
 
-		BB_SPI_LCD _sprite_top;
-		BB_SPI_LCD _sprite_bottom;
-		BB_SPI_LCD _sprite_left;
-		BB_SPI_LCD _sprite_right;
+		uint16_t body_color = 0;
 
-		void calculate_alignment();
+		umgfx::UM_GFX_Canvas _sprite_top;
+		umgfx::UM_GFX_Canvas _sprite_bottom;
+		umgfx::UM_GFX_Canvas _sprite_left;
+		umgfx::UM_GFX_Canvas _sprite_right;
+
+		// void calculate_alignment();
+
+		virtual bool external_content_dirty() const { return false; }
+		virtual void render_content() = 0;
+		virtual void after_content_render() {}
+		virtual uint16_t content_background_color();
+		virtual uint16_t scroll_track_color();
+		virtual uint16_t scroll_thumb_color();
+
+	private:
+		void update_scroll_metrics();
 };

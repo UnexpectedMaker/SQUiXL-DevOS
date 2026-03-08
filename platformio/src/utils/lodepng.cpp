@@ -32,7 +32,26 @@ Rename this file to lodepng.cpp to use it for C++, or to lodepng.c to use it for
 #define LODEPNG_REALLOC(p, s) heap_caps_realloc((p), (s), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT)
 #define LODEPNG_FREE(p) heap_caps_free(p)
 
+// Use small CRC32 lookup table (64 bytes) instead of full tables (8KB)
+#define LODEPNG_NO_COMPILE_CRC
+
 #include "lodepng.h"
+
+// Small-table CRC32 implementation - saves ~8KB of heap
+unsigned lodepng_crc32(const unsigned char *data, size_t length)
+{
+	unsigned r = 0xffffffffu;
+	static const unsigned table[16] = {
+		0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac, 0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
+		0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c, 0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c};
+	while (length--)
+	{
+		r = table[(r ^ *data) & 0xf] ^ (r >> 4);
+		r = table[(r ^ (*data >> 4)) & 0xf] ^ (r >> 4);
+		data++;
+	}
+	return r ^ 0xffffffffu;
+}
 
 #ifdef LODEPNG_COMPILE_DISK
 #include <limits.h> /* LONG_MAX */

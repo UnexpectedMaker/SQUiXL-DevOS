@@ -3,7 +3,7 @@
 	Copyright (c) 2025 Unexpected Maker
 	https://squixl.io
 
-	version 0.1
+	version V2 Alpha 0.2
 */
 
 #ifndef SQUIXL_LITE_H

@@ -117,7 +117,10 @@ bool widgetBattery::redraw(uint8_t fade_amount, int8_t tab_group)
 	else
 	{
 		_sprite_content.drawSprite(0, 0, &wifi_icons[0], 1.0f, 0x0);
+		_sprite_content.setCursor(40, 15);
 		_sprite_content.print("WiFi not configured");
+		_sprite_content.setCursor(40, 29);
+		_sprite_content.print("Swipe RIGHT for WifiManager");
 	}
 
 	_sprite_content.setCursor(40, 52);

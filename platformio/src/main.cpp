@@ -553,7 +553,7 @@ Setup WiFi Manager Screen
 
 	screen_wifimanager = new ui_screen(); // Allocates into PSRAM
 	screen_wifimanager->setup(darken565(0x5AEB, 0.5), true);
-	wifimanager_scan_results.create(20, 20, 440, 295, "WiFi Manager", TFT_GREY);
+	wifimanager_scan_results.create(15, 15, 450, 295, "WiFi Manager", TFT_GREY);
 	wifimanager_scan_results.set_draggable(DRAGGABLE::DRAG_VERTICAL);
 	wifimanager_scan_results.set_refresh_interval(50);
 
@@ -827,15 +827,6 @@ void loop()
 		return;
 	}
 
-	if (wifi_controller.is_connected() && rtc.requiresNTP && millis() - ntp_time_set > 10000)
-	{
-		ntp_time_set = millis();
-		// We have wifi credentials and country/UTC details, so set the time because it's stale.
-		Serial.println("WIFI: Updating time from NTP");
-		rtc.set_time_from_NTP(settings.config.location.utc_offset);
-		// return;
-	}
-
 	// Seems we always need audio - so long as the SD card is not enabled
 	if (squixl.mux_check_state(MUX_STATE::MUX_I2S))
 		audio.update();
@@ -912,12 +903,15 @@ void loop()
 		}
 	}
 
-	// Process the wifi controller task queue
-	// Only processes every 1 second inside it's loop
+	// Process the wifi controller task queue (scan state, callbacks) - always needed, not just when connected
 	wifi_controller.loop();
 
 	// Process the backlight - if it gets too dark, sleepy time
-	squixl.process_backlight_dimmer();
+	// dont process the dimmer when showing the intial first time UI
+	if (!settings.config.first_time)
+	{
+		squixl.process_backlight_dimmer();
+	}
 
 	// WiFi Setup stays running all of the time until you have configures a WiFi router to connect SQUiXL to. You can configure the credentials any time, regardless of leaving the "first time" screen.
 	if (wifiSetup.running())
@@ -928,17 +922,21 @@ void loop()
 			{
 				wifiSetup.wifi_ap_changed = false;
 
+				squixl.lcd.setFreeFont(UbuntuMono_R[3]);
+
 				if (wifiSetup.cached_message != "")
 				{
 					squixl.lcd.setTextColor(darken565(0x5AEB, 0.5), darken565(0x5AEB, 0.5));
-					squixl.lcd.setCursor(70, 443);
+					squixl.lcd.setCursor(70, 433);
 					squixl.lcd.print(wifiSetup.cached_message);
 				}
 
 				squixl.lcd.setTextColor(darken565(TFT_WHITE, 0.1), darken565(0x5AEB, 0.5));
 
-				squixl.lcd.setCursor(70, 443);
+				squixl.lcd.setCursor(70, 433);
 				squixl.lcd.print(wifiSetup.wifi_ap_messages);
+
+				squixl.lcd.force_cache_write();
 
 				audio.play_tone(1000, 10);
 
@@ -962,8 +960,19 @@ void loop()
 			wifiSetup.stop(true);
 		}
 	}
-	else if (wifi_controller.is_connected())
+
+	if (!wifiSetup.running() && wifi_controller.is_connected())
 	{
+
+		if (rtc.requiresNTP && millis() - ntp_time_set > 10000)
+		{
+			ntp_time_set = millis();
+			// We have wifi credentials and country/UTC details, so set the time because it's stale.
+			Serial.println("WIFI: Updating time from NTP");
+			rtc.set_time_from_NTP(settings.config.location.utc_offset);
+			// return;
+		}
+
 		if (start_webserver && millis() - delay_webserver_start > 2000)
 		{
 			// We want to block the web server from starting if we have starng requests in the queue that are waiting to be processed

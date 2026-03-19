@@ -459,7 +459,7 @@ bool widgetRSSFeeds::redraw(uint8_t fade_amount, int8_t tab_group)
 			_sprite_article.setFreeFont(UbuntuMono_R[2]);
 			_sprite_article.setTextColor(TFT_GREY, TFT_MAGENTA);
 			_sprite_article.setCursor(10, 38);
-			_sprite_article.print("WAITING...");
+			_sprite_article.print(wifi_controller.is_connected() ? "WAITING..." : "NO INTERNET");
 			DEBUG_PRINTLN("DEBUG: Displayed 'WAITING...'");
 		}
 	}

@@ -13,13 +13,13 @@ class ui_scrollarea_wifimanager : public ui_scrollarea
 		void about_to_show_screen() override;
 
 		void show_connected();
+		mutable bool wifi_results_dirty = false;
 
 	private:
+		void draw_flash_line(int index, bool flash);
+
 		int flash_index = -1;
 		static constexpr int LINE_HEIGHT = 28;
-
-		uint8_t wifi_char_width = 0;
-		uint8_t wifi_char_height = 0;
 
 		bool shown_connected = false;
 };

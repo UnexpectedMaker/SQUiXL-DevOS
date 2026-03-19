@@ -84,29 +84,39 @@ void SQUiXL::display_first_boot(bool show)
 
 		wifi_manager_content.setFreeFont(UbuntuMono_R[2]);
 		wifi_manager_content.setTextColor(darken565(TFT_WHITE, 0.1), -1);
-		wifi_manager_content.setCursor(0, 100);
-		wifi_manager_content.println("  Hey, you got a SQUiXL, Congratulations!\n");
+		wifi_manager_content.setCursor(0, 90);
+		wifi_manager_content.println("    Hey, you got a SQUiXL, Congratulations!\n");
 
+		wifi_manager_content.setFreeFont(UbuntuMono_R[1]);
 		wifi_manager_content.setTextColor(darken565(TFT_WHITE, 0.3), -1);
-		wifi_manager_content.println("  SQUiXL requires access to the internet,");
-		wifi_manager_content.println("  so a captive portal has been launched for");
-		wifi_manager_content.println("  you to setup your WiFi credentials.\n");
-		wifi_manager_content.print("  Join the ");
+		wifi_manager_content.println("    SQUiXL requires access to the internet via your WiFi");
+		wifi_manager_content.println("    Router, and there are 2 ways you can set this up.\n");
+
+		wifi_manager_content.setTextColor(squixl_blue, -1);
+		wifi_manager_content.print("    1.");
+		wifi_manager_content.setTextColor(darken565(TFT_WHITE, 0.3), -1);
+		wifi_manager_content.print("    Join the ");
 		wifi_manager_content.setTextColor(squixl_blue, -1);
 		wifi_manager_content.print("SQUiXL");
 		wifi_manager_content.setTextColor(darken565(TFT_WHITE, 0.3), -1);
-		wifi_manager_content.println(" WiFi AP on your phone");
-		wifi_manager_content.println("  or tablet, select your WiFi SSID and");
-		wifi_manager_content.println("  enter your password, then click connect.\n");
+		wifi_manager_content.println(" WiFi AP on your phone or tablet,");
+		wifi_manager_content.println("    select your WiFi SSID from the list and enter your\n  password and then click connect.\n");
 
-		wifi_manager_content.println("  You will only see this message once, but");
-		wifi_manager_content.println("  the captive portal will remain running");
-		wifi_manager_content.println("  until you setup your WiFi.\n");
+		wifi_manager_content.setTextColor(squixl_blue, -1);
+		wifi_manager_content.print("    2.");
+		wifi_manager_content.setTextColor(darken565(TFT_WHITE, 0.3), -1);
+		wifi_manager_content.println("    Swipe right in the main SQUiXL UI and once the");
+		wifi_manager_content.println("    WiFi scan completes, select your SSID from the list");
+		wifi_manager_content.println("    and then tap on the password field and enter your");
+		wifi_manager_content.println("    password using the on-screen keyboard.\n");
+
+		wifi_manager_content.println("    You will only see this message once, but the captive");
+		wifi_manager_content.println("    portal will remain running until your WIFI IS setup.\n");
 
 		wifi_manager_content.setTextColor(TFT_WHITE, -1);
-		wifi_manager_content.println("  You can skip this now by tapping the screen.\n");
+		wifi_manager_content.println("    You can skip this now by tapping the screen.\n");
 
-		wifi_manager_content.drawSprite(20, 420, &wifi_icon, 1.0f, 0x0);
+		wifi_manager_content.drawSprite(20, 410, &wifi_icon, 1.0f, 0x0);
 		wifi_manager_content.setFreeFont(UbuntuMono_R[1]);
 		wifi_manager_content.setTextColor(darken565(TFT_WHITE, 0.3), -1);
 		wifi_manager_content.setCursor(470 - get_version().length() * UbuntuMono_R_Char_Sizes[1][0], 470);
@@ -403,6 +413,13 @@ bool SQUiXL::process_touch_full()
 
 		if (!isTouched)
 		{
+			// If a single tap is pending and a second touch-down arrives within the window, cancel it immediately.
+			// Double-tap detection itself is unchanged — it still fires on second lift as before.
+			if (last_was_click && (millis() - last_touch < 200))
+				last_was_click = false;
+
+			Serial.printf("Touch down: %lu\n", millis());
+
 			startX = pts[0][0];
 			startY = pts[0][1];
 			deltaX = 0;
@@ -551,6 +568,8 @@ bool SQUiXL::process_touch_full()
 	{
 		isTouched = false;
 
+		Serial.printf("Touch up: %lu\n", millis());
+
 		if (last_was_long)
 		{
 			last_was_long = false;
@@ -632,8 +651,9 @@ bool SQUiXL::process_touch_full()
 		clamp_delta_low = -20;
 		clamp_delta_high = 20;
 	}
-	else if (last_was_click && millis() - last_touch > 150)
+	else if (last_was_click && millis() - last_touch > 80)
 	{
+		Serial.printf("Tap processed: %lu\n", millis());
 		last_was_click = false;
 		if (currently_selected != nullptr)
 		{

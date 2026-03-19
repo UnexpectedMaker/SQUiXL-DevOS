@@ -24,18 +24,30 @@ const char *auth_mode_to_str(wifi_auth_mode_t mode)
 		return "WPA2";
 	case WIFI_AUTH_WPA_WPA2_PSK:
 		return "WPA/WPA2";
-	case WIFI_AUTH_WPA2_ENTERPRISE:
-		return "WPA2-Ent";
-#ifdef WIFI_AUTH_WPA3_PSK
+	case WIFI_AUTH_ENTERPRISE:
+		return "EAP";
 	case WIFI_AUTH_WPA3_PSK:
 		return "WPA3";
-#endif
-#ifdef WIFI_AUTH_WPA2_WPA3_PSK
 	case WIFI_AUTH_WPA2_WPA3_PSK:
 		return "WPA2/WPA3";
-#endif
+	case WIFI_AUTH_WAPI_PSK:
+		return "WAPI";
+	case WIFI_AUTH_OWE:
+		return "OWE";
+	case WIFI_AUTH_WPA3_ENT_192:
+		return "WPA3-Ent";
+	case WIFI_AUTH_WPA3_EXT_PSK:
+		return "WPA3-Ext";
+	case WIFI_AUTH_WPA3_EXT_PSK_MIXED_MODE:
+		return "WPA3-Mix";
+	case WIFI_AUTH_DPP:
+		return "DPP";
 	default:
-		return "Unknown";
+	{
+		static char buf[8];
+		snprintf(buf, sizeof(buf), "(%d)", (int)mode);
+		return buf;
+	}
 	}
 }
 } // namespace
@@ -43,7 +55,10 @@ const char *auth_mode_to_str(wifi_auth_mode_t mode)
 bool ui_scrollarea_wifimanager::external_content_dirty() const
 {
 
-	return wifi_controller.is_scan_in_progress() || !wifi_controller.scan_results().empty();
+	bool dirty = wifi_results_dirty;
+	wifi_results_dirty = false;
+
+	return dirty;
 }
 
 void ui_scrollarea_wifimanager::show_connected()
@@ -73,7 +88,6 @@ void ui_scrollarea_wifimanager::render_content()
 	_sprite_back.setCursor(padding.left, char_height + 2);
 	_sprite_back.print(_title.c_str());
 
-	squixl.get_cached_char_sizes(FONT_SPEC::FONT_WEIGHT_R, 2, &wifi_char_width, &wifi_char_height);
 	_sprite_content.setFreeFont(UbuntuMono_R[2]);
 
 	auto *screen = static_cast<ui_screen *>(get_ui_parent());
@@ -90,6 +104,7 @@ void ui_scrollarea_wifimanager::render_content()
 		_sprite_content.setCursor(10, _scroll_y + line_y);
 		_sprite_content.print("Scanning for WiFi networks...");
 		content_height = line_y + LINE_HEIGHT;
+		wifi_results_dirty = true;
 		return;
 	}
 
@@ -99,8 +114,11 @@ void ui_scrollarea_wifimanager::render_content()
 		_sprite_content.setCursor(10, _scroll_y + line_y);
 		_sprite_content.print("No WiFi networks found.");
 		content_height = line_y + LINE_HEIGHT;
+		wifi_results_dirty = true;
 		return;
 	}
+
+	_sprite_content.setFreeFont(UbuntuMono_R[1]);
 
 	int item_index = 0;
 	int vertical_padding = (LINE_HEIGHT - char_height) / 2;
@@ -108,25 +126,23 @@ void ui_scrollarea_wifimanager::render_content()
 	{
 		int row_y = _scroll_y + line_y - char_height - vertical_padding;
 
-		// Draw highlight if this is the flashed item
-		if (item_index == flash_index)
-		{
-			_sprite_content.fillRect(0, row_y, content_sprite_width, LINE_HEIGHT, TFT_WHITE);
-			_sprite_content.setTextColor(TFT_BLACK, TFT_WHITE);
-		}
-		else
-		{
-			_sprite_content.setTextColor(TFT_WHITE, body_color);
-		}
+		_sprite_content.setTextColor(TFT_WHITE, body_color);
 
-		_sprite_content.setCursor(10, _scroll_y + line_y);
-		_sprite_content.print(network.name.c_str());
+		_sprite_content.setCursor(8, _scroll_y + line_y);
+		{
+			const auto &name = network.name;
+			if (name.size() > 25)
+				_sprite_content.print((name.substr(0, 22) + "...").c_str());
+			else
+				_sprite_content.print(name.c_str());
+		}
 		// _sprite_content.print("  ");
-		_sprite_content.setCursor(240, _scroll_y + line_y);
+		_sprite_content.setCursor(250, _scroll_y + line_y);
 		_sprite_content.print(network.rssi);
 		_sprite_content.print("dBm");
 
-		_sprite_content.setCursor(340, _scroll_y + line_y);
+		// _sprite_content.setFreeFont(UbuntuMono_R[1]);
+		_sprite_content.setCursor(330, _scroll_y + line_y);
 		_sprite_content.print(auth_mode_to_str(network.encryption));
 
 		line_y += LINE_HEIGHT;
@@ -138,12 +154,57 @@ void ui_scrollarea_wifimanager::render_content()
 	{
 		content_height = line_y + LINE_HEIGHT;
 	}
+
+	wifi_results_dirty = true;
+}
+
+void ui_scrollarea_wifimanager::draw_flash_line(int index, bool flash)
+{
+	const auto &networks = wifi_controller.scan_results();
+	if (index < 0 || index >= (int)networks.size())
+		return;
+
+	int line_y = char_height + 10 + (index * LINE_HEIGHT);
+	int vertical_padding = (LINE_HEIGHT - char_height) / 2;
+	int row_y = _scroll_y + line_y - char_height - vertical_padding;
+
+	_sprite_content.setFreeFont(UbuntuMono_R[1]);
+
+	if (flash)
+	{
+		_sprite_content.fillRect(0, row_y, content_sprite_width, LINE_HEIGHT, TFT_WHITE);
+		_sprite_content.setTextColor(TFT_BLACK, TFT_WHITE);
+	}
+	else
+	{
+		_sprite_content.fillRect(0, row_y, content_sprite_width, LINE_HEIGHT, body_color);
+		_sprite_content.setTextColor(TFT_WHITE, body_color);
+	}
+
+	_sprite_content.setCursor(8, _scroll_y + line_y);
+	const auto &name = networks[index].name;
+	if (name.size() > 25)
+		_sprite_content.print((name.substr(0, 22) + "...").c_str());
+	else
+		_sprite_content.print(name.c_str());
+
+	_sprite_content.setCursor(250, _scroll_y + line_y);
+	_sprite_content.print(networks[index].rssi);
+	_sprite_content.print("dBm");
+
+	_sprite_content.setCursor(330, _scroll_y + line_y);
+	_sprite_content.print(auth_mode_to_str(networks[index].encryption));
+
+	auto *parent = get_ui_parent();
+	if (parent && parent->_sprite_content.getBuffer())
+		parent->_sprite_content.drawSprite(_x + padding.left, _y + 26, &_sprite_content, 1.0f, -1);
 }
 
 void ui_scrollarea_wifimanager::about_to_show_screen()
 {
 	is_dragging = false;
 	acceleration_y = 0;
+	// wifi_results_dirty = true;
 
 	if (!wifi_controller.is_scan_in_progress() && wifi_controller.scan_results().empty())
 	{
@@ -155,6 +216,7 @@ void ui_scrollarea_wifimanager::start_rescan()
 {
 	shown_connected = false;
 	content_changed = true;
+	// wifi_results_dirty = true;
 	wifi_controller.start_async_scan();
 }
 
@@ -179,33 +241,33 @@ bool ui_scrollarea_wifimanager::process_touch(touch_event_t touch_event)
 			const auto &networks = wifi_controller.scan_results();
 			if (item_index >= 0 && item_index < (int)networks.size())
 			{
-				// Visual feedback - flash the selected line
-				flash_index = item_index;
-				content_changed = true;
-				redraw(32);
-				if (auto *screen = static_cast<ui_screen *>(get_ui_parent()))
-					screen->refresh(true);
+				auto *screen = static_cast<ui_screen *>(get_ui_parent());
 
-				// Audio feedback
+				Serial.printf("Flash line: %lu\n", millis());
+				draw_flash_line(item_index, true);
+				if (screen)
+					screen->redraw(32);
+
 				audio.play_tone(500, 1);
-
 				delay(100);
 
-				flash_index = -1;
-				content_changed = true;
-				redraw(32);
-				if (auto *screen = static_cast<ui_screen *>(get_ui_parent()))
-					screen->refresh(true);
+				draw_flash_line(item_index, false);
 
-				// Set the SSID text
 				if (text_wifimanager_ssid != nullptr)
 				{
 					text_wifimanager_ssid->set_text(networks[item_index].name.c_str());
 					text_wifimanager_ssid->redraw(32);
 				}
-				return true;
+
+				if (screen)
+					screen->refresh(true);
+				return false;
 			}
 		}
+	}
+	else if (touch_event.type == TOUCH_DOUBLE)
+	{
+		Serial.println("DBL");
 	}
 
 	// Let base class handle scrolling

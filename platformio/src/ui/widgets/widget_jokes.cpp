@@ -129,10 +129,10 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 		return false;
 	}
 
-	if (!has_had_any_jokes && millis() - next_joke_swap > 10000)
+	if (settings.has_wifi_creds() && !has_had_any_jokes && millis() - next_joke_swap > 10000)
 	{
 		next_joke_swap = millis();
-		if (settings.has_wifi_creds() && !server_path.empty() && !wifi_controller.wifi_blocking_access)
+		if (!server_path.empty() && !wifi_controller.wifi_blocking_access)
 		{
 			wifi_controller.add_to_queue(server_path.c_str(), [this](bool success, const String &response) { this->process_joke_data(success, response); });
 		}
@@ -177,7 +177,7 @@ bool widgetJokes::redraw(uint8_t fade_amount, int8_t tab_group)
 		_sprite_joke.setFreeFont(UbuntuMono_R[2]);
 		_sprite_joke.setTextColor(TFT_GREY, TFT_MAGENTA);
 		_sprite_joke.setCursor(10, 38);
-		_sprite_joke.print("WAITING...");
+		_sprite_joke.print(wifi_controller.is_connected() ? "WAITING..." : "NO INTERNET");
 	}
 	else if (!is_aniamted_cached)
 	{

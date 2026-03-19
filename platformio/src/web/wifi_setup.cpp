@@ -118,7 +118,7 @@ struct connect_responder
 void WifiSetup::start()
 {
 	done = false;
-	WiFi.mode(WIFI_AP);
+	WiFi.mode(WIFI_AP_STA);
 	WiFi.softAP("SQUiXL");
 	Serial.println("AP started");
 	dnsServer.start(53, "*", WiFi.softAPIP());
@@ -188,7 +188,7 @@ void WifiSetup::start()
 	// Redirect all unhandled requests to the portal
 	webServer.onNotFound([](AsyncWebServerRequest *request) { request->redirect("http://" + WiFi.softAPIP().toString()); });
 
-	Serial.println("webServer.begin();");
+	Serial.println("Wifi Manager Started");
 	_running = true;
 	webServer.begin();
 }

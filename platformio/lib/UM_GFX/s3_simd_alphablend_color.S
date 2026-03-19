@@ -3,6 +3,7 @@
 // By Seon Rozenblum, Unexpected Maker for UM_GFX
 //
 // Based on s3_simd_alphablend.S by by Larry Bank, BitBank Software, Inc.
+// https://github.com/bitbank2/BB_SPI_LCD
 //
 
 #if defined (ARDUINO_ARCH_ESP32) && !defined(NO_SIMD)

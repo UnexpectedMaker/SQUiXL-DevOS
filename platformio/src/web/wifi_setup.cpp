@@ -6,8 +6,11 @@
 #include "squixl.h"
 #include "web/wifi_setup.h"
 #include "web/wifi_setup_templates.h"
+#include "web/wifi_controller.h"
 #include <Arduino.h>
 #include <WiFi.h>
+
+#define PORTAL_LOG
 
 static void htmlEscape(String &str)
 {
@@ -16,7 +19,15 @@ static void htmlEscape(String &str)
 	str.replace(">", "&gt;");
 }
 
-static bool isPortalRequest(AsyncWebServerRequest *request) { return request->host() == WiFi.softAPIP().toString(); }
+static bool isPortalRequest(AsyncWebServerRequest *request)
+{
+	String host = request->host();
+	String apIP = WiFi.softAPIP().toString();
+#ifdef PORTAL_LOG
+	Serial.printf("PORTAL: request host='%s', softAPIP='%s', match=%d\n", host.c_str(), apIP.c_str(), host == apIP);
+#endif
+	return host == apIP;
+}
 
 struct scan_responder
 {
@@ -30,24 +41,27 @@ struct scan_responder
 		{
 			if (waiting)
 			{
-				auto netCount = WiFi.scanComplete();
-				if (netCount < 0)
+				bool in_progress = wifi_controller.is_scan_in_progress();
+				const auto &networks = wifi_controller.scan_results();
+				auto netCount = (int)networks.size();
+				Serial.printf("SCAN_RESP: is_scan_in_progress=%d, results=%d\n", in_progress, netCount);
+
+				if (in_progress && netCount == 0)
 				{
 					return RESPONSE_TRY_AGAIN;
 				}
 
-				// // limit the SSID count to max 20 items to prevent captive portal crashing
-				if (netCount > 16)
-					netCount = 16;
+#ifdef PORTAL_LOG
+				Serial.printf("SCAN_RESP: scan done, %d networks\n", netCount);
+#endif
 
 				server->update_wifisetup_status(String("FOUND ") + netCount + " NETWORKS", RGB(0xff, 0xc9, 0x00));
 				waiting = false;
 				response = startHtml;
-				// todo: sort by rssi?
 				for (int i = 0; i < netCount; i++)
 				{
-					auto ssid = WiFi.SSID(i);
-					auto rssi = WiFi.RSSI(i);
+					String ssid = networks[i].name.c_str();
+					auto rssi = networks[i].rssi;
 					htmlEscape(ssid);
 					response += R"~(<div class="ssid_extra"><a href="#" class="ssid">)~";
 					response += ssid.c_str();
@@ -121,19 +135,29 @@ void WifiSetup::start()
 	WiFi.mode(WIFI_AP_STA);
 	WiFi.softAP("SQUiXL");
 	Serial.println("AP started");
+	Serial.printf("AP IP: %s\n", WiFi.softAPIP().toString().c_str());
 	dnsServer.start(53, "*", WiFi.softAPIP());
 	Serial.println("DNS started");
-	webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request) { request->send(200, "text/html", String(startHtml) + scanningHtml); })
+
+	webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+#ifdef PORTAL_LOG
+				 Serial.println("PORTAL: GET /");
+#endif
+				 request->send(200, "text/html", String(startHtml) + scanningHtml);
+			 })
 		.setFilter(isPortalRequest);
 
 	webServer
 		.on("/connect", HTTP_GET,
 			[this](AsyncWebServerRequest *request) {
-				// audio tone
-				// BuzzerUI({{2000, 50}});
+#ifdef PORTAL_LOG
+				Serial.println("PORTAL: GET /connect");
+#endif
 				update_wifisetup_status("SCANNING...", RGB(0xff, 0xc9, 0x00));
-				// Start an async scan
-				WiFi.scanNetworks(true);
+				wifi_controller.start_async_scan();
+#ifdef PORTAL_LOG
+				Serial.printf("PORTAL: scan started, in_progress=%d\n", wifi_controller.is_scan_in_progress());
+#endif
 				request->send(request->beginChunkedResponse("text/html", scan_responder(this)));
 			})
 		.setFilter(isPortalRequest);
@@ -141,6 +165,9 @@ void WifiSetup::start()
 	webServer
 		.on("/connect", HTTP_POST,
 			[this](AsyncWebServerRequest *request) {
+#ifdef PORTAL_LOG
+				Serial.println("PORTAL: POST /connect");
+#endif
 				auto ssidParam = request->getParam("ssid", true);
 				auto passParam = request->getParam("pass", true);
 
@@ -152,9 +179,6 @@ void WifiSetup::start()
 
 				ssid = ssidParam->value();
 				pass = passParam->value();
-				// audio beep
-				// BuzzerUI({{2000, 50}});
-				// updateStatus("TRYING TO CONNECT...", YELLOW);
 				update_wifisetup_status("CONNECTING...", RGB(0xff, 0xc9, 0x00));
 				Serial.printf("Connecting to %s with password %s\n", ssid.c_str(), pass.c_str());
 
@@ -182,11 +206,21 @@ void WifiSetup::start()
 			})
 		.setFilter(isPortalRequest);
 
-	webServer.on("/connectresult", HTTP_GET, [this](AsyncWebServerRequest *request) { request->send(request->beginChunkedResponse("text/html", connect_responder(this))); })
+	webServer.on("/connectresult", HTTP_GET, [this](AsyncWebServerRequest *request) {
+#ifdef PORTAL_LOG
+				 Serial.println("PORTAL: GET /connectresult");
+#endif
+				 request->send(request->beginChunkedResponse("text/html", connect_responder(this)));
+			 })
 		.setFilter(isPortalRequest);
 
 	// Redirect all unhandled requests to the portal
-	webServer.onNotFound([](AsyncWebServerRequest *request) { request->redirect("http://" + WiFi.softAPIP().toString()); });
+	webServer.onNotFound([](AsyncWebServerRequest *request) {
+#ifdef PORTAL_LOG
+		Serial.printf("PORTAL: onNotFound url='%s' host='%s'\n", request->url().c_str(), request->host().c_str());
+#endif
+		request->redirect("http://" + WiFi.softAPIP().toString());
+	});
 
 	Serial.println("Wifi Manager Started");
 	_running = true;

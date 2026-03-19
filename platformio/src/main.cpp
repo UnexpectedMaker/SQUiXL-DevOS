@@ -916,6 +916,8 @@ void loop()
 	// WiFi Setup stays running all of the time until you have configures a WiFi router to connect SQUiXL to. You can configure the credentials any time, regardless of leaving the "first time" screen.
 	if (wifiSetup.running())
 	{
+		wifiSetup.process();
+
 		if (settings.config.first_time)
 		{
 			if (wifiSetup.wifi_ap_changed)

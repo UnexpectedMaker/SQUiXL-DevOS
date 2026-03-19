@@ -243,7 +243,7 @@ bool ui_scrollarea_wifimanager::process_touch(touch_event_t touch_event)
 			{
 				auto *screen = static_cast<ui_screen *>(get_ui_parent());
 
-				Serial.printf("Flash line: %lu\n", millis());
+				// Serial.printf("Flash line: %lu\n", millis());
 				draw_flash_line(item_index, true);
 				if (screen)
 					screen->redraw(32);
@@ -265,11 +265,11 @@ bool ui_scrollarea_wifimanager::process_touch(touch_event_t touch_event)
 			}
 		}
 	}
-	else if (touch_event.type == TOUCH_DOUBLE)
-	{
-		Serial.println("DBL");
-	}
+	// else if (touch_event.type == TOUCH_DOUBLE)
+	// {
+	// 	Serial.println("DBL");
+}
 
-	// Let base class handle scrolling
-	return ui_scrollarea::process_touch(touch_event);
+// Let base class handle scrolling
+return ui_scrollarea::process_touch(touch_event);
 }

@@ -159,6 +159,11 @@ static const char *scanningHtml = R"~(
 <h3 class="green_text">Scanning WiFi Networks...</h3>
 )~";
 
+static const char *scanWaitHtml = R"~(
+<meta http-equiv="refresh" content="1;url=/connect">
+<h3 class="green_text">Scanning WiFi Networks...</h3>
+)~";
+
 static const char *formHtml = R"~(
 
 	<div class="content">

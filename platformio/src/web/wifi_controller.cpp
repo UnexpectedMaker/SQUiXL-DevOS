@@ -180,10 +180,12 @@ void WifiController::disconnect(bool force)
 
 void WifiController::loop()
 {
+	// Always poll scan state - update_scan_state() returns immediately if not scanning
+	update_scan_state();
+
 	if (millis() - next_wifi_loop > 2000)
 	{
 		next_wifi_loop = millis();
-		update_scan_state();
 		wifi_callback_item result;
 		while (xQueueReceive(wifi_callback_queue, &result, 0) == pdTRUE)
 		{

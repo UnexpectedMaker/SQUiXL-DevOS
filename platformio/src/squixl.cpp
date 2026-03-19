@@ -418,7 +418,7 @@ bool SQUiXL::process_touch_full()
 			if (last_was_click && (millis() - last_touch < 200))
 				last_was_click = false;
 
-			Serial.printf("Touch down: %lu\n", millis());
+			// Serial.printf("Touch down: %lu\n", millis());
 
 			startX = pts[0][0];
 			startY = pts[0][1];
@@ -568,7 +568,7 @@ bool SQUiXL::process_touch_full()
 	{
 		isTouched = false;
 
-		Serial.printf("Touch up: %lu\n", millis());
+		// Serial.printf("Touch up: %lu\n", millis());
 
 		if (last_was_long)
 		{

@@ -268,8 +268,8 @@ bool ui_scrollarea_wifimanager::process_touch(touch_event_t touch_event)
 	// else if (touch_event.type == TOUCH_DOUBLE)
 	// {
 	// 	Serial.println("DBL");
-}
+	// }
 
-// Let base class handle scrolling
-return ui_scrollarea::process_touch(touch_event);
+	// Let base class handle scrolling
+	return ui_scrollarea::process_touch(touch_event);
 }
